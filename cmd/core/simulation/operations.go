@@ -71,244 +71,88 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			fallthrough
 		case orthtypes.PrimitiveI64:
 			preProgram[i+1].Content.ValidPos = true
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Push,
-				Operand: orthtypes.Operand{
-					VarType: v.Content.Content,
-					Operand: preProgram[i+1].Content.Content,
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveF32:
 			fallthrough
 		case orthtypes.PrimitiveF64:
 			preProgram[i+1].Content.ValidPos = true
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Push,
-				Operand: orthtypes.Operand{
-					VarType: v.Content.Content,
-					Operand: preProgram[i+1].Content.Content,
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveSTR:
 			preProgram[i+1].Content.ValidPos = true
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Push,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveSTR,
-					Operand: preProgram[i+1].Content.Content[1 : len(preProgram[i+1].Content.Content)-1],
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push, -1)
+			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveBOOL:
 			preProgram[i+1].Content.ValidPos = true
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Push,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: preProgram[i+1].Content.Content,
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			program.Operations = append(program.Operations, ins)
 		case "+":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Sum,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum, -1)
+			program.Operations = append(program.Operations, ins)
 		case "-":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Minus,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Minus, -1)
+			program.Operations = append(program.Operations, ins)
 		case "*":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Mult,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mult, -1)
+			program.Operations = append(program.Operations, ins)
 		case "/":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Div,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div, -1)
+			program.Operations = append(program.Operations, ins)
 		case "dump":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Dump,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.VOID,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Dump, -1)
+			program.Operations = append(program.Operations, ins)
 		case "=":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Equal,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal, -1)
+			program.Operations = append(program.Operations, ins)
 		case "<>":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.NotEqual,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.NotEqual, -1)
+			program.Operations = append(program.Operations, ins)
 		case "<":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Lt,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Lt, -1)
+			program.Operations = append(program.Operations, ins)
 		case ">":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Gt,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Gt, -1)
+			program.Operations = append(program.Operations, ins)
 		case "if":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.If,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.If, -1)
+			program.Operations = append(program.Operations, ins)
 		case "else":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Else,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else, -1)
+			program.Operations = append(program.Operations, ins)
 		case "end":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.End,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveBOOL,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End, -1)
+			program.Operations = append(program.Operations, ins)
 		case "print":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Print,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveRNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Print, -1)
+			program.Operations = append(program.Operations, ins)
 		case "dup":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Dup,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveRNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup, -1)
+			program.Operations = append(program.Operations, ins)
 		case "while":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.While,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveRNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While, -1)
+			program.Operations = append(program.Operations, ins)
 		case "do":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Do,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do, -1)
+			program.Operations = append(program.Operations, ins)
 		case "drop":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Drop,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.VOID,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Drop, -1)
+			program.Operations = append(program.Operations, ins)
 		case "swap":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Swap,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.VOID,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Swap, -1)
+			program.Operations = append(program.Operations, ins)
 		case "%":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Mod,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mod, -1)
+			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveMem:
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Mem,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.PrimitiveMem,
-					Operand: orthtypes.PrimitiveMem,
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveMem, orthtypes.PrimitiveMem, orthtypes.Mem, -1)
+			program.Operations = append(program.Operations, ins)
 		case ".":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Store,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Store, -1)
+			program.Operations = append(program.Operations, ins)
 		case ",":
-			program.Operations = append(program.Operations, orthtypes.Operation{
-				Instruction: orthtypes.Load,
-				Operand: orthtypes.Operand{
-					VarType: orthtypes.RNT,
-					Operand: "",
-				},
-				RefBlock: -1,
-			})
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load, -1)
+			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
 				panic(fmt.Errorf("Unknow token %q at line: %d colum: %d\n", v.Content.Content, v.Index, v.Content.Index))
@@ -316,4 +160,15 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		}
 	}
 	return program
+}
+
+func parseToken(varType, operand string, op, refBlock int) orthtypes.Operation {
+	return orthtypes.Operation{
+		Instruction: op,
+		Operand: orthtypes.Operand{
+			VarType: varType,
+			Operand: operand,
+		},
+		RefBlock: refBlock,
+	}
 }
