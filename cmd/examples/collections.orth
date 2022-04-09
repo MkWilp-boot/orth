@@ -1,0 +1,2 @@
+mem i 0 s[] {s "hello world"} .
+mem i 0 , [i 0] print

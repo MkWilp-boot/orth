@@ -1,0 +1,9 @@
+i 0 // push initial value
+while dup i 10 < do
+    dup i 5 = if
+        s "Oh look, I found a 5 in the loop" s "\n" + print
+    else
+        s "Oh, it's just another " print dup print s "\n" print
+    end
+    i 1 + // increment loop step
+end

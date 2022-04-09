@@ -1,0 +1,9 @@
+b true if
+    i 69 i 420 = if
+        s "69 is equal to 69!" dump
+    else
+        s "69 is not equal to 420!" dump
+    end
+else
+    s "False" dump
+end

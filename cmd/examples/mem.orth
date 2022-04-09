@@ -1,0 +1,2 @@
+mem i 0 s "I am in the 'mem' storage!" .
+mem i 0 , print
