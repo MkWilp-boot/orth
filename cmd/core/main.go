@@ -35,6 +35,6 @@ func main() {
 			fmt.Printf("%#v\n", v)
 		}
 	} else {
-		simulation.Simulate(program)
+		simulation.Run(program)
 	}
 }

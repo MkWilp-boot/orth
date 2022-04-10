@@ -31,5 +31,8 @@ const (
 	Mem
 	Store
 	Load
+	LoadStay
+	Func
+	Call
 	TotalOps
 )

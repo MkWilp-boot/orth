@@ -11,7 +11,8 @@ import (
 
 const memCap = 10
 
-func Simulate(program orthtypes.Program) {
+// Run runs a program built by previous steps
+func Run(program orthtypes.Program) {
 	stack := make([]orthtypes.Operand, 0)
 	mem := make([]orthtypes.Operand, memCap)
 
@@ -204,6 +205,14 @@ func Simulate(program orthtypes.Program) {
 			address := helpers.StackPop(&stack)
 			stack = append(stack, mem[helpers.ToInt(address)])
 			mem[helpers.ToInt(address)] = orthtypes.Operand{}
+			ip++
+		case orthtypes.Call:
+			fn := functions.Functions[stackItem.Operand.Operand]
+			fn(&stack)
+			ip++
+		case orthtypes.LoadStay:
+			address := helpers.StackPop(&stack)
+			stack = append(stack, mem[helpers.ToInt(address)])
 			ip++
 		default:
 			panic(fmt.Errorf(debug.InvalidInstruction, stackItem.Instruction))

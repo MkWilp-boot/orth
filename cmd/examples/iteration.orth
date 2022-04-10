@@ -1,9 +1,9 @@
-i 0 // push initial value
-while dup i 10 < do
-    dup i 5 = if
-        s "Oh look, I found a 5 in the loop" s "\n" + print
-    else
-        s "Oh, it's just another " print dup print s "\n" print
+mem i 0 s "Numbers: " .
+i 0 while dup i 5 > do
+    dup i 2 % i 0 = if
+        dup call to_string mem i 0 , swap + s "," + mem i 0 swap .
     end
-    i 1 + // increment loop step
+    i 1 +
 end
+
+mem i 0 , print

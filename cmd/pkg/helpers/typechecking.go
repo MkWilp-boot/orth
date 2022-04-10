@@ -22,6 +22,8 @@ func IsString(t string) bool {
 	return orthtypes.GlobalTypes[orthtypes.STRING][t] != ""
 }
 
+// SameBaseType checks if the 2 variables have the same base type.
+// Ex: INT-INT, FLOAT-FLOAT, STRING-INT
 func SameBaseType(operands ...orthtypes.Operand) {
 	if operands[0].GrabRootType() != operands[1].GrabRootType() {
 		panic(fmt.Errorf("Mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].VarType, operands[1].Operand, operands[1].VarType))

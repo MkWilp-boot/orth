@@ -45,6 +45,7 @@ type Operand struct {
 	Operand string
 }
 
+// IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
 	return GlobalTypes[INTS][o.Operand.VarType] != "" ||
 		GlobalTypes[FLOATS][o.Operand.VarType] != "" ||

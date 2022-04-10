@@ -12,6 +12,8 @@ func PopLast(root *[]int) int {
 	return ret
 }
 
+// CrossReferenceBlocks loops over a program and define all inter references
+// needed for execution. Ex: if-else-do blocks
 func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 	stack := make([]int, 0)
 
@@ -56,6 +58,7 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 	return program
 }
 
+// ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
 func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program {
 	program := orthtypes.Program{}
 
@@ -153,6 +156,13 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case ",":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load, -1)
 			program.Operations = append(program.Operations, ins)
+		case "call":
+			preProgram[i+1].Content.ValidPos = true
+			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call, -1)
+			program.Operations = append(program.Operations, ins)
+		case ",!":
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay, -1)
+			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
 				panic(fmt.Errorf("Unknow token %q at line: %d colum: %d\n", v.Content.Content, v.Index, v.Content.Index))
@@ -162,6 +172,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 	return program
 }
 
+// parseToken parses a single token into a instruction
 func parseToken(varType, operand string, op, refBlock int) orthtypes.Operation {
 	return orthtypes.Operation{
 		Instruction: op,
