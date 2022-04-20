@@ -1,4 +1,4 @@
-package simulation
+package embedded
 
 import (
 	"fmt"
@@ -11,8 +11,8 @@ import (
 
 const memCap = 10
 
-// Run runs a program built by previous steps
-func Run(program orthtypes.Program) {
+// Simulate runs a program built by previous steps
+func Simulate(program orthtypes.Program) {
 	stack := make([]orthtypes.Operand, 0)
 	mem := make([]orthtypes.Operand, memCap)
 

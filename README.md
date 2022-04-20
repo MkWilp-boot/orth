@@ -72,7 +72,7 @@ s "The " mem i 3 , call to_string + s "th number is " + mem i 1 , call to_string
 ```
 
 So, what do you think this program does? if you said it's the fibonacci sequence, then you are right!</br>
-If didn't said it correctly, don't worry, 99% of the people reading this will probably and we will get to the point where this piece of code will look readable.
+If didn't said it correctly, don't worry, 99% of the people reading this will probably fail, don't worry we will get to the point where this code will look readable.
 
 ## Types
 

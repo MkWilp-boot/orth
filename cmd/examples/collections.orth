@@ -1,3 +1,0 @@
-i[] { i 10, i 20 } s "hellow" print
-// mem i 0 s[] {s "hello ", s "world"} .
-// mem i 0 , [i 0] print

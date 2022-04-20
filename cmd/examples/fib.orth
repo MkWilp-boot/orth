@@ -1,7 +1,7 @@
 mem i 0 i 0 .  // a
 mem i 1 i 1 .  // b
 mem i 2 i 0 .  // c
-mem i 3 i 20 . // n
+mem i 3 i 10 . // n
 
 mem i 3 ,! // read n
 i 0 = if

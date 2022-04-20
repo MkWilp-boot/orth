@@ -7,7 +7,7 @@ import (
 	"strings"
 	"t/cmd/core/debug"
 	"t/cmd/core/lexer"
-	"t/cmd/core/simulation"
+	"t/cmd/core/embedded"
 	orthtypes "t/cmd/pkg/types"
 )
 
@@ -27,14 +27,25 @@ func init() {
 }
 
 func main() {
-	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
-	program := simulation.CrossReferenceBlocks(simulation.ParseTokenAsOperation(strProgram))
+	// args is
+	// [0] -> file to be processed
 
-	if *debug.DumpVMCode {
+	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
+	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(strProgram))
+
+	switch {
+	case *debug.DumpVMCode:
 		for _, v := range program.Operations {
 			fmt.Printf("%#v\n", v)
 		}
-	} else {
-		simulation.Run(program)
+	case *debug.Simulate:
+		embedded.Simulate(program)
+	case *debug.CompileRun:
+		panic("compile & run not implemented")
+	case *debug.Compile:
+		panic("compile not implemented")
+	default:
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 }

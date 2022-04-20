@@ -1,4 +1,4 @@
-package simulation
+package embedded
 
 import (
 	"fmt"
