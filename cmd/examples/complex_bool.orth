@@ -1,9 +1,11 @@
-b true if
-    i 69 i 420 = if
-        s "69 is equal to 69!" dump
-    else
-        s "69 is not equal to 420!" dump
+b 1 if
+    i 10 i 10 + i 20 = if
+        i 69 i 1 + i 71 = if
+            i 69 print
+        else
+            i 420 print
+        end
     end
 else
-    s "False" dump
+    i64 0 print
 end
