@@ -6,8 +6,9 @@ import (
 	"os"
 	"strings"
 	"t/cmd/core/debug"
-	"t/cmd/core/lexer"
 	"t/cmd/core/embedded"
+	"t/cmd/core/lexer"
+	"t/cmd/pkg/helpers/functions"
 	orthtypes "t/cmd/pkg/types"
 )
 
@@ -23,6 +24,11 @@ func init() {
 		fmt.Println("=================================================================================================")
 		fmt.Printf("WARNING! The following file %q is not of type %q, the content may not be well formatted\n", flag.Args()[0], orthtypes.FileType)
 		fmt.Println("=================================================================================================")
+	}
+	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.CompileRun {
+		fmt.Println("Error, must select a run option.")
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 }
 
@@ -42,8 +48,8 @@ func main() {
 		embedded.Simulate(program)
 	case *debug.CompileRun:
 		panic("compile & run not implemented")
-	case *debug.Compile:
-		panic("compile not implemented")
+	case *debug.Compile != "":
+		embedded.Compile(program, functions.CheckAsmType(*debug.Compile))
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)

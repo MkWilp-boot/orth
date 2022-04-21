@@ -7,6 +7,16 @@ import (
 	orthtypes "t/cmd/pkg/types"
 )
 
+func CheckAsmType(flagValue string) string {
+	available := []string{"nasm", "masm", "fasm"}
+	for _, v := range available {
+		if flagValue == v {
+			return v
+		}
+	}
+	panic("nsupported assembly type")
+}
+
 // TypesAreEqual checks if the compared types the same INNER-TYPE variant
 func TypesAreEqual(opreands ...orthtypes.Operand) bool {
 	t := opreands[0].VarType

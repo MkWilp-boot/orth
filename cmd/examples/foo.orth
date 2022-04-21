@@ -1,1 +1,1 @@
-s "Hello world" print
+i 34 i 35 + i 11 + print
