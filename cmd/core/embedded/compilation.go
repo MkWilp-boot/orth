@@ -38,18 +38,67 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	// code segment
 	writer.WriteString(".CODE\n")
 	writer.WriteString("start:\n")
-	for _, operation := range program.Operations {
+	for i, operation := range program.Operations {
 		switch operation.Instruction {
 		case orthtypes.Push:
-			writer.WriteString("; push \n")
+			writer.WriteString("	; push \n")
 			writer.WriteString("	push " + operation.Operand.Operand + "\n")
 		case orthtypes.Sum:
-			writer.WriteString("; sum \n")
+			writer.WriteString("	; sum \n")
 			writer.WriteString("	pop eax\n")
 			writer.WriteString("	pop ebx\n")
 			writer.WriteString("	add eax, ebx\n")
 			writer.WriteString("	push eax\n")
+		case orthtypes.Minus:
+			writer.WriteString("    ; minus \n")
+			writer.WriteString("    pop eax\n")
+			writer.WriteString("    pop ebx\n")
+			writer.WriteString("    sub ebx, eax\n")
+			writer.WriteString("    push ebx\n")
+		case orthtypes.Equal:
+			writer.WriteString("    ; equal \n")
+			writer.WriteString("    pop eax\n")
+			writer.WriteString("    pop ebx\n")
+			writer.WriteString("    .if(eax == ebx)\n")
+			writer.WriteString("    	push 1\n")
+			writer.WriteString("    .else\n")
+			writer.WriteString("    	push 0\n")
+			writer.WriteString("    .endif\n")
+		case orthtypes.Gt:
+			writer.WriteString("    ; GT \n")
+			writer.WriteString("    pop eax\n")
+			writer.WriteString("    pop ebx\n")
+			writer.WriteString("    .if(eax > ebx)\n")
+			writer.WriteString("    	push 1\n")
+			writer.WriteString("    .else\n")
+			writer.WriteString("    	push 0\n")
+			writer.WriteString("    .endif\n")
+		case orthtypes.Lt:
+			writer.WriteString("    ; LT \n")
+			writer.WriteString("    pop eax\n")
+			writer.WriteString("    pop ebx\n")
+			writer.WriteString("    .if(eax < ebx)\n")
+			writer.WriteString("    	push 1\n")
+			writer.WriteString("    .else\n")
+			writer.WriteString("    	push 0\n")
+			writer.WriteString("    .endif\n")
+		case orthtypes.If:
+			writer.WriteString("	pop eax\n")
+			writer.WriteString("	.if(eax)\n")
+		case orthtypes.Else:
+			writer.WriteString("	.else\n")
+		case orthtypes.End:
+			for _, v := range program.Operations[:i] {
+				if v.RefBlock == operation.RefBlock-1 {
+					if v.Instruction == orthtypes.Else || v.Instruction == orthtypes.If {
+						writer.WriteString("	.endif\n")
+					} else if v.Instruction == orthtypes.Do {
+						writer.WriteString("	.endw\n")
+					}
+				}
+			}
 		case orthtypes.Print:
+			writer.WriteString("    pop eax\n")
 			writer.WriteString("	invoke crt__itoa, eax, OFFSET num_str, 10\n")
 			writer.WriteString("	invoke crt_printf, OFFSET fmt, OFFSET num_str\n")
 		}
