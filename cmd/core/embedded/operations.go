@@ -74,94 +74,94 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			fallthrough
 		case orthtypes.PrimitiveI64:
 			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveF32:
 			fallthrough
 		case orthtypes.PrimitiveF64:
 			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveSTR:
 			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push, -1)
+			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveBOOL:
 			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveBOOL, preProgram[i+1].Content.Content, orthtypes.Push, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, preProgram[i+1].Content.Content, orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case "+":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)
 			program.Operations = append(program.Operations, ins)
 		case "-":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Minus, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Minus)
 			program.Operations = append(program.Operations, ins)
 		case "*":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mult, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mult)
 			program.Operations = append(program.Operations, ins)
 		case "/":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
 			program.Operations = append(program.Operations, ins)
 		case "dump":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Dump, -1)
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Dump)
 			program.Operations = append(program.Operations, ins)
 		case "=":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)
 			program.Operations = append(program.Operations, ins)
 		case "<>":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.NotEqual, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.NotEqual)
 			program.Operations = append(program.Operations, ins)
 		case "<":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Lt, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Lt)
 			program.Operations = append(program.Operations, ins)
 		case ">":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Gt, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Gt)
 			program.Operations = append(program.Operations, ins)
 		case "if":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.If, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.If)
 			program.Operations = append(program.Operations, ins)
 		case "else":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else)
 			program.Operations = append(program.Operations, ins)
 		case "end":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End, -1)
+			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End)
 			program.Operations = append(program.Operations, ins)
 		case "print":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Print, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Print)
 			program.Operations = append(program.Operations, ins)
 		case "dup":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup)
 			program.Operations = append(program.Operations, ins)
 		case "while":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While)
 			program.Operations = append(program.Operations, ins)
 		case "do":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do)
 			program.Operations = append(program.Operations, ins)
 		case "drop":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Drop, -1)
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Drop)
 			program.Operations = append(program.Operations, ins)
 		case "swap":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Swap, -1)
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Swap)
 			program.Operations = append(program.Operations, ins)
 		case "%":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mod, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mod)
 			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveMem:
-			ins := parseToken(orthtypes.PrimitiveMem, orthtypes.PrimitiveMem, orthtypes.Mem, -1)
+			ins := parseToken(orthtypes.PrimitiveMem, orthtypes.PrimitiveMem, orthtypes.Mem)
 			program.Operations = append(program.Operations, ins)
 		case ".":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Store, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Store)
 			program.Operations = append(program.Operations, ins)
 		case ",":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
 			program.Operations = append(program.Operations, ins)
 		case "call":
 			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call, -1)
+			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
 			program.Operations = append(program.Operations, ins)
 		case ",!":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay, -1)
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay)
 			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
@@ -173,13 +173,13 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 }
 
 // parseToken parses a single token into a instruction
-func parseToken(varType, operand string, op, refBlock int) orthtypes.Operation {
+func parseToken(varType, operand string, op int) orthtypes.Operation {
 	return orthtypes.Operation{
 		Instruction: op,
 		Operand: orthtypes.Operand{
 			VarType: varType,
 			Operand: operand,
 		},
-		RefBlock: refBlock,
+		RefBlock: -1,
 	}
 }

@@ -3,8 +3,8 @@ package orthtypes
 const FileType = "orth"
 
 const (
-	StdTrue  = "true"
-	StdFalse = "false"
+	StdTrue  = "1"
+	StdFalse = "0"
 )
 
 const (
