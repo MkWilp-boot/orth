@@ -25,7 +25,7 @@ func init() {
 		fmt.Printf("WARNING! The following file %q is not of type %q, the content may not be well formatted\n", flag.Args()[0], orthtypes.FileType)
 		fmt.Println("=================================================================================================")
 	}
-	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.CompileRun {
+	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.CompileRun && !*debug.DumpVMCode {
 		fmt.Println("Error, must select a run option.")
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -41,8 +41,9 @@ func main() {
 
 	switch {
 	case *debug.DumpVMCode:
+		mapped := debug.ToStringIntruction()
 		for _, v := range program.Operations {
-			fmt.Printf("%#v\n", v)
+			fmt.Printf("action %q\toperand%q\n", mapped[v.Instruction], v.Operand.Operand)
 		}
 	case *debug.Simulate:
 		embedded.Simulate(program)
