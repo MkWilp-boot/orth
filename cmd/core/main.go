@@ -43,7 +43,7 @@ func main() {
 	case *debug.DumpVMCode:
 		mapped := debug.ToStringIntruction()
 		for _, v := range program.Operations {
-			fmt.Printf("action %q\t type %q\t operand %q\n", mapped[v.Instruction], v.Operand.VarType, v.Operand.Operand)
+			fmt.Printf("action %q\t type %q\t operand %q\t refblock %d\n", mapped[v.Instruction], v.Operand.VarType, v.Operand.Operand, v.RefBlock)
 		}
 	case *debug.Simulate:
 		embedded.Simulate(program)

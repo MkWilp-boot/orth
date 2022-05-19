@@ -1,1 +1,4 @@
-i 34 i 35 + i 11 + print
+i 0 while dup i 3 > do
+    s "Hello\n" print
+    i 1 +
+end

@@ -250,9 +250,15 @@ func GreaterThanInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		panic(err)
 	}
 
+	var op string
+	if o1 > o2 {
+		op = "1"
+	} else {
+		op = "0"
+	}
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 > o2),
+		Operand: op,
 	}
 }
 
@@ -485,9 +491,15 @@ func GreaterThanFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		panic(err)
 	}
 
+	var op string
+	if o1 > o2 {
+		op = "1"
+	} else {
+		op = "0"
+	}
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 > o2),
+		Operand: op,
 	}
 }
 
