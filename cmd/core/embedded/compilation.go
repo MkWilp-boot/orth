@@ -93,6 +93,18 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.End:
 			writer.WriteString("; End\n")
 			writer.WriteString(fmt.Sprintf("jmp addr_%d\n", op.RefBlock))
+		case orthtypes.Dup:
+			writer.WriteString("; Dup\n")
+			writer.WriteString("pop eax\n")
+			writer.WriteString("push eax\n")
+			writer.WriteString("push eax\n")
+		case orthtypes.While:
+			writer.WriteString("; While\n")
+		case orthtypes.Do:
+			writer.WriteString("; Do\n")
+			writer.WriteString("pop eax\n")
+			writer.WriteString("test eax, eax\n")
+			writer.WriteString(fmt.Sprintf("jz addr_%d\n", op.RefBlock))
 		}
 	}
 	writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))

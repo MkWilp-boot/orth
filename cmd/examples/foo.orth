@@ -1,4 +1,4 @@
-i 0 while dup i 3 > do
-    s "Hello\n" print
+i 0 while dup i 3 < do
+    i 888
     i 1 +
 end
