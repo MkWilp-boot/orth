@@ -9,11 +9,11 @@ import (
 	orthtypes "t/cmd/pkg/types"
 )
 
-const memCap = 10
+const memCap = 64000
 
 // Simulate runs a program built by previous steps
 func Simulate(program orthtypes.Program) {
-	stack := make([]orthtypes.Operand, 0)
+	stack := make([]orthtypes.Operand, 0, memCap)
 	mem := make([]orthtypes.Operand, memCap)
 
 	ip := 0

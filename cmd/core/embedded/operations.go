@@ -165,7 +165,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
-				panic(fmt.Errorf("Unknow token %q at line: %d colum: %d\n", v.Content.Content, v.Index, v.Content.Index))
+				panic(fmt.Errorf("unknow token %q at line: %d colum: %d", v.Content.Content, v.Index, v.Content.Index))
 			}
 		}
 	}

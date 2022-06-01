@@ -35,6 +35,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
+	writer.WriteString("trash dd ?\n")
 
 	// code segment
 	writer.WriteString(".CODE\n")
@@ -105,6 +106,9 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("pop eax\n")
 			writer.WriteString("test eax, eax\n")
 			writer.WriteString(fmt.Sprintf("jz addr_%d\n", op.RefBlock))
+		case orthtypes.Drop:
+			writer.WriteString("; Drop\n")
+			writer.WriteString("pop trash\n")
 		}
 	}
 	writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))

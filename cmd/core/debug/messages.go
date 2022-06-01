@@ -1,9 +1,9 @@
 package debug
 
 const (
-	DefaultRuntimeException = "Fatal error while executing program\n"
-	InvalidBoolType         = "Non bool type used as bool\n"
-	//OFMException            = "Out of memory in %q storage\n"
-	InvalidTypeForIndex = "Can not use a non %q as index\n"
-	InvalidInstruction  = "Invalid instruction of type '%d'\n"
+	DefaultRuntimeException = "fatal error while executing program"
+	InvalidBoolType         = "non bool type used as bool"
+	//OFMException            = "Out of memory in %q storage\"
+	InvalidTypeForIndex = "can not use a non %q as index"
+	InvalidInstruction  = "invalid instruction of type '%d'"
 )
