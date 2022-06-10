@@ -2,6 +2,8 @@ package embedded
 
 import (
 	"fmt"
+	"t/cmd/core/debug"
+	"t/cmd/pkg/helpers/functions"
 	orthtypes "t/cmd/pkg/types"
 )
 
@@ -63,6 +65,9 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 	program := orthtypes.Program{}
 
 	for i, v := range preProgram {
+		if v.Content.ValidPos {
+			continue
+		}
 		switch v.Content.Content {
 		case orthtypes.PrimitiveInt:
 			fallthrough
@@ -157,11 +162,21 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
 			program.Operations = append(program.Operations, ins)
 		case "call":
+			_, ok := functions.Functions[preProgram[i+1].Content.Content]
+			if !ok {
+				panic(fmt.Errorf(debug.UndefinedToken, preProgram[i+1].Content.Content))
+			}
 			preProgram[i+1].Content.ValidPos = true
 			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
 			program.Operations = append(program.Operations, ins)
 		case ",!":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay)
+			program.Operations = append(program.Operations, ins)
+		case "type":
+			preProgram[i+1].Content.ValidPos = true
+
+			ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
+
 			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {

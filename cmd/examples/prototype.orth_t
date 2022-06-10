@@ -1,0 +1,11 @@
+fun main (argc i, argv [] s) -> i16 in
+    call sum (34 35) call to_string s "\n" + print
+end
+
+fun print_log () -> void in
+    s "I am loggin some stuff\n" print
+end
+
+fun sum (n1 i, n2 i) -> i in
+    n1 n2 + return
+end

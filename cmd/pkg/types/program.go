@@ -34,5 +34,6 @@ const (
 	LoadStay
 	Func
 	Call
+	OType
 	TotalOps
 )

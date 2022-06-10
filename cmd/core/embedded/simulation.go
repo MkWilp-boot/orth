@@ -27,9 +27,11 @@ func Simulate(program orthtypes.Program) {
 			fmt.Println("====================================")
 			panic(debug.DefaultRuntimeException)
 		}
-
 		switch stackItem.Instruction {
 		case orthtypes.Push:
+			if len(stack) >= memCap {
+				panic("stack overflow!")
+			}
 			stack = append(stack, stackItem.Operand)
 			ip++
 		case orthtypes.Sum:
@@ -206,9 +208,16 @@ func Simulate(program orthtypes.Program) {
 			stack = append(stack, mem[helpers.ToInt(address)])
 			mem[helpers.ToInt(address)] = orthtypes.Operand{}
 			ip++
+		case orthtypes.OType:
+			fmt.Println(stack)
+			ip++
 		case orthtypes.Call:
-			fn := functions.Functions[stackItem.Operand.Operand]
-			fn(&stack)
+			f1 := functions.Functions[stackItem.Operand.Operand]
+			workWithMem, f2 := f1(&stack)
+			if workWithMem {
+				f2(&mem)
+			}
+			fmt.Println(mem[0:10])
 			ip++
 		case orthtypes.LoadStay:
 			address := helpers.StackPop(&stack)

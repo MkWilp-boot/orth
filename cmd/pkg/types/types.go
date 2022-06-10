@@ -20,6 +20,7 @@ const (
 	PrimitiveVOID    = "void"
 	PrimitiveRNT     = "rnt"
 	PrimitiveMem     = "mem"
+	PrimitiveType    = "type"
 	PrimitiveInvalid = ""
 )
 
@@ -30,7 +31,9 @@ const (
 	BOOL        = "bool"
 	VOID        = "void"
 	RNT         = "rnt"
+	ADDR        = "address"
 	MEM         = "mem"
+	TYPE        = "type"
 	INVALIDTYPE = ""
 )
 
@@ -45,9 +48,15 @@ type Operand struct {
 	Operand string
 }
 
+type Collection struct {
+	MainType string
+	Operands []Operand
+}
+
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
-	return GlobalTypes[INTS][o.Operand.VarType] != "" ||
+	return GlobalTypes[TYPE][o.Operand.VarType] != "" ||
+		GlobalTypes[INTS][o.Operand.VarType] != "" ||
 		GlobalTypes[FLOATS][o.Operand.VarType] != "" ||
 		GlobalTypes[STRING][o.Operand.VarType] != "" ||
 		GlobalTypes[BOOL][o.Operand.VarType] != "" ||
@@ -119,4 +128,7 @@ func init() {
 
 	GlobalTypes[MEM] = make(map[string]string, 0)
 	GlobalTypes[MEM][PrimitiveMem] = "rnt"
+
+	GlobalTypes[TYPE] = make(map[string]string, 0)
+	GlobalTypes[TYPE]["type"] = "type"
 }

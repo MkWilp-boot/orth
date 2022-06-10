@@ -50,6 +50,7 @@ func main() {
 	case *debug.CompileRun:
 		panic("compile & run not implemented")
 	case *debug.Compile != "":
+		fmt.Println("[WARN] Be aware that compilation may not work as expected due the fact of me being lazy :)")
 		embedded.Compile(program, functions.CheckAsmType(*debug.Compile))
 	default:
 		flag.PrintDefaults()
