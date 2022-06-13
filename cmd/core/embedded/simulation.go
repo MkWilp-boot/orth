@@ -16,6 +16,8 @@ func Simulate(program orthtypes.Program) {
 	stack := make([]orthtypes.Operand, 0, memCap)
 	mem := make([]orthtypes.Operand, memCap)
 
+	vars := make(map[string]orthtypes.Operand)
+
 	ip := 0
 	for ip < len(program.Operations) {
 		stackItem := program.Operations[ip]
@@ -217,11 +219,19 @@ func Simulate(program orthtypes.Program) {
 			if workWithMem {
 				f2(&mem)
 			}
-			fmt.Println(mem[0:10])
 			ip++
 		case orthtypes.LoadStay:
 			address := helpers.StackPop(&stack)
 			stack = append(stack, mem[helpers.ToInt(address)])
+			ip++
+		case orthtypes.Var:
+			//			vName					Value
+			vars[stackItem.Operand.Operand] = helpers.StackPop(&stack)
+			ip++
+		case orthtypes.Hold:
+			vName := stackItem.Operand.Operand
+			v := vars[vName]
+			stack = append(stack, v)
 			ip++
 		default:
 			panic(fmt.Errorf(debug.InvalidInstruction, stackItem.Instruction))

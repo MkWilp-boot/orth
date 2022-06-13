@@ -35,5 +35,7 @@ const (
 	Func
 	Call
 	OType
+	Var
+	Hold
 	TotalOps
 )

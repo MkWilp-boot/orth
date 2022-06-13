@@ -39,15 +39,7 @@ func init() {
 		}
 
 		capacity := helpers.ToInt(helpers.StackPop(&*stack))
-		//length := helpers.ToInt(helpers.StackPop(&*stack))
 		typ := helpers.StackPop(&*stack)
-
-		// collection := orthtypes.Collection{
-		// 	MainType: typ.Operand,
-		// 	Operands: make([]orthtypes.Operand, length, capacity),
-		// }
-
-		// fmt.Printf("collection: %v\n", collection)
 
 		return true, func(originalMem *[]orthtypes.Operand) {
 			// why go?

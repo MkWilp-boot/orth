@@ -21,6 +21,8 @@ const (
 	PrimitiveRNT     = "rnt"
 	PrimitiveMem     = "mem"
 	PrimitiveType    = "type"
+	PrimitiveVar     = "var"
+	PrimitiveHold    = "hold"
 	PrimitiveInvalid = ""
 )
 
@@ -131,4 +133,6 @@ func init() {
 
 	GlobalTypes[TYPE] = make(map[string]string, 0)
 	GlobalTypes[TYPE]["type"] = "type"
+	GlobalTypes[TYPE]["var"] = "var"
+	GlobalTypes[TYPE]["hold"] = "hold"
 }

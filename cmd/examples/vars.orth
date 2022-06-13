@@ -1,0 +1,9 @@
+var name = s "João"
+var age = i 20
+
+s "Olá, meu nome é "
+hold name + 
+s " e tenho " + 
+hold age 
+call to_string +
+print

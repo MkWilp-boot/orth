@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"fmt"
+	"regexp"
 	"t/cmd/core/debug"
 	"t/cmd/pkg/helpers/functions"
 	orthtypes "t/cmd/pkg/types"
@@ -110,7 +111,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case "dump":
 			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Dump)
 			program.Operations = append(program.Operations, ins)
-		case "=":
+		case "==":
 			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)
 			program.Operations = append(program.Operations, ins)
 		case "<>":
@@ -177,6 +178,44 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 
 			ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
 
+			program.Operations = append(program.Operations, ins)
+		case "var":
+			re := regexp.MustCompile(`[^\w]`)
+
+			// check name
+			if re.Match([]byte(preProgram[i+1].Content.Content)) {
+				panic("var has invalid characters in it's composition")
+			}
+			// check if has a value
+			if preProgram[i+2].Content.Content != "=" {
+				panic("var must be initialized with `=` sign")
+			}
+
+			for x := 1; x < 5; x++ {
+				preProgram[i+x].Content.ValidPos = true
+			}
+
+			vName := preProgram[i+1].Content.Content
+			vType := preProgram[i+3].Content.Content
+
+			var vValue string
+
+			if vType == orthtypes.PrimitiveSTR {
+				vValue = preProgram[i+4].Content.Content[1 : len(preProgram[i+4].Content.Content)-1]
+			} else {
+				vValue = preProgram[i+4].Content.Content
+			}
+
+			ins := parseToken(vType, vValue, orthtypes.Push)
+			program.Operations = append(program.Operations, ins)
+
+			ins = parseToken(orthtypes.PrimitiveVar, vName, orthtypes.Var)
+			program.Operations = append(program.Operations, ins)
+		case "hold":
+			preProgram[i+1].Content.ValidPos = true
+			vName := preProgram[i+1].Content.Content
+
+			ins := parseToken(orthtypes.PrimitiveHold, vName, orthtypes.Hold)
 			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {

@@ -1,4 +1,4 @@
-i 34 i 35 + i 69 =
+i 34 i 35 + i 69 ==
 if 
     s "Equal\n" print
 else
