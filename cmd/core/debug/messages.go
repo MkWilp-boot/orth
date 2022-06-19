@@ -6,6 +6,7 @@ const (
 	InvalidTypeForIndex       = "RNT_ERR: can not use a non %q as index"
 	InvalidInstruction        = "RNT_ERR: invalid instruction of type '%d'"
 	InvalidTypeForInstruction = "RNT_ERR: invalid type of '%s' for instruction of type '%s'"
+	VariableUndefined         = "RNT_ERR: variable %q does not exist"
 	StackUnderFlow            = "RNT_ERR: stack underflow!"
 	UndefinedToken            = "VM_ERR: undefined token %q"
 )

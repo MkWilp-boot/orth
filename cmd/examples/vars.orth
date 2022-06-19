@@ -1,9 +1,9 @@
-var name = s "João"
+var name = s "John"
 var age = i 20
 
-s "Olá, meu nome é "
-hold name + 
-s " e tenho " + 
-hold age 
-call to_string +
-print
+s "Hi, My name is " hold name +
+s " and I am " + hold age call to_string + 
+s " years old" + print
+
+var name call free_var
+var age call free_var

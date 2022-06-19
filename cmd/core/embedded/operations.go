@@ -188,7 +188,18 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			}
 			// check if has a value
 			if preProgram[i+2].Content.Content != "=" {
-				panic("var must be initialized with `=` sign")
+				switch {
+				// used as a func param
+				case preProgram[i+2].Content.Content == "call":
+					preProgram[i+1].Content.ValidPos = true
+
+					ins := parseToken(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, orthtypes.Push)
+					program.Operations = append(program.Operations, ins)
+					continue
+
+				default:
+					panic("var must be initialized with `=` sign")
+				}
 			}
 
 			for x := 1; x < 5; x++ {

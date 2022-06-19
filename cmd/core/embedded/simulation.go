@@ -214,11 +214,8 @@ func Simulate(program orthtypes.Program) {
 			fmt.Println(stack)
 			ip++
 		case orthtypes.Call:
-			f1 := functions.Functions[stackItem.Operand.Operand]
-			workWithMem, f2 := f1(&stack)
-			if workWithMem {
-				f2(&mem)
-			}
+			fn := functions.Functions[stackItem.Operand.Operand]
+			fn(&stack, &mem, vars)
 			ip++
 		case orthtypes.LoadStay:
 			address := helpers.StackPop(&stack)
@@ -230,7 +227,10 @@ func Simulate(program orthtypes.Program) {
 			ip++
 		case orthtypes.Hold:
 			vName := stackItem.Operand.Operand
-			v := vars[vName]
+			v, ok := vars[vName]
+			if !ok {
+				panic(fmt.Errorf(debug.VariableUndefined, vName))
+			}
 			stack = append(stack, v)
 			ip++
 		default:

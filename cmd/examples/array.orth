@@ -1,3 +1,1 @@
-var mArray = i 60
-
-type s i 5 mArray call make_array
+type s i 5 call make_array

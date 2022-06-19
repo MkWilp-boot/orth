@@ -15,7 +15,6 @@ This language is not mature enough
 
 ## Missing features
 
-* Collections
 * Functions
 * Local scope
 * Main entry point
@@ -127,6 +126,29 @@ RNT stands for Runtime, this variable's type will calculated at runtime without 
 
 Like in C or C++, Orth's **VOID** stands for everything that will not return anything.</br>
 They are used mainly by operators such as **"+","-","*"**, functions for side effects and so on
+
+## Variables
+
+As you may guess, orth has variables that store values. To create a variable, use the keyword `var` following by it's name and value:
+```orth
+var name = s "John"
+var age = i 20
+```
+**orth's variables must be initialized when declared**
+
+To use a variable, use the keyword `hold`
+```orth
+hold name 
+print // John
+```
+Variables have a infinite life cycle, meaning that once declared, they will live for the rest of the program's life.</br>
+To free a variable use the `free_var` function followed by `var` `varname`</br>
+
+```orth
+var name = s "John"
+hold name s "\n" + print
+var name call free_var
+```
 
 ## Conditions
 
