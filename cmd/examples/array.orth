@@ -1,1 +1,4 @@
 type s i 5 call make_array
+type s i 10 call make_array
+
+call dump_stack

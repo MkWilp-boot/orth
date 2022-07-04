@@ -58,6 +58,20 @@ func init() {
 		}
 		delete(vars, vName.Operand)
 	}
+
+	Functions["dump_stack"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		if len(*stack) == 0 {
+			fmt.Println("***********************************************************")
+			fmt.Println("STACK IS EMPTY")
+			fmt.Println("***********************************************************")
+		}
+
+		stackCp := make([]orthtypes.Operand, len(*stack), cap(*stack))
+		copy(stackCp, *stack)
+		for i := len(stackCp); i > 0; i-- {
+			fmt.Printf("Position: %d\t Type: %q\t Value: %#v\n", i, stackCp[i-1].VarType, stackCp[i-1].Operand)
+		}
+	}
 }
 
 func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtypes.Operand, capacity int) {
@@ -74,7 +88,7 @@ func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtype
 		slice := memCopy[i:(i + capacity)]
 
 		for _, xx := range slice {
-			if xx.Operand == "" {
+			if xx.Operand == "" && xx.VarType == "" {
 				fitInAmount++
 			}
 		}
@@ -95,7 +109,7 @@ func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtype
 		*originalMem = memCopy
 		*stack = append(*stack, orthtypes.Operand{
 			VarType: orthtypes.ADDR,
-			Operand: fmt.Sprint(capacity),
+			Operand: fmt.Sprint(capacity - 1),
 		}, orthtypes.Operand{
 			VarType: orthtypes.ADDR,
 			Operand: fmt.Sprint(start),
