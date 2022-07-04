@@ -50,6 +50,10 @@ type Operand struct {
 	Operand string
 }
 
+type Iterable struct {
+	From, To Operand
+}
+
 type Collection struct {
 	MainType string
 	Operands []Operand
