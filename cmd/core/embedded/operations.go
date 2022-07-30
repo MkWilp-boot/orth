@@ -70,6 +70,10 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			continue
 		}
 		switch v.Content.Content {
+		case orthtypes.ADDR:
+			fallthrough
+		case orthtypes.PrimitiveRNT:
+			fallthrough
 		case orthtypes.PrimitiveInt:
 			fallthrough
 		case orthtypes.PrimitiveI8:
@@ -79,22 +83,18 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case orthtypes.PrimitiveI32:
 			fallthrough
 		case orthtypes.PrimitiveI64:
-			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
-			program.Operations = append(program.Operations, ins)
+			fallthrough
 		case orthtypes.PrimitiveF32:
 			fallthrough
 		case orthtypes.PrimitiveF64:
+			fallthrough
+		case orthtypes.PrimitiveBOOL:
 			preProgram[i+1].Content.ValidPos = true
 			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case orthtypes.PrimitiveSTR:
 			preProgram[i+1].Content.ValidPos = true
 			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push)
-			program.Operations = append(program.Operations, ins)
-		case orthtypes.PrimitiveBOOL:
-			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveBOOL, preProgram[i+1].Content.Content, orthtypes.Push)
 			program.Operations = append(program.Operations, ins)
 		case "+":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)

@@ -3,11 +3,13 @@ package helpers
 import (
 	"fmt"
 	"strconv"
+	"t/cmd/core/debug"
 	orthtypes "t/cmd/pkg/types"
 )
 
 func IsInt(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.INTS][t] != ""
+	_, ok := orthtypes.GlobalTypes[orthtypes.INTS][t]
+	return ok
 }
 
 func IsFloat(t string) bool {
@@ -48,6 +50,14 @@ func ToInt(o orthtypes.Operand) int {
 			panic("Unknow error " + err.Error())
 		}
 		return int(f)
+	}
+
+	if o.VarType == orthtypes.ADDR {
+		n, err := strconv.Atoi(o.Operand)
+		if err != nil {
+			panic(debug.DefaultRuntimeException)
+		}
+		return n
 	}
 
 	panic("Non INT or FLOAT variant been used in 'to int' operation!")

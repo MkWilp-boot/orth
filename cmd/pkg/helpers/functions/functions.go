@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t/cmd/core/debug"
 	orthtypes "t/cmd/pkg/types"
 )
 
@@ -41,14 +42,20 @@ func TypesAreEqual(opreands ...orthtypes.Operand) bool {
 // | [s, i] -> panic()
 func GetSupersetType(opreands ...orthtypes.Operand) string {
 	switch {
-	case strings.Contains(opreands[0].VarType, "i"):
+	case strings.Contains(opreands[0].VarType, "i") ||
+		strings.Contains(opreands[0].VarType, "i8") ||
+		strings.Contains(opreands[0].VarType, "i16") ||
+		strings.Contains(opreands[0].VarType, "i32") ||
+		strings.Contains(opreands[0].VarType, "i64"):
 		return IntSupersetOfSlice(opreands...)
-
-	case strings.Contains(opreands[0].VarType, "f"):
+	case strings.Contains(opreands[0].VarType, "f32") ||
+		strings.Contains(opreands[0].VarType, "f64"):
 		return FloatSupersetOfSlice(opreands...)
-
-	case strings.Contains(opreands[0].VarType, orthtypes.PrimitiveSTR):
+	case strings.Contains(opreands[0].VarType, orthtypes.ADDR):
+		return orthtypes.ADDR
+	case opreands[0].VarType == orthtypes.PrimitiveSTR:
 		return orthtypes.PrimitiveSTR
+
 	default:
 		panic("Invalid type")
 	}
@@ -73,14 +80,22 @@ func ModBasedOnType(superType string) func(string, orthtypes.Operand, orthtypes.
 }
 
 // SumBasedOnType sums a set of numbers based on the set's type
-func SumBasedOnType(superType string) func(string, orthtypes.Operand, orthtypes.Operand) orthtypes.Operand {
+func SumBasedOnType(superType string) (func(string, orthtypes.Operand, orthtypes.Operand) orthtypes.Operand, error) {
+	fmt.Println(superType)
 	switch {
-	case strings.Contains(superType, "i"):
-		return SumIntegers
-	case strings.Contains(superType, "f"):
-		return SumFloats
-	case strings.Contains(superType, orthtypes.PrimitiveSTR):
-		return ConcatPrimitiveSTR
+	case strings.Contains(superType, "i") ||
+		strings.Contains(superType, "i8") ||
+		strings.Contains(superType, "i16") ||
+		strings.Contains(superType, "i32") ||
+		strings.Contains(superType, "i64"):
+		return SumIntegers, nil
+	case strings.Contains(superType, "f32") ||
+		strings.Contains(superType, "f64"):
+		return SumFloats, nil
+	case superType == orthtypes.PrimitiveSTR:
+		return ConcatPrimitiveSTR, nil
+	case strings.Contains(superType, orthtypes.ADDR):
+		return nil, fmt.Errorf(debug.StrangeUseOfVariable, orthtypes.ADDR, "PLUS")
 	default:
 		panic("Invalid type")
 	}
