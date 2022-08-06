@@ -8,6 +8,38 @@ import (
 	orthtypes "t/cmd/pkg/types"
 )
 
+func PanicErrIfNonNil(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func DissectRangeAsInt(o1 orthtypes.Operand) (int, int) {
+	opStart, opEnd := DissectRange(o1)
+	iStart, err := strconv.Atoi(opStart.Operand)
+	PanicErrIfNonNil(err)
+	iEnd, err := strconv.Atoi(opEnd.Operand)
+	PanicErrIfNonNil(err)
+	return iStart, iEnd
+}
+
+func DissectRange(o1 orthtypes.Operand) (orthtypes.Operand, orthtypes.Operand) {
+	if o1.VarType != orthtypes.RNGABL {
+		panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "DissectRange"))
+	}
+	nums := strings.Split(o1.Operand, "|")
+	start, _ := strconv.Atoi(nums[0])
+	end, _ := strconv.Atoi(nums[1])
+
+	return orthtypes.Operand{
+			VarType: orthtypes.PrimitiveI32,
+			Operand: fmt.Sprint(start),
+		}, orthtypes.Operand{
+			VarType: orthtypes.PrimitiveI32,
+			Operand: fmt.Sprint(end),
+		}
+}
+
 func CheckAsmType(flagValue string) string {
 	available := []string{"nasm", "masm", "fasm"}
 	for _, v := range available {

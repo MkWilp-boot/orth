@@ -2,3 +2,4 @@
 *.asm
 *.obj
 .vscode
+*.orth_t

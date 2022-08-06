@@ -1,6 +1,13 @@
-type s i 5 call make_array
-i 0 call at
-var hello = s "Hello 世界" drop
-mem hold hello .
-mem address 0 ,
-call dump_stack
+type s i32 5 call make_array // allocate the array array
+s "Hello Orth!" call fill // fill the array with "Hello Orth"
+var table call grab_last // store the last item into "table"
+
+hold table while dup < do
+    dup // duplicate the rangeable
+    call index // gets the relative index for the range (see documentatio for more info)
+    mem , // reads at the "index" position
+    call to_string // converts the last value to a string 
+    s "\n" + // appends a "\n" to the string
+    print // prints to STDOUT
+    i32 1 + // next iteration ready to go
+end

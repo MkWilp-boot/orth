@@ -13,7 +13,6 @@ else
         mem address 4 swap . // backup b
         +
         dup // produce c
-        dup dump
         mem address 2 swap . // c = a + b
         mem address 4 , // b backed up
         mem address 0 swap . // a = b

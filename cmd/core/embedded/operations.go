@@ -165,7 +165,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case "call":
 			_, ok := functions.Functions[preProgram[i+1].Content.Content]
 			if !ok {
-				panic(fmt.Errorf(debug.UndefinedToken, preProgram[i+1].Content.Content))
+				panic(fmt.Errorf(debug.UndefinedFunction, preProgram[i+1].Content.Content))
 			}
 			preProgram[i+1].Content.ValidPos = true
 			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
@@ -192,11 +192,9 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 				// used as a func param
 				case preProgram[i+2].Content.Content == "call":
 					preProgram[i+1].Content.ValidPos = true
-
 					ins := parseToken(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, orthtypes.Push)
 					program.Operations = append(program.Operations, ins)
 					continue
-
 				default:
 					panic("var must be initialized with `=` sign")
 				}
@@ -211,9 +209,12 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 
 			var vValue string
 
-			if vType == orthtypes.PrimitiveSTR {
+			switch vType {
+			case orthtypes.PrimitiveSTR:
+				fallthrough
+			case orthtypes.RNGABL:
 				vValue = preProgram[i+4].Content.Content[1 : len(preProgram[i+4].Content.Content)-1]
-			} else {
+			default:
 				vValue = preProgram[i+4].Content.Content
 			}
 
