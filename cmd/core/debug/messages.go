@@ -8,5 +8,7 @@ const (
 	InvalidTypeForInstruction = "RNT_ERR: invalid type of '%s' for instruction of type '%s'"
 	VariableUndefined         = "RNT_ERR: variable %q does not exist"
 	StackUnderFlow            = "RNT_ERR: stack underflow!"
-	UndefinedToken            = "VM_ERR: undefined token %q"
+	UndefinedToken            = "RNT_ERR: undefined token %q"
+	StrangeUseOfVariable      = "RNT_ERR: a variable of type %q can not be used in %q statements"
+	IndexOutOfBounds          = "RNT_ERR: the index %d is out of bounds [%d, %d]"
 )

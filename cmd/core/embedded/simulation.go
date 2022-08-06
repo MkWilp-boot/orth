@@ -44,7 +44,11 @@ func Simulate(program orthtypes.Program) {
 
 			superType := functions.GetSupersetType(o1, o2)
 
-			fun := functions.SumBasedOnType(superType)
+			fun, err := functions.SumBasedOnType(superType)
+			if err != nil {
+				fmt.Println(err)
+				functions.DumpStack(stack)
+			}
 
 			helpers.BasedOnType(&stack, superType, fun, o1, o2)
 			ip++
@@ -53,7 +57,6 @@ func Simulate(program orthtypes.Program) {
 			o2 := helpers.StackPop(&stack)
 
 			helpers.SameBaseType(o1, o2)
-
 			superType := functions.GetSupersetType(o1, o2)
 			fun := functions.SubBasedOnType(superType)
 
@@ -199,7 +202,7 @@ func Simulate(program orthtypes.Program) {
 			value := helpers.StackPop(&stack)
 			address := helpers.StackPop(&stack)
 
-			if !helpers.IsInt(address.VarType) {
+			if address.VarType != orthtypes.ADDR {
 				panic(fmt.Errorf(debug.InvalidTypeForIndex, orthtypes.PrimitiveInt))
 			}
 
@@ -224,6 +227,10 @@ func Simulate(program orthtypes.Program) {
 		case orthtypes.Var:
 			//			vName					Value
 			vars[stackItem.Operand.Operand] = helpers.StackPop(&stack)
+			stack = append(stack, orthtypes.Operand{
+				VarType: orthtypes.PrimitiveVar,
+				Operand: stackItem.Operand.Operand,
+			})
 			ip++
 		case orthtypes.Hold:
 			vName := stackItem.Operand.Operand

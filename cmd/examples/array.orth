@@ -1,4 +1,6 @@
 type s i 5 call make_array
-type s i 10 call make_array
-
+i 0 call at
+var hello = s "Hello 世界" drop
+mem hold hello .
+mem address 0 ,
 call dump_stack

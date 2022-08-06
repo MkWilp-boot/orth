@@ -34,6 +34,7 @@ const (
 	VOID        = "void"
 	RNT         = "rnt"
 	ADDR        = "address"
+	RNGABL      = "rangeable"
 	MEM         = "mem"
 	TYPE        = "type"
 	INVALIDTYPE = ""
@@ -48,15 +49,6 @@ type Operation struct {
 type Operand struct {
 	VarType string
 	Operand string
-}
-
-type Iterable struct {
-	From, To Operand
-}
-
-type Collection struct {
-	MainType string
-	Operands []Operand
 }
 
 // IsValidType checks whenever a variable has a know or unknow type
@@ -110,27 +102,29 @@ func init() {
 	GlobalTypes = make(map[string]Type, 0)
 	GlobalTypes[INTS] = make(map[string]string, 0)
 
-	GlobalTypes[INTS][PrimitiveI64] = "int64"
-	GlobalTypes[INTS][PrimitiveI32] = "int32"
-	GlobalTypes[INTS][PrimitiveI16] = "int16"
-	GlobalTypes[INTS][PrimitiveI8] = "int8"
-	GlobalTypes[INTS][PrimitiveInt] = "int"
+	GlobalTypes[INTS][PrimitiveI64] = "i64"
+	GlobalTypes[INTS][PrimitiveI32] = "i32"
+	GlobalTypes[INTS][PrimitiveI16] = "i16"
+	GlobalTypes[INTS][PrimitiveI8] = "i8"
+	GlobalTypes[INTS][PrimitiveInt] = "i"
 
 	GlobalTypes[FLOATS] = make(map[string]string, 0)
-	GlobalTypes[FLOATS][PrimitiveF64] = "float64"
-	GlobalTypes[FLOATS][PrimitiveF32] = "float32"
+	GlobalTypes[FLOATS][PrimitiveF64] = "f64"
+	GlobalTypes[FLOATS][PrimitiveF32] = "f32"
 
 	GlobalTypes[STRING] = make(map[string]string, 0)
-	GlobalTypes[STRING][PrimitiveSTR] = "string"
+	GlobalTypes[STRING][PrimitiveSTR] = "s"
 
 	GlobalTypes[BOOL] = make(map[string]string, 0)
-	GlobalTypes[BOOL][PrimitiveBOOL] = "bool"
+	GlobalTypes[BOOL][PrimitiveBOOL] = "b"
 
 	GlobalTypes[VOID] = make(map[string]string, 0)
-	GlobalTypes[VOID][PrimitiveVOID] = "void"
+	GlobalTypes[VOID][PrimitiveVOID] = "v"
 
 	GlobalTypes[RNT] = make(map[string]string, 0)
 	GlobalTypes[RNT][PrimitiveRNT] = "rnt"
+	GlobalTypes[RNT][ADDR] = "address"
+	GlobalTypes[RNT][RNGABL] = "rangeable"
 
 	GlobalTypes[MEM] = make(map[string]string, 0)
 	GlobalTypes[MEM][PrimitiveMem] = "rnt"

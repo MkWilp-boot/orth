@@ -1,25 +1,24 @@
-mem i 0 i 0 .  // a
-mem i 1 i 1 .  // b
-mem i 2 i 0 .  // c
-mem i 3 i 10 . // n
+mem address 0 i32 0 . 
+mem address 1 i32 1 . 
+mem address 2 i32 0 . 
+mem address 3 i32 10 .
 
-mem i 3 ,! // read n
-i 0 = if
-    mem i 0 , print
+mem address 3 ,! i 0 == if
+    mem address 0 , print
 else
-    i 2 while dup mem i 3 ,! > do
-        mem i 0 , // read a
-        mem i 1 , // read b
+    i 2 while dup mem address 3 ,! > do
+        mem address 0 , // read a
+        mem address 1 , // read b
         dup
-        mem i 4 swap . // backup b
+        mem address 4 swap . // backup b
         +
         dup // produce c
-        mem i 2 swap . // c = a + b
-        mem i 4 , // b backed up
-        mem i 0 swap . // a = b
-        mem i 1 swap . // b = c
-
-        i 1 + // step foward
+        dup dump
+        mem address 2 swap . // c = a + b
+        mem address 4 , // b backed up
+        mem address 0 swap . // a = b
+        mem address 1 swap . // b = c
+        i 1 +
     end
 end
-s "The " mem i 3 , call to_string + s "th fibonacci number is " + mem i 1 , call to_string + print
+s "The " mem address 3 , call to_string + s "th fibonacci number is " + mem address 1 , call to_string + print
