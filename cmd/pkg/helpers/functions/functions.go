@@ -81,7 +81,6 @@ func ModBasedOnType(superType string) func(string, orthtypes.Operand, orthtypes.
 
 // SumBasedOnType sums a set of numbers based on the set's type
 func SumBasedOnType(superType string) (func(string, orthtypes.Operand, orthtypes.Operand) orthtypes.Operand, error) {
-	fmt.Println(superType)
 	switch {
 	case strings.Contains(superType, "i") ||
 		strings.Contains(superType, "i8") ||
@@ -247,9 +246,15 @@ func LowerThanInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		panic(err)
 	}
 
+	var op string
+	if o1 < o2 {
+		op = "1"
+	} else {
+		op = "0"
+	}
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 < o2),
+		Operand: op,
 	}
 }
 

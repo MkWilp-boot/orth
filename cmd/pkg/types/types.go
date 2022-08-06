@@ -51,15 +51,6 @@ type Operand struct {
 	Operand string
 }
 
-type Iterable struct {
-	From, To Operand
-}
-
-type Collection struct {
-	MainType string
-	Operands []Operand
-}
-
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
 	return GlobalTypes[TYPE][o.Operand.VarType] != "" ||

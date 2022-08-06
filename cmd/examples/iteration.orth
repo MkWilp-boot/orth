@@ -1,9 +1,4 @@
-i 0 
-while 
-dup 
-i 10 
-> 
-do
-    s "Test\n" print
+i 0 while dup i 5 > do
+    s "h\n" print
     i 1 +
 end
