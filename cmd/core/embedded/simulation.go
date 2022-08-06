@@ -40,6 +40,20 @@ func Simulate(program orthtypes.Program) {
 			o1 := helpers.StackPop(&stack)
 			o2 := helpers.StackPop(&stack)
 
+			if o2.VarType == orthtypes.RNGABL {
+				start, end := functions.DissectRangeAsInt(o2)
+				sum := start + end
+
+				teste := orthtypes.Operand{
+					VarType: orthtypes.RNGABL,
+					Operand: fmt.Sprintf("%d|%d", sum, end),
+				}
+
+				stack = append(stack, teste)
+				ip++
+				continue
+			}
+
 			helpers.SameBaseType(o1, o2)
 
 			superType := functions.GetSupersetType(o1, o2)
@@ -107,19 +121,33 @@ func Simulate(program orthtypes.Program) {
 			stack = append(stack, fun(superType, o1, o2))
 			ip++
 		case orthtypes.Lt:
-			o1 := helpers.StackPop(&stack)
-			o2 := helpers.StackPop(&stack)
+			var o1 orthtypes.Operand
+			var o2 orthtypes.Operand
 
-			helpers.SameBaseType(o1, o2)
+			o1 = helpers.StackPop(&stack)
+
+			if o1.VarType == orthtypes.RNGABL {
+				o1, o2 = functions.DissectRange(o1)
+			} else {
+				o2 = helpers.StackPop(&stack)
+			}
 
 			superType := functions.GetSupersetType(o1, o2)
-			fun := functions.LowerBasedOnType(superType)
 
+			fun := functions.LowerBasedOnType(superType)
 			stack = append(stack, fun(superType, o1, o2))
 			ip++
 		case orthtypes.Gt:
-			o1 := helpers.StackPop(&stack)
-			o2 := helpers.StackPop(&stack)
+			var o1 orthtypes.Operand
+			var o2 orthtypes.Operand
+
+			o1 = helpers.StackPop(&stack)
+
+			if o1.VarType == orthtypes.RNGABL {
+				o1, o2 = functions.DissectRange(o1)
+			} else {
+				o2 = helpers.StackPop(&stack)
+			}
 
 			helpers.SameBaseType(o1, o2)
 
@@ -203,7 +231,7 @@ func Simulate(program orthtypes.Program) {
 			address := helpers.StackPop(&stack)
 
 			if address.VarType != orthtypes.ADDR {
-				panic(fmt.Errorf(debug.InvalidTypeForIndex, orthtypes.PrimitiveInt))
+				panic(fmt.Errorf(debug.InvalidTypeForIndex, orthtypes.ADDR))
 			}
 
 			mem[helpers.ToInt(address)] = value
@@ -214,7 +242,7 @@ func Simulate(program orthtypes.Program) {
 			mem[helpers.ToInt(address)] = orthtypes.Operand{}
 			ip++
 		case orthtypes.OType:
-			fmt.Println(stack)
+			//fmt.Println(stack)
 			ip++
 		case orthtypes.Call:
 			fn := functions.Functions[stackItem.Operand.Operand]

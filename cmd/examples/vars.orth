@@ -1,5 +1,5 @@
-var name = s "John"
-var age = i 20
+var name = s "John" drop
+var age = i 20 drop
 
 s "Hi, My name is " hold name +
 s " and I am " + hold age call to_string + 

@@ -1,9 +1,9 @@
 package functions
 
 import (
-	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"t/cmd/core/debug"
@@ -81,96 +81,82 @@ func init() {
 		DumpStack(*stack)
 	}
 
-	Functions["write"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
-		numBytes := helpers.StackPop(&*stack)
-		content := helpers.StackPop(&*stack)
-		absPos := helpers.StackPop(&*stack)
+	Functions["dump_vars"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		DumpVars(vars)
+	}
 
-		if absPos.VarType != orthtypes.ADDR {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, absPos.VarType, "write"))
+	Functions["exit"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		code := helpers.StackPop(&*stack)
+		if helpers.IsInt(code.VarType) {
+			log.Println("Progam exited with code:", code.Operand)
+			os.Exit(helpers.ToInt(code))
 		}
-		if !helpers.IsInt(numBytes.VarType) {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, numBytes.VarType, "write"))
+		panic(fmt.Errorf(debug.InvalidTypeForInstruction, code.VarType, "exit"))
+	}
+
+	Functions["fill"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		value := helpers.StackPop(&*stack)
+		rangeable := helpers.StackPop(&*stack)
+
+		if rangeable.VarType != orthtypes.RNGABL {
+			panic(fmt.Errorf(debug.InvalidTypeForInstruction, rangeable.VarType, "fill"))
+		}
+		start, end := DissectRangeAsInt(rangeable)
+		helpers.SameBaseType((*mem)[start], value)
+
+		for i := start; i <= end; i++ {
+			(*mem)[i] = value
 		}
 
-		at := helpers.ToInt(absPos)
+		*stack = append(*stack, rangeable)
+	}
 
-		reader := bytes.NewReader([]byte(content.Operand))
-
-		bs := make([]byte, helpers.ToInt(numBytes))
-		_, err := reader.Read(bs)
-		if err != nil {
-			log.Fatal(err)
+	Functions["index"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		rangeable := helpers.StackPop(&*stack)
+		if rangeable.VarType != orthtypes.RNGABL {
+			panic(fmt.Errorf(debug.InvalidTypeForInstruction, rangeable.VarType, "index"))
 		}
 
-		(*mem)[at] = orthtypes.Operand{
-			VarType: content.VarType,
-			Operand: string(bs),
-		}
+		nums := strings.Split(rangeable.Operand, "|")
+		index, _ := strconv.Atoi(nums[0])
+
 		*stack = append(*stack, orthtypes.Operand{
-			VarType: orthtypes.PrimitiveInt,
-			Operand: fmt.Sprint(len(bs)),
+			VarType: orthtypes.ADDR,
+			Operand: fmt.Sprint(index),
 		})
 	}
 
-	Functions["at"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["grab_at"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
 		o1 := helpers.StackPop(&*stack)
-		if !helpers.IsInt(o1.VarType) {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "read"))
+		o2 := helpers.StackPop(&*stack)
+
+		if !helpers.IsInt(o2.VarType) {
+			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o2.VarType, "grab_at"))
 		}
+		o3 := (*stack)[helpers.ToInt(o2)]
 
-		at := helpers.ToInt(o1)
-		var retValue orthtypes.Operand
-
-		source := helpers.StackPop(&*stack)
-
-		if source.VarType != orthtypes.RNGABL {
-			retValue = orthtypes.Operand{
-				VarType: orthtypes.ADDR,
-				Operand: fmt.Sprint(at),
-			}
-		} else {
-			points := strings.Split(source.Operand, "|")
-			start, _ := strconv.Atoi(points[0])
-			end, _ := strconv.Atoi(points[1])
-
-			if start+at >= end {
-				panic(fmt.Errorf(debug.IndexOutOfBounds, at, start, end))
-			}
-			retValue = orthtypes.Operand{
-				VarType: orthtypes.ADDR,
-				Operand: fmt.Sprint(start + at),
-			}
-		}
-
-		*stack = append(*stack, retValue)
+		vars[o1.Operand] = o3
 	}
 
-	Functions["read"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["grab_last"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
 		o1 := helpers.StackPop(&*stack)
-		if !helpers.IsInt(o1.VarType) {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "read"))
-		}
+		o2 := helpers.StackPop(&*stack)
 
-		at := helpers.ToInt(o1)
-		var retValue orthtypes.Operand
+		vars[o1.Operand] = o2
+	}
+}
 
-		source := helpers.StackPop(&*stack)
+func DumpVars(vars map[string]orthtypes.Operand) {
+	if len(vars) == 0 {
+		fmt.Println("***********************************************************")
+		fmt.Println("VARS IS EMPTY")
+		fmt.Println("***********************************************************")
+		return
+	}
 
-		if source.VarType != orthtypes.RNGABL {
-			retValue = (*mem)[at]
-		} else {
-			points := strings.Split(source.Operand, "|")
-			start, _ := strconv.Atoi(points[0])
-			end, _ := strconv.Atoi(points[1])
-
-			if start+at >= end {
-				panic(fmt.Errorf(debug.IndexOutOfBounds, at, start, end))
-			}
-			retValue = (*mem)[start+at]
-		}
-
-		*stack = append(*stack, retValue)
+	fmt.Println("VARS:")
+	for name, value := range vars {
+		fmt.Printf("var name: %q\t var value: %v\n", name, value)
 	}
 }
 
@@ -184,7 +170,7 @@ func DumpStack(stack []orthtypes.Operand) {
 
 	fmt.Println("STACK:")
 	for i := len(stack); i > 0; i-- {
-		fmt.Printf("Position: %d\t Type: %q\t Value: %#v\n", i, stack[i-1].VarType, stack[i-1].Operand)
+		fmt.Printf("Position: %d\t Type: %q\t Value: %#v\n", i-1, stack[i-1].VarType, stack[i-1].Operand)
 	}
 }
 
@@ -215,7 +201,7 @@ func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtype
 	}
 
 	if foundPlace {
-		for i := start + 1; i < capacity; i++ {
+		for i := start; i < capacity; i++ {
 			memCopy[i] = orthtypes.Operand{
 				VarType: typ.Operand,
 			}
