@@ -77,6 +77,10 @@ func init() {
 		delete(vars, vName.Operand)
 	}
 
+	Functions["dump_mem"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+		DumpMem(*stack, *mem)
+	}
+
 	Functions["dump_stack"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
 		DumpStack(*stack)
 	}
@@ -171,6 +175,24 @@ func DumpStack(stack []orthtypes.Operand) {
 	fmt.Println("STACK:")
 	for i := len(stack); i > 0; i-- {
 		fmt.Printf("Position: %d\t Type: %q\t Value: %#v\n", i-1, stack[i-1].VarType, stack[i-1].Operand)
+	}
+}
+
+func DumpMem(stack, mem []orthtypes.Operand) {
+	opTo := helpers.StackPop(&stack)
+	opFrom := helpers.StackPop(&stack)
+
+	if !helpers.IsInt(opTo.VarType) && !helpers.IsInt(opFrom.VarType) {
+		msg := fmt.Sprintf(debug.InvalidTypeForInstruction+"\n", opTo.Operand, "dump_mem")
+		msg += fmt.Sprintf(debug.InvalidTypeForInstruction, opFrom.Operand, "dump_mem")
+		panic(msg)
+	}
+
+	to, from := helpers.ToInt(opTo), helpers.ToInt(opFrom)
+
+	slicedMem := mem[from:to]
+	for i, op := range slicedMem {
+		fmt.Printf("%d: %v\n", i, op)
 	}
 }
 
