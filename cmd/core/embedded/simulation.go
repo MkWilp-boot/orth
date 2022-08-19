@@ -42,7 +42,10 @@ func Simulate(program orthtypes.Program) {
 
 			if o2.VarType == orthtypes.RNGABL {
 				start, end := functions.DissectRangeAsInt(o2)
-				sum := start + end
+				if !helpers.IsInt(o1.VarType) {
+					panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "sum rangeable"))
+				}
+				sum := start + helpers.ToInt(o1)
 
 				teste := orthtypes.Operand{
 					VarType: orthtypes.RNGABL,
