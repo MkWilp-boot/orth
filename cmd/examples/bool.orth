@@ -1,27 +1,27 @@
-i 34 i 35 + i 69 ==
+i 35 i 35 + i 70 ==
 if 
     s "Equal\n" print
 else
     s "False!\n" print
 end
 
-i 34 i 35 + i 69 <>
+i 35 i 35 + i 70 <>
 if 
-    s "false! last item is a 69\n" print
+    s "false! last item is a 70\n" print
 else
-    s "true! last item is a 69\n" print
+    s "true! last item is a 70\n" print
 end
 
-i 420 i 69 <
+i 420 i 70 <
 if 
-    s "true! 420 is greater than 69\n" print
+    s "true! 420 is greater than 70\n" print
 else
-    s "false! 420 is greater than 69\n" print
+    s "false! 420 is greater than 70\n" print
 end
 
-i 420 i 69 >
+i 420 i 70 >
 if 
-    s "true! 420 is greater than 69\n" print
+    s "true! 420 is greater than 70\n" print
 else
-    s "false! 420 is greater than 69\n" print
+    s "false! 420 is greater than 70\n" print
 end

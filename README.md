@@ -43,31 +43,29 @@ $ Hello world in orth!
 Really simple, isn't it? this program just pushes a string value into the stack and prints using the instruction `print` but it can get more complicated as things starts to grow.
 
 ```orth
-mem i 0 i 0 . 
-mem i 1 i 1 . 
-mem i 2 i 0 . 
-mem i 3 i 20 .
+var a = i 0  drop
+var b = i 1  drop
+var c = i 0  drop
+var n = i 15 drop
 
-mem i 3 ,!
-i 0 = if
-    mem i 0 , print
+hold n i 0 == if
+    hold a print
 else
-    i 2 while dup mem i 3 ,! > do
-        mem i 0 ,
-        mem i 1 ,
+    i 2 while dup hold n > do
+        hold a // read a
+        hold b // read b
         dup
-        mem i 4 swap .
+        var d call grab_last // backup b
         +
-        dup
-        mem i 2 swap .
-        mem i 4 ,
-        mem i 0 swap .
-        mem i 1 swap .
-
+        dup // produce c
+        var c call grab_last // c = a + b
+        hold d // b backed up
+        var a call grab_last // a = b
+        var b call grab_last // b = c
         i 1 +
     end
 end
-s "The " mem i 3 , call to_string + s "th number is " + mem i 1 , call to_string + print
+s "The number is " hold b call to_string + print
 ```
 
 So, what do you think this program does? if you said it's the fibonacci sequence, then you are right!</br>
@@ -156,13 +154,13 @@ Conditions in Orth are very simple and are made by the `if-end` blocks</br>
 first: if you want something to be true or false, the last item on the stack **must** be a bool type.
 
 ```orth
-i 10 i 10 + i 20 = print
+i 10 i 10 + i 20 == print
 ```
 
 the code above will produce a bool type that can be used by if blocks
 
 ```orth
-i 10 i 10 + i 20 =
+i 10 i 10 + i 20 ==
 if 
     s "Yes, this is a true statement print
 else 
@@ -195,4 +193,17 @@ and until 10 is > 0 we add 1 to the last item on the stack, as simple as this
 
 ## Functions
 
-Orth will have some bultin functions to help people's life, for now we only have a **to_string** function that converts the last element into it's string literal
+Orth have some bultin functions to help people's life:
+* to_string (rnt n)
+* size_of (s string)
+* length_of (s string)
+* make_array (type atype, i capacity)
+* free_var (var to_free)
+* dump_mem ()
+* dump_stack ()
+* dump_vars ()
+* exit (i code)
+* fill (rnt value, x|x+1 rangeable)
+* index (i relative_pos)
+* grab_at (i absolute_pos)
+* grab_last (stack > 1)
