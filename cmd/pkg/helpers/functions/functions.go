@@ -242,9 +242,16 @@ func EqualInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		panic(err)
 	}
 
+	var res string
+	if o1 == o2 {
+		res = "1"
+	} else {
+		res = "0"
+	}
+
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 == o2),
+		Operand: res,
 	}
 }
 
@@ -492,9 +499,16 @@ func EqualFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		panic(err)
 	}
 
+	var res string
+	if o1 == o2 {
+		res = "1"
+	} else {
+		res = "0"
+	}
+
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 == o2),
+		Operand: res,
 	}
 }
 
@@ -652,10 +666,18 @@ func DiffString(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 }
 
 // EqualString checks if two variables have the same Operand
-func EqualString(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
+func EqualString(_ string, o1, o2 orthtypes.Operand) orthtypes.Operand {
+
+	var res string
+	if o1 == o2 {
+		res = "1"
+	} else {
+		res = "0"
+	}
+
 	return orthtypes.Operand{
 		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", n1.Operand == n2.Operand),
+		Operand: res,
 	}
 }
 

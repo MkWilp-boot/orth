@@ -1,23 +1,23 @@
-mem address 0 i32 0 . 
-mem address 1 i32 1 . 
-mem address 2 i32 0 . 
-mem address 3 i32 10 .
+var a = i 0  drop
+var b = i 1  drop
+var c = i 0  drop
+var n = i 15 drop
 
-mem address 3 ,! i 0 == if
-    mem address 0 , print
+hold n i 0 == if
+    hold a print
 else
-    i 2 while dup mem address 3 ,! > do
-        mem address 0 , // read a
-        mem address 1 , // read b
+    i 2 while dup hold n > do
+        hold a // read a
+        hold b // read b
         dup
-        mem address 4 swap . // backup b
+        var d call grab_last // backup b
         +
         dup // produce c
-        mem address 2 swap . // c = a + b
-        mem address 4 , // b backed up
-        mem address 0 swap . // a = b
-        mem address 1 swap . // b = c
+        var c call grab_last // c = a + b
+        hold d // b backed up
+        var a call grab_last // a = b
+        var b call grab_last // b = c
         i 1 +
     end
 end
-s "The " mem address 3 , call to_string + s "th fibonacci number is " + mem address 1 , call to_string + print
+s "The " hold n call to_string + s "th fibonacci number is " + hold b call to_string + print
