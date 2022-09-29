@@ -21,7 +21,7 @@ const (
 	Gt
 	NotEqual
 	Dup
-	Dump
+	DumpUI64
 	Print
 	Do
 	Drop

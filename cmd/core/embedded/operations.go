@@ -109,7 +109,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
 			program.Operations = append(program.Operations, ins)
 		case "dump":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Dump)
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.DumpUI64)
 			program.Operations = append(program.Operations, ins)
 		case "==":
 			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)

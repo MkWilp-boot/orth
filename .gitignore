@@ -3,3 +3,7 @@
 *.obj
 .vscode
 *.orth_t
+*.pdb
+*.ilk
+*.lnk
+*.bat
