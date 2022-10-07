@@ -25,7 +25,7 @@ func init() {
 		fmt.Printf("WARNING! The following file %q is not of type %q, the content may not be well formatted\n", flag.Args()[0], orthtypes.FileType)
 		fmt.Println("=================================================================================================")
 	}
-	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.CompileRun && !*debug.DumpVMCode {
+	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.DumpVMCode {
 		fmt.Println("Error, must select a run option.")
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -33,9 +33,6 @@ func init() {
 }
 
 func main() {
-	// args is
-	// [0] -> file to be processed
-
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
 	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(strProgram))
 
@@ -47,8 +44,6 @@ func main() {
 		}
 	case *debug.Simulate:
 		embedded.Simulate(program)
-	case *debug.CompileRun:
-		panic("compile & run not implemented")
 	case *debug.Compile != "":
 		fmt.Println("[WARN] Be aware that compilation may not work as expected due the fact of me being lazy :)")
 		embedded.Compile(program, functions.CheckAsmType(*debug.Compile))
