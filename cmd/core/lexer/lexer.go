@@ -2,8 +2,8 @@ package lexer
 
 import (
 	"io/ioutil"
+	orthtypes "orth/cmd/pkg/types"
 	"strings"
-	orthtypes "t/cmd/pkg/types"
 )
 
 // LoadProgramFromFile receives a path for a program and returns LexFile(path)

@@ -2,11 +2,11 @@ package embedded
 
 import (
 	"fmt"
+	"orth/cmd/core/debug"
+	"orth/cmd/pkg/helpers"
+	"orth/cmd/pkg/helpers/functions"
+	orthtypes "orth/cmd/pkg/types"
 	"strings"
-	"t/cmd/core/debug"
-	"t/cmd/pkg/helpers"
-	"t/cmd/pkg/helpers/functions"
-	orthtypes "t/cmd/pkg/types"
 )
 
 const memCap = 64000

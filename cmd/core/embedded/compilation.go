@@ -3,9 +3,9 @@ package embedded
 import (
 	"bufio"
 	"fmt"
+	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
-	orthtypes "t/cmd/pkg/types"
 )
 
 // Compile compiles a program into assembly

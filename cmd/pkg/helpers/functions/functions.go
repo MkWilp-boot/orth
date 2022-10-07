@@ -2,10 +2,10 @@ package functions
 
 import (
 	"fmt"
+	"orth/cmd/core/debug"
+	orthtypes "orth/cmd/pkg/types"
 	"strconv"
 	"strings"
-	"t/cmd/core/debug"
-	orthtypes "t/cmd/pkg/types"
 )
 
 func PanicErrIfNonNil(err error) {

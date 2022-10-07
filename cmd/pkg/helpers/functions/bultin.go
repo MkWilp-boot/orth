@@ -3,12 +3,12 @@ package functions
 import (
 	"fmt"
 	"log"
+	"orth/cmd/core/debug"
+	"orth/cmd/pkg/helpers"
+	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"strconv"
 	"strings"
-	"t/cmd/core/debug"
-	"t/cmd/pkg/helpers"
-	orthtypes "t/cmd/pkg/types"
 	"unicode/utf8"
 )
 
