@@ -2,9 +2,9 @@ package helpers
 
 import (
 	"fmt"
+	"orth/cmd/core/debug"
+	orthtypes "orth/cmd/pkg/types"
 	"strconv"
-	"t/cmd/core/debug"
-	orthtypes "t/cmd/pkg/types"
 )
 
 func IsInt(t string) bool {
@@ -33,7 +33,9 @@ func SameBaseType(operands ...orthtypes.Operand) {
 }
 
 // ===================================
+//
 //	CONVERSIONS
+//
 // ===================================
 func ToInt(o orthtypes.Operand) int {
 	if IsInt(o.VarType) {

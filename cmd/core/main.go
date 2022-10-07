@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"orth/cmd/core/debug"
+	"orth/cmd/core/embedded"
+	"orth/cmd/core/lexer"
+	"orth/cmd/pkg/helpers/functions"
+	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"strings"
-	"t/cmd/core/debug"
-	"t/cmd/core/embedded"
-	"t/cmd/core/lexer"
-	"t/cmd/pkg/helpers/functions"
-	orthtypes "t/cmd/pkg/types"
 )
 
 func init() {
