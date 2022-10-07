@@ -23,7 +23,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	compileCmd := exec.Command("ml64.exe", "../../output.asm", "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
 	if err = compileCmd.Run(); err != nil {
-		compileCmd.Output()
+		panic(err)
 	}
 }
 
@@ -83,7 +83,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	cmp rax, rbx\n")
-			writer.WriteString("	.if(rax > rbx)\n")
+			writer.WriteString("	.if(rax } rbx)\n")
 			writer.WriteString("		push 1\n")
 			writer.WriteString("	.else\n")
 			writer.WriteString("		push 0\n")
@@ -93,7 +93,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	cmp rax, rbx\n")
-			writer.WriteString("	.if(rax < rbx)\n")
+			writer.WriteString("	.if(rax { rbx)\n")
 			writer.WriteString("		push 1\n")
 			writer.WriteString("	.else\n")
 			writer.WriteString("		push 0\n")
@@ -136,8 +136,8 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop trash\n")
 		case orthtypes.DumpUI64:
 			writer.WriteString("; DumpUI64\n")
-			writer.WriteString("	pop rcx\n")
-			writer.WriteString("	invoke dump_ui64\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	invoke dump_ui64, rax\n")
 		}
 	}
 	writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))
