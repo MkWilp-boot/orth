@@ -2,10 +2,10 @@ package embedded
 
 import (
 	"fmt"
+	"orth/cmd/core/debug"
+	"orth/cmd/pkg/helpers/functions"
+	orthtypes "orth/cmd/pkg/types"
 	"regexp"
-	"t/cmd/core/debug"
-	"t/cmd/pkg/helpers/functions"
-	orthtypes "t/cmd/pkg/types"
 )
 
 func PopLast(root *[]int) int {

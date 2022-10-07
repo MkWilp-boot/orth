@@ -3,9 +3,9 @@ package embedded
 import (
 	"bufio"
 	"fmt"
+	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
-	orthtypes "t/cmd/pkg/types"
 )
 
 // Compile compiles a program into assembly
@@ -80,24 +80,22 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	push rax\n")
 		case orthtypes.Gt:
 			writer.WriteString("; GT\n")
+			writer.WriteString("	mov rdx, 1\n")
+			writer.WriteString("	mov rcx, 0\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	cmp rax, rbx\n")
-			writer.WriteString("	.if(rax } rbx)\n")
-			writer.WriteString("		push 1\n")
-			writer.WriteString("	.else\n")
-			writer.WriteString("		push 0\n")
-			writer.WriteString("	.endif\n")
+			writer.WriteString("	cmovg rcx, rdx\n")
+			writer.WriteString("	push rcx\n")
 		case orthtypes.Lt:
 			writer.WriteString("; LT\n")
+			writer.WriteString("	mov rdx, 1\n")
+			writer.WriteString("	mov rcx, 0\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	cmp rax, rbx\n")
-			writer.WriteString("	.if(rax { rbx)\n")
-			writer.WriteString("		push 1\n")
-			writer.WriteString("	.else\n")
-			writer.WriteString("		push 0\n")
-			writer.WriteString("	.endif\n")
+			writer.WriteString("	cmovl rcx, rdx\n")
+			writer.WriteString("	push rcx\n")
 		case orthtypes.Equal:
 			writer.WriteString("; Equal\n")
 			writer.WriteString("	pop rax\n")

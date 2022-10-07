@@ -1,3 +1,3 @@
-module t
+module orth
 
-go 1.18
+go 1.19
