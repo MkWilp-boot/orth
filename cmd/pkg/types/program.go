@@ -37,5 +37,7 @@ const (
 	OType
 	Var
 	Hold
+	Skip
+	Nop
 	TotalOps
 )

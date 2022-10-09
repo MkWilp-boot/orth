@@ -40,6 +40,11 @@ const (
 	INVALIDTYPE = ""
 )
 
+type Pair[T1, T2 comparable] struct {
+	VarName  T1
+	VarValue T2
+}
+
 type Operation struct {
 	Instruction int
 	Operand     Operand
