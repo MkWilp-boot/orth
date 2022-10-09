@@ -3,13 +3,23 @@ package embedded
 import (
 	"bufio"
 	"fmt"
+	embedded_helpers "orth/cmd/core/embedded/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
 )
 
+var varsAndValues chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]
+
+func init() {
+	varsAndValues = make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand])
+}
+
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
+
+	go embedded_helpers.RetreiveProgramInfo(program, varsAndValues, embedded_helpers.GetVarsAndValues)
+
 	if assemblyType != "masm" {
 		panic("[TEMP]: the current supported assembly is MASM")
 	}
@@ -36,10 +46,13 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// data segment (pre-defined)
 	writer.WriteString(".DATA\n")
+	for pair := range varsAndValues {
+		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
+	}
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
-	writer.WriteString("trash dd ?\n")
+	writer.WriteString("	trash dd ?\n")
 
 	// code segment
 	writer.WriteString(".CODE\n")
@@ -66,8 +79,13 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	writer.WriteString("main PROC\n")
 	for ip := 0; ip < len(program.Operations); ip++ {
-		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
 		op := program.Operations[ip]
+		if op.Instruction == orthtypes.Skip {
+			ip++
+			continue
+		}
+		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
+		// ignore vars so they are located on the data segment
 		switch op.Instruction {
 		case orthtypes.Push:
 			writer.WriteString("; push\n")
@@ -136,6 +154,14 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("; DumpUI64\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke dump_ui64, rax\n")
+		case orthtypes.Hold:
+			writer.WriteString("; Hold var\n")
+			writer.WriteString("	lea rax, " + op.Operand.Operand + "\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Print:
+			writer.WriteString("; Print string\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	invoke StdOut, rax\n")
 		}
 	}
 	writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))
