@@ -108,8 +108,8 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case "/":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
 			program.Operations = append(program.Operations, ins)
-		case "dump":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.DumpUI64)
+		case "put_u64":
+			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.PutU64)
 			program.Operations = append(program.Operations, ins)
 		case "==":
 			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)
@@ -132,8 +132,8 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case "end":
 			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End)
 			program.Operations = append(program.Operations, ins)
-		case "print":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Print)
+		case "put_string":
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
 			program.Operations = append(program.Operations, ins)
 		case "dup":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup)
