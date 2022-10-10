@@ -175,7 +175,7 @@ func Simulate(program orthtypes.Program) {
 			ip = stackItem.RefBlock
 		case orthtypes.End:
 			ip = stackItem.RefBlock
-		case orthtypes.DumpUI64:
+		case orthtypes.PutU64:
 			o1 := helpers.StackPop(&stack)
 			if !helpers.IsInt(o1.VarType) {
 				panic(fmt.Sprintf(debug.InvalidTypeForInstruction, o1.VarType, "DumpUI64"))
@@ -183,7 +183,7 @@ func Simulate(program orthtypes.Program) {
 
 			fmt.Printf("%d\n", helpers.ToInt(o1))
 			ip++
-		case orthtypes.Print:
+		case orthtypes.PutString:
 			o1 := helpers.StackPop(&stack)
 
 			if strings.HasSuffix(o1.Operand, "\\n") {

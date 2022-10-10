@@ -1,6 +1,6 @@
 var hello = s "hello "
 
 i 0 while dup i 5 > do
-    hold hello print
+    hold hello put_string
     i 1 +
 end
