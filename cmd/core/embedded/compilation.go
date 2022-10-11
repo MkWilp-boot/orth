@@ -10,6 +10,7 @@ import (
 )
 
 var varsAndValues chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]
+var rmvFiles = []string{"mllink$.lnk", "output.ilk", "output.obj", "output.pdb"}
 
 func init() {
 	varsAndValues = make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand])
@@ -34,6 +35,12 @@ func Compile(program orthtypes.Program, assemblyType string) {
 
 	if err = compileCmd.Run(); err != nil {
 		panic(err)
+	}
+
+	for _, file := range rmvFiles {
+		if err = os.Remove(file); err != nil {
+			panic(err)
+		}
 	}
 }
 
