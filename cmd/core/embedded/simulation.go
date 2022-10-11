@@ -2,7 +2,7 @@ package embedded
 
 import (
 	"fmt"
-	"orth/cmd/core/debug"
+	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers"
 	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
@@ -27,7 +27,7 @@ func Simulate(program orthtypes.Program) {
 			fmt.Printf("Error At instruction number %d ->'%#v'", ip, stackItem)
 			fmt.Printf("The argument %s has a invalid type of %q\n", stackItem.Operand, stackItem.Operand.VarType)
 			fmt.Println("====================================")
-			panic(debug.DefaultRuntimeException)
+			panic(orth_debug.DefaultRuntimeException)
 		}
 		switch stackItem.Instruction {
 		case orthtypes.Push:
@@ -43,7 +43,7 @@ func Simulate(program orthtypes.Program) {
 			if o2.VarType == orthtypes.RNGABL {
 				start, end := functions.DissectRangeAsInt(o2)
 				if !helpers.IsInt(o1.VarType) {
-					panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "sum rangeable"))
+					panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "sum rangeable"))
 				}
 				sum := start + helpers.ToInt(o1)
 
@@ -163,7 +163,7 @@ func Simulate(program orthtypes.Program) {
 			o1 := helpers.StackPop(&stack)
 
 			if o1.VarType != "b" {
-				panic(debug.InvalidBoolType)
+				panic(orth_debug.InvalidBoolType)
 			}
 
 			if o1.Operand == orthtypes.StdTrue {
@@ -178,7 +178,7 @@ func Simulate(program orthtypes.Program) {
 		case orthtypes.PutU64:
 			o1 := helpers.StackPop(&stack)
 			if !helpers.IsInt(o1.VarType) {
-				panic(fmt.Sprintf(debug.InvalidTypeForInstruction, o1.VarType, "DumpUI64"))
+				panic(fmt.Sprintf(orth_debug.InvalidTypeForInstruction, o1.VarType, "DumpUI64"))
 			}
 
 			fmt.Printf("%d\n", helpers.ToInt(o1))
@@ -199,7 +199,7 @@ func Simulate(program orthtypes.Program) {
 		case orthtypes.Do:
 			o1 := helpers.StackPop(&stack)
 			if o1.VarType != orthtypes.PrimitiveBOOL {
-				panic(debug.InvalidBoolType)
+				panic(orth_debug.InvalidBoolType)
 			}
 
 			if o1.Operand == orthtypes.StdTrue {
@@ -238,7 +238,7 @@ func Simulate(program orthtypes.Program) {
 			address := helpers.StackPop(&stack)
 
 			if address.VarType != orthtypes.ADDR {
-				panic(fmt.Errorf(debug.InvalidTypeForIndex, orthtypes.ADDR))
+				panic(fmt.Errorf(orth_debug.InvalidTypeForIndex, orthtypes.ADDR))
 			}
 
 			mem[helpers.ToInt(address)] = value
@@ -271,12 +271,12 @@ func Simulate(program orthtypes.Program) {
 			vName := stackItem.Operand.Operand
 			v, ok := vars[vName]
 			if !ok {
-				panic(fmt.Errorf(debug.VariableUndefined, vName))
+				panic(fmt.Errorf(orth_debug.VariableUndefined, vName))
 			}
 			stack = append(stack, v)
 			ip++
 		default:
-			panic(fmt.Errorf(debug.InvalidInstruction, stackItem.Instruction))
+			panic(fmt.Errorf(orth_debug.InvalidInstruction, stackItem.Instruction))
 		}
 	}
 }
