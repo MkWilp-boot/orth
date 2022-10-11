@@ -2,7 +2,7 @@ package functions
 
 import (
 	"fmt"
-	"orth/cmd/core/debug"
+	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
 	"strconv"
 	"strings"
@@ -25,7 +25,7 @@ func DissectRangeAsInt(o1 orthtypes.Operand) (int, int) {
 
 func DissectRange(o1 orthtypes.Operand) (orthtypes.Operand, orthtypes.Operand) {
 	if o1.VarType != orthtypes.RNGABL {
-		panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "DissectRange"))
+		panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "DissectRange"))
 	}
 	nums := strings.Split(o1.Operand, "|")
 	start, _ := strconv.Atoi(nums[0])
@@ -126,7 +126,7 @@ func SumBasedOnType(superType string) (func(string, orthtypes.Operand, orthtypes
 	case superType == orthtypes.PrimitiveSTR:
 		return ConcatPrimitiveSTR, nil
 	case strings.Contains(superType, orthtypes.ADDR):
-		return nil, fmt.Errorf(debug.StrangeUseOfVariable, orthtypes.ADDR, "PLUS")
+		return nil, fmt.Errorf(orth_debug.StrangeUseOfVariable, orthtypes.ADDR, "PLUS")
 	default:
 		panic("Invalid type")
 	}

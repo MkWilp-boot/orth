@@ -2,7 +2,7 @@ package helpers
 
 import (
 	"fmt"
-	"orth/cmd/core/debug"
+	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
 	"strconv"
 )
@@ -57,7 +57,7 @@ func ToInt(o orthtypes.Operand) int {
 	if o.VarType == orthtypes.ADDR {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
-			panic(debug.DefaultRuntimeException)
+			panic(orth_debug.DefaultRuntimeException)
 		}
 		return n
 	}

@@ -2,7 +2,7 @@ package embedded
 
 import (
 	"fmt"
-	"orth/cmd/core/debug"
+	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
 	"regexp"
@@ -165,7 +165,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 		case "call":
 			_, ok := functions.Functions[preProgram[i+1].Content.Content]
 			if !ok {
-				panic(fmt.Errorf(debug.UndefinedFunction, preProgram[i+1].Content.Content))
+				panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Content))
 			}
 			preProgram[i+1].Content.ValidPos = true
 			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)

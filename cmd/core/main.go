@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"orth/cmd/core/debug"
 	"orth/cmd/core/embedded"
 	"orth/cmd/core/lexer"
+	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	if *debug.Help {
+	if *orth_debug.Help {
 		flag.PrintDefaults()
 	}
 	if len(flag.Args()) < 1 {
@@ -25,7 +25,7 @@ func init() {
 		fmt.Printf("WARNING! The following file %q is not of type %q, the content may not be well formatted\n", flag.Args()[0], orthtypes.FileType)
 		fmt.Println("=================================================================================================")
 	}
-	if !*debug.Help && !*debug.Simulate && (*debug.Compile == "") && !*debug.DumpVMCode {
+	if !*orth_debug.Help && !*orth_debug.Simulate && (*orth_debug.Compile == "") && !*orth_debug.DumpVMCode {
 		fmt.Println("Error, must select a run option.")
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -37,16 +37,16 @@ func main() {
 	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(strProgram))
 
 	switch {
-	case *debug.DumpVMCode:
-		mapped := debug.ToStringIntruction()
+	case *orth_debug.DumpVMCode:
+		mapped := orth_debug.ToStringIntruction()
 		for _, v := range program.Operations {
 			fmt.Printf("action %q\t type %q\t operand %q\t refblock %d\n", mapped[v.Instruction], v.Operand.VarType, v.Operand.Operand, v.RefBlock)
 		}
-	case *debug.Simulate:
+	case *orth_debug.Simulate:
 		embedded.Simulate(program)
-	case *debug.Compile != "":
+	case *orth_debug.Compile != "":
 		fmt.Println("[WARN] Be aware that compilation may not work as expected due the fact of me being lazy :)")
-		embedded.Compile(program, functions.CheckAsmType(*debug.Compile))
+		embedded.Compile(program, functions.CheckAsmType(*orth_debug.Compile))
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)
