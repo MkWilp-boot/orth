@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-func PopLast(root *[]int) int {
+func PopLast[T comparable](root *[]T) T {
 	stack := *root
 	ret := stack[len(stack)-1]
 	*root = stack[:len(stack)-1]
@@ -18,44 +18,53 @@ func PopLast(root *[]int) int {
 // CrossReferenceBlocks loops over a program and define all inter references
 // needed for execution. Ex: if-else-do blocks
 func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
-	stack := make([]int, 0)
+	stack := make([]orthtypes.Pair[int, orthtypes.Operation], 0)
 
 	// program.Operations[ip] is actually the current position in loop
 	for ip, v := range program.Operations {
+		pair := orthtypes.Pair[int, orthtypes.Operation]{
+			VarName:  ip,
+			VarValue: v,
+		}
 		switch v.Instruction {
 		case orthtypes.If:
-			stack = append(stack, ip)
+			fallthrough
+		case orthtypes.Proc:
+			fallthrough
+		case orthtypes.While:
+			stack = append(stack, pair)
 		case orthtypes.Else:
 			blockIp := PopLast(&stack)
 
-			if program.Operations[blockIp].Instruction != orthtypes.If {
+			if program.Operations[blockIp.VarName].Instruction != orthtypes.If {
 				panic("Invalid Else clause")
 			}
 
-			program.Operations[blockIp].RefBlock = ip + 1
-			stack = append(stack, ip)
+			program.Operations[blockIp.VarName].RefBlock = ip + 1
+			stack = append(stack, pair)
 		case orthtypes.End:
 			blockIp := PopLast(&stack)
-			if program.Operations[blockIp].Instruction == orthtypes.If ||
-				program.Operations[blockIp].Instruction == orthtypes.Else {
-
-				program.Operations[blockIp].RefBlock = ip
+			switch {
+			case program.Operations[blockIp.VarName].Instruction == orthtypes.If || program.Operations[blockIp.VarName].Instruction == orthtypes.Else:
+				program.Operations[blockIp.VarName].RefBlock = ip
 				program.Operations[ip].RefBlock = ip + 1 // end block
-			} else if program.Operations[blockIp].Instruction == orthtypes.Do {
-				if program.Operations[blockIp].RefBlock == -1 {
+			case program.Operations[blockIp.VarName].Instruction == orthtypes.In:
+				fallthrough
+			case program.Operations[blockIp.VarName].Instruction == orthtypes.Do:
+				if program.Operations[blockIp.VarName].RefBlock == -1 {
 					panic("Not enought arguments for a cross-refernce block operation")
 				}
-				program.Operations[ip].RefBlock = program.Operations[blockIp].RefBlock
-				program.Operations[blockIp].RefBlock = ip + 1
-			} else {
-				panic("End block can only close [if | else | do] blocks")
+				program.Operations[ip].RefBlock = program.Operations[blockIp.VarName].RefBlock
+				program.Operations[blockIp.VarName].RefBlock = ip + 1
+			default:
+				panic("End block can only close [if | else | do | proc in] blocks")
 			}
+		case orthtypes.In:
+			fallthrough
 		case orthtypes.Do:
 			blockIp := PopLast(&stack)
-			program.Operations[ip].RefBlock = blockIp
-			stack = append(stack, ip)
-		case orthtypes.While:
-			stack = append(stack, ip)
+			program.Operations[ip].RefBlock = blockIp.VarName
+			stack = append(stack, pair)
 		}
 	}
 	return program
@@ -140,6 +149,15 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			program.Operations = append(program.Operations, ins)
 		case "while":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While)
+			program.Operations = append(program.Operations, ins)
+		case "proc":
+			preProgram[i+1].Content.ValidPos = true
+			pName := preProgram[i+1].Content.Content
+
+			ins := parseToken(orthtypes.PrimitiveProc, pName, orthtypes.Proc)
+			program.Operations = append(program.Operations, ins)
+		case "in":
+			ins := parseToken(orthtypes.PrimitiveIn, "", orthtypes.In)
 			program.Operations = append(program.Operations, ins)
 		case "do":
 			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do)

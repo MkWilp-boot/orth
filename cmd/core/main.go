@@ -34,7 +34,8 @@ func init() {
 
 func main() {
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
-	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(strProgram))
+	tokenProgram := lexer.LexFile(strProgram)
+	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(tokenProgram))
 
 	switch {
 	case *orth_debug.DumpVMCode:

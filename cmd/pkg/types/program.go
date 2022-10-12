@@ -39,5 +39,7 @@ const (
 	Hold
 	Skip
 	Nop
+	Proc
+	In
 	TotalOps
 )
