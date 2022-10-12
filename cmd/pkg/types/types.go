@@ -23,6 +23,8 @@ const (
 	PrimitiveType    = "type"
 	PrimitiveVar     = "var"
 	PrimitiveHold    = "hold"
+	PrimitiveProc    = "proc"
+	PrimitiveIn      = "in"
 	PrimitiveInvalid = ""
 )
 

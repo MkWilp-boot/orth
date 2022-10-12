@@ -59,7 +59,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
-	writer.WriteString("	trash dd ?\n")
+	writer.WriteString("	trash dq ?\n")
 
 	// code segment
 	writer.WriteString(".CODE\n")
@@ -84,7 +84,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.WriteString("    ret\n")
 	writer.WriteString("dump_ui64 ENDP\n")
 
-	writer.WriteString("main PROC\n")
+	//writer.WriteString("main PROC\n")
 	for ip := 0; ip < len(program.Operations); ip++ {
 		op := program.Operations[ip]
 		if op.Instruction == orthtypes.Skip {
@@ -138,7 +138,16 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.Else:
 			writer.WriteString("; Else\n")
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
+		case orthtypes.Proc:
+			writer.WriteString("; Proc\n")
+			writer.WriteString(op.Operand.Operand + " proc\n")
 		case orthtypes.End:
+			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
+				writer.WriteString("; Endp\n")
+				writer.WriteString("ret\n")
+				writer.WriteString(program.Operations[op.RefBlock].Operand.Operand + " endp\n")
+				continue
+			}
 			writer.WriteString("; End\n")
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
 		case orthtypes.Dup:
@@ -170,9 +179,9 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	invoke StdOut, rax\n")
 		}
 	}
-	writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))
-	writer.WriteString("	ret\n")
-	writer.WriteString("main ENDP\n")
+	//writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))
+	//writer.WriteString("	ret\n")
+	//writer.WriteString("main ENDP\n")
 	writer.WriteString("end\n")
 	writer.Flush()
 }

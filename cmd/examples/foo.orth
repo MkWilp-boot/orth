@@ -1,8 +1,13 @@
 var hello = s "hello "
 
-i 1 call exit
+var space = s " "
 
-i 0 while dup i 5 > do
-    hold hello put_string
-    i 1 +
+proc main in
+    i 0 while dup i 5 > do
+        dup put_u64 hold space put_string
+        i 1 +
+    end drop
+
+    var msg = s "I am inside the main entry point!!!"
+    hold msg put_string
 end
