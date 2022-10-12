@@ -10,6 +10,7 @@ import (
 )
 
 var varsAndValues chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]
+var rmvFiles = []string{"mllink$.lnk", "output.ilk", "output.obj", "output.pdb"}
 
 func init() {
 	varsAndValues = make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand])
@@ -34,6 +35,12 @@ func Compile(program orthtypes.Program, assemblyType string) {
 
 	if err = compileCmd.Run(); err != nil {
 		panic(err)
+	}
+
+	for _, file := range rmvFiles {
+		if err = os.Remove(file); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -116,14 +123,13 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	push rcx\n")
 		case orthtypes.Equal:
 			writer.WriteString("; Equal\n")
+			writer.WriteString("	mov rdx, 1\n")
+			writer.WriteString("	mov rcx, 0\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	cmp rax, rbx\n")
-			writer.WriteString("	.if(rax == rbx)\n")
-			writer.WriteString("		push 1\n")
-			writer.WriteString("	.else\n")
-			writer.WriteString("		push 0\n")
-			writer.WriteString("	.endif\n")
+			writer.WriteString("	cmove rcx, rdx\n")
+			writer.WriteString("	push rcx\n")
 		case orthtypes.If:
 			writer.WriteString("; If\n")
 			writer.WriteString("	pop rax\n")
@@ -150,7 +156,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.Drop:
 			writer.WriteString("; Drop\n")
 			writer.WriteString("	pop trash\n")
-		case orthtypes.DumpUI64:
+		case orthtypes.PutU64:
 			writer.WriteString("; DumpUI64\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke dump_ui64, rax\n")
@@ -158,7 +164,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("; Hold var\n")
 			writer.WriteString("	lea rax, " + op.Operand.Operand + "\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Print:
+		case orthtypes.PutString:
 			writer.WriteString("; Print string\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke StdOut, rax\n")

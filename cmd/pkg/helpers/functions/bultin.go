@@ -3,7 +3,7 @@ package functions
 import (
 	"fmt"
 	"log"
-	"orth/cmd/core/debug"
+	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
@@ -35,7 +35,7 @@ func init() {
 				Operand: fmt.Sprint(len(o1.Operand)),
 			})
 		default:
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "Functions[length_of]"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "Functions[length_of]"))
 		}
 	}
 
@@ -48,13 +48,13 @@ func init() {
 				Operand: fmt.Sprint(utf8.RuneCountInString(o1.Operand)),
 			})
 		default:
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o1.VarType, "Functions[length_of]"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "Functions[length_of]"))
 		}
 	}
 
 	Functions["make_array"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
 		if len(*stack) < 2 {
-			panic(debug.StackUnderFlow)
+			panic(orth_debug.StackUnderFlow)
 		}
 
 		capacity := helpers.ToInt(helpers.StackPop(stack))
@@ -68,11 +68,11 @@ func init() {
 		_, ok := vars[vName.Operand]
 
 		if !ok {
-			panic(fmt.Errorf(debug.VariableUndefined, vName.Operand))
+			panic(fmt.Errorf(orth_debug.VariableUndefined, vName.Operand))
 		}
 
 		if vName.VarType != orthtypes.PrimitiveVar {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, vName.VarType, "free_var"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, vName.VarType, "free_var"))
 		}
 		delete(vars, vName.Operand)
 	}
@@ -95,7 +95,7 @@ func init() {
 			log.Println("Progam exited with code:", code.Operand)
 			os.Exit(helpers.ToInt(code))
 		}
-		panic(fmt.Errorf(debug.InvalidTypeForInstruction, code.VarType, "exit"))
+		panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, code.VarType, "exit"))
 	}
 
 	Functions["fill"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
@@ -103,7 +103,7 @@ func init() {
 		rangeable := helpers.StackPop(&*stack)
 
 		if rangeable.VarType != orthtypes.RNGABL {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, rangeable.VarType, "fill"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.VarType, "fill"))
 		}
 		start, end := DissectRangeAsInt(rangeable)
 		helpers.SameBaseType((*mem)[start], value)
@@ -118,7 +118,7 @@ func init() {
 	Functions["index"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
 		rangeable := helpers.StackPop(&*stack)
 		if rangeable.VarType != orthtypes.RNGABL {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, rangeable.VarType, "index"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.VarType, "index"))
 		}
 
 		nums := strings.Split(rangeable.Operand, "|")
@@ -135,7 +135,7 @@ func init() {
 		o2 := helpers.StackPop(&*stack)
 
 		if !helpers.IsInt(o2.VarType) {
-			panic(fmt.Errorf(debug.InvalidTypeForInstruction, o2.VarType, "grab_at"))
+			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o2.VarType, "grab_at"))
 		}
 		o3 := (*stack)[helpers.ToInt(o2)]
 
@@ -183,8 +183,8 @@ func DumpMem(stack, mem []orthtypes.Operand) {
 	opFrom := helpers.StackPop(&stack)
 
 	if !helpers.IsInt(opTo.VarType) && !helpers.IsInt(opFrom.VarType) {
-		msg := fmt.Sprintf(debug.InvalidTypeForInstruction+"\n", opTo.Operand, "dump_mem")
-		msg += fmt.Sprintf(debug.InvalidTypeForInstruction, opFrom.Operand, "dump_mem")
+		msg := fmt.Sprintf(orth_debug.InvalidTypeForInstruction+"\n", opTo.Operand, "dump_mem")
+		msg += fmt.Sprintf(orth_debug.InvalidTypeForInstruction, opFrom.Operand, "dump_mem")
 		panic(msg)
 	}
 

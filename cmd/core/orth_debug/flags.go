@@ -1,4 +1,4 @@
-package debug
+package orth_debug
 
 import "flag"
 

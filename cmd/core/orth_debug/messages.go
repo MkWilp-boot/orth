@@ -1,4 +1,4 @@
-package debug
+package orth_debug
 
 const (
 	DefaultRuntimeException   = "RNT_ERR: fatal error while executing program"

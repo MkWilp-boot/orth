@@ -21,8 +21,8 @@ const (
 	Gt
 	NotEqual
 	Dup
-	DumpUI64
-	Print
+	PutU64
+	PutString
 	Do
 	Drop
 	While

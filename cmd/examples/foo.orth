@@ -1,6 +1,6 @@
-var hello = s "hello "
+@include "std.orth"
 
-i 0 while dup i 5 > do
-    hold hello print
-    i 1 +
-end
+hold space put_string
+
+var hello = s "hello "
+hold hello put_string
