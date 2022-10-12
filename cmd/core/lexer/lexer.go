@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-var fileStr string
-
 func getParams(regEx, line string) (paramsMap []string) {
 	var compRegEx = regexp.MustCompile(regEx)
 	match := compRegEx.FindAllStringSubmatch(line, -1)

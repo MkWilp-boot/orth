@@ -1,10 +1,9 @@
-@include "str.orth"
+proc p_eexit in
+    var eexit = s "eexit" 
+    hold eexit put_string
+end
 
-i 100 put_u64
-hold space put_string
-i 200 put_u64
-hold space put_string
-i 300 put_u64
-
-hold space put_string
-hold teste put_string
+proc p_teste in
+    var teste = s "teste" 
+    hold eexit put_string
+end

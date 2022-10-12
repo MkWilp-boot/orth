@@ -1,6 +1,0 @@
-var teste = s "teste"
-i 100 put_u64
-i 200 put_u64
-i 300 put_u64
-var hello = s "hello "
-hold hello put_string
