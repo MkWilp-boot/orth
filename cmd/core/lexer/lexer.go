@@ -1,42 +1,18 @@
 package lexer
 
 import (
+	"io/ioutil"
 	orthtypes "orth/cmd/pkg/types"
-	"os"
-	"regexp"
 	"strings"
 )
 
-var fileStr string
-
-func getParams(regEx, line string) (paramsMap []string) {
-	var compRegEx = regexp.MustCompile(regEx)
-	match := compRegEx.FindAllStringSubmatch(line, -1)
-
-	paramsMap = make([]string, 0)
-	for i := range match {
-		paramsMap = append(paramsMap, match[i][1])
-	}
-	return paramsMap
-}
-
 // LoadProgramFromFile receives a path for a program and returns LexFile(path)
-func LoadProgramFromFile(path string) string {
-	fileBytes, err := os.ReadFile(path)
+func LoadProgramFromFile(path string) []orthtypes.StringEnum {
+	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-
-	strProgram := string(fileBytes)
-	includeFiles := getParams(`(?i)@include\s"(?P<File>\w+\.orth)"`, strProgram)
-
-	for _, v := range includeFiles {
-		rmInclude := regexp.MustCompile(`(?i)@include\s"` + v + `"\r?\n?`)
-		strProgram = rmInclude.ReplaceAllString(strProgram, "")
-		includedProgram := LoadProgramFromFile(v)
-		strProgram = includedProgram + strProgram
-	}
-	return strProgram
+	return LexFile(string(fileBytes))
 }
 
 // LexFile receives a pure text program then
