@@ -5,19 +5,18 @@ It uses [GO](https://github.com/golang/go) as the mastermind for the entire proj
 
 ## UNDER DEVELOPMENT
 
-This language is not mature enough
+This language is under development
 
 ## What are our goals?
 
-1. We expect a simple language capable of doing things in a stack based way
+1. I expect a simple language capable of doing things in a stack based way
 2. Native code compilation
 3. Web suport
 
 ## Missing features
 
-* Functions
+* Functions (halfway there)
 * Local scope
-* Main entry point
 
 ## Getting started
 
@@ -29,13 +28,14 @@ The installer can be found [here](https://go.dev/dl/).
 As mentioned, Orth is a stack-based language and the way of reading/writing a program is a bit different than usual. First create a file called **hello.orth** then write this code:
 
 ```orth
-s "Hello world in orth!" print
+var hello = s "Hello world in orth!"
+hold hello put_string
 ```
 
 and run using the executable
 
 ```console
-.\core hello.orth
+.\core -c=masm hello.orth && .\output.exe
 
 $ Hello world in orth!
 ```
@@ -70,6 +70,11 @@ s "The number is " hold b call to_string + print
 
 So, what do you think this program does? if you said it's the fibonacci sequence, then you are right!</br>
 If didn't said it correctly, don't worry, 99% of the people reading this will probably fail, don't worry we will get to the point where this code will look readable.
+
+## Compiled Orth and simulated Orth
+
+Yes, orth has two modes, **Simulation** and **Compilation**. Nowadays (2022-10-12) I am currently migrating all simulation code<br/>
+to compilation mode, my plans are to support NASM and MASM but only MASM is working.
 
 ## Types
 
@@ -136,18 +141,8 @@ var age = i 20
 
 To use a variable, use the keyword `hold`
 ```orth
-hold name 
-print // John
+hold name put_string // John
 ```
-Variables have a infinite life cycle, meaning that once declared, they will live for the rest of the program's life.</br>
-To free a variable use the `free_var` function followed by `var` `varname`</br>
-
-```orth
-var name = s "John"
-hold name s "\n" + print
-var name call free_var
-```
-
 ## Conditions
 
 Conditions in Orth are very simple and are made by the `if-end` blocks</br>
@@ -180,7 +175,7 @@ a while loop basic consists of a "until thisis true, then keep doing", that's ba
 i 0 while dup i 10 > do
     dup call to_string s "\n" + print
     i 1 +
-end
+end drop
 ```
 
 So, as you can see we:
@@ -191,7 +186,7 @@ So, as you can see we:
 
 and until 10 is > 0 we add 1 to the last item on the stack, as simple as this
 
-## Functions
+## Functions (simulation only)
 
 Orth have some bultin functions to help people's life:
 * to_string (rnt n)
