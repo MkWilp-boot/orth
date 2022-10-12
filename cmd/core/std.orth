@@ -1,0 +1,10 @@
+@include "str.orth"
+
+i 100 put_u64
+hold space put_string
+i 200 put_u64
+hold space put_string
+i 300 put_u64
+
+hold space put_string
+hold teste put_string
