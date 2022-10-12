@@ -1,8 +1,6 @@
+@include "std.orth"
+
+hold space put_string
+
 var hello = s "hello "
-
-i 1 call exit
-
-i 0 while dup i 5 > do
-    hold hello put_string
-    i 1 +
-end
+hold hello put_string
