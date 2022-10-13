@@ -1,9 +1,9 @@
-proc p_eexit in
-    var eexit = s "eexit" 
-    hold eexit put_string
+proc p_if in
+    var l_if = s "inside IF " 
+    hold l_if put_string
 end
 
-proc p_teste in
-    var teste = s "teste" 
-    hold eexit put_string
+proc p_else in
+    var l_else = s "inside ELSE " 
+    hold l_else put_string
 end

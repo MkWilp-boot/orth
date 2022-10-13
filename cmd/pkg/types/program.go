@@ -36,10 +36,12 @@ const (
 	Call
 	OType
 	Var
+	Gvar
 	Hold
 	Skip
 	Nop
 	Proc
 	In
+	Invoke
 	TotalOps
 )

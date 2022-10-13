@@ -1,9 +1,0 @@
-var name = s "John" drop
-var age = i 20 drop
-
-s "Hi, My name is " hold name +
-s " and I am " + hold age call to_string + 
-s " years old" + print
-
-var name call free_var
-var age call free_var
