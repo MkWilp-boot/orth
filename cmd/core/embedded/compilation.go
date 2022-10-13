@@ -63,10 +63,6 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// code segment
 	writer.WriteString(".CODE\n")
-	writer.WriteString("p_exit PROC exit_code:DWORD\n")
-	writer.WriteString("	invoke ExitProcess, exit_code\n")
-	writer.WriteString("p_exit ENDP\n")
-
 	writer.WriteString("p_dump_ui64 PROC\n")
 	writer.WriteString("	local buf[10]: BYTE\n")
 	writer.WriteString("	push	rbx\n")
@@ -89,12 +85,12 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.WriteString("p_dump_ui64 ENDP\n")
 
 	for ip := 0; ip < len(program.Operations); ip++ {
+		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
+
 		op := program.Operations[ip]
 		if op.Instruction == orthtypes.Skip {
 			continue
 		}
-		addr := fmt.Sprintf("addr_%d:\n", ip)
-		writer.WriteString(addr)
 		// ignore vars so they are located on the data segment
 		switch op.Instruction {
 		case orthtypes.Push:
@@ -156,7 +152,6 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.Invoke:
 			writer.WriteString("; invoke\n")
 			writer.WriteString("	invoke " + op.Operand.Operand + "\n")
-
 		case orthtypes.Dup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")

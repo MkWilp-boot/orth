@@ -2,8 +2,11 @@
 
 proc main in
     i 10 i 10 + i 20 == if
-        invoke p_test
+        invoke p_if
+    else
+        invoke p_else
     end
     
-    i 400 put_u64
+    var msg = s "I am inside the main entry point!!!"
+    hold msg put_string
 end
