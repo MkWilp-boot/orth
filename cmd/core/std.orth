@@ -1,9 +1,4 @@
-proc p_eexit in
-    var eexit = s "eexit" 
-    hold eexit put_string
-end
-
-proc p_teste in
-    var teste = s "teste" 
-    hold eexit put_string
+proc p_test in
+    var teste = s "inside teste " 
+    hold teste put_string
 end

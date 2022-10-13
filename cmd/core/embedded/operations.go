@@ -247,6 +247,12 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 
 			ins := parseToken(orthtypes.PrimitiveHold, vName, orthtypes.Hold)
 			program.Operations = append(program.Operations, ins)
+		case "invoke":
+			preProgram[i+1].Content.ValidPos = true
+			pName := preProgram[i+1].Content.Content
+
+			ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
+			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
 				panic(fmt.Errorf("unknow token %q at line: %d colum: %d", v.Content.Content, v.Index, v.Content.Index))

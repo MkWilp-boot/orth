@@ -63,7 +63,11 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// code segment
 	writer.WriteString(".CODE\n")
-	writer.WriteString("dump_ui64 PROC\n")
+	writer.WriteString("p_exit PROC exit_code:DWORD\n")
+	writer.WriteString("	invoke ExitProcess, exit_code\n")
+	writer.WriteString("p_exit ENDP\n")
+
+	writer.WriteString("p_dump_ui64 PROC\n")
 	writer.WriteString("	local buf[10]: BYTE\n")
 	writer.WriteString("	push	rbx\n")
 	writer.WriteString("	mov		rax, rcx\n")
@@ -82,16 +86,15 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.WriteString("    invoke	StdOut, rcx\n")
 	writer.WriteString("	pop		rbx\n")
 	writer.WriteString("    ret\n")
-	writer.WriteString("dump_ui64 ENDP\n")
+	writer.WriteString("p_dump_ui64 ENDP\n")
 
-	//writer.WriteString("main PROC\n")
 	for ip := 0; ip < len(program.Operations); ip++ {
 		op := program.Operations[ip]
 		if op.Instruction == orthtypes.Skip {
-			ip++
 			continue
 		}
-		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
+		addr := fmt.Sprintf("addr_%d:\n", ip)
+		writer.WriteString(addr)
 		// ignore vars so they are located on the data segment
 		switch op.Instruction {
 		case orthtypes.Push:
@@ -144,12 +147,16 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.End:
 			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
 				writer.WriteString("; Endp\n")
-				writer.WriteString("ret\n")
+				writer.WriteString("	ret\n")
 				writer.WriteString(program.Operations[op.RefBlock].Operand.Operand + " endp\n")
 				continue
 			}
 			writer.WriteString("; End\n")
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
+		case orthtypes.Invoke:
+			writer.WriteString("; invoke\n")
+			writer.WriteString("	invoke " + op.Operand.Operand + "\n")
+
 		case orthtypes.Dup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")
@@ -168,7 +175,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.PutU64:
 			writer.WriteString("; DumpUI64\n")
 			writer.WriteString("	pop rax\n")
-			writer.WriteString("	invoke dump_ui64, rax\n")
+			writer.WriteString("	invoke p_dump_ui64, rax\n")
 		case orthtypes.Hold:
 			writer.WriteString("; Hold var\n")
 			writer.WriteString("	lea rax, " + op.Operand.Operand + "\n")
@@ -179,9 +186,6 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	invoke StdOut, rax\n")
 		}
 	}
-	//writer.WriteString(fmt.Sprintf("addr_%d:\n", len(program.Operations)))
-	//writer.WriteString("	ret\n")
-	//writer.WriteString("main ENDP\n")
 	writer.WriteString("end\n")
 	writer.Flush()
 }
