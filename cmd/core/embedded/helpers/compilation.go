@@ -35,6 +35,18 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 	switch operand.VarType {
 	case orthtypes.PrimitiveSTR:
 		asmTypeInstruction = "db"
+	case orthtypes.PrimitiveI8:
+		asmTypeInstruction = "byte"
+	case orthtypes.PrimitiveI16:
+		asmTypeInstruction = "dw"
+	case orthtypes.PrimitiveI32:
+		asmTypeInstruction = "dd"
+	case orthtypes.PrimitiveI64:
+		asmTypeInstruction = "dq"
+	case orthtypes.PrimitiveF32:
+		asmTypeInstruction = "real4"
+	case orthtypes.PrimitiveF64:
+		asmTypeInstruction = "real8"
 	default:
 		asmTypeInstruction = "dd"
 	}
