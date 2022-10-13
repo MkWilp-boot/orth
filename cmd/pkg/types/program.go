@@ -36,6 +36,7 @@ const (
 	Call
 	OType
 	Var
+	Gvar
 	Hold
 	Skip
 	Nop
