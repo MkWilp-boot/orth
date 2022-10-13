@@ -1,13 +1,9 @@
-var hello = s "hello "
-
-var space = s " "
+@include "std.orth"
 
 proc main in
-    i 0 while dup i 5 > do
-        dup put_u64 hold space put_string
-        i 1 +
-    end drop
-
-    var msg = s "I am inside the main entry point!!!"
-    hold msg put_string
+    i 10 i 10 + i 20 == if
+        invoke p_test
+    end
+    
+    i 400 put_u64
 end

@@ -41,5 +41,6 @@ const (
 	Nop
 	Proc
 	In
+	Invoke
 	TotalOps
 )
