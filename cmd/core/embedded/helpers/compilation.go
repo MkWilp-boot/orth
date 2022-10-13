@@ -3,6 +3,7 @@ package embedded_helpers
 import (
 	"fmt"
 	orthtypes "orth/cmd/pkg/types"
+	"strconv"
 	"strings"
 )
 
@@ -44,15 +45,23 @@ func VarValueToAsmSyntax(operand orthtypes.Operand) string {
 	var lietralValue string
 	switch operand.VarType {
 	case orthtypes.PrimitiveSTR:
-		// convert var's value to a byte slice
-		strBytes := []byte(operand.Operand)
-		strRep := make([]string, 0, cap(strBytes))
-		for _, b := range strBytes {
-			// converts each byte to a string literal ex: [104 101 108 108 111] -> ["104" "101" "108" "108" "111"]
-			strRep = append(strRep, fmt.Sprint(b))
+		// Unquote/unescape the string
+		unquoted, err := strconv.Unquote(`"` + operand.Operand + `"`)
+		if err != nil {
+			panic(err)
 		}
-		// add null char
-		lietralValue = strings.Join(strRep, ",") + ",0"
+		// convert to a byte array so we can convert each byte to a string representation
+		unquotedBytes := []byte(unquoted)
+
+		// allocate the buffer
+		unquotedBF := make([]string, len(unquotedBytes)+1, cap(unquotedBytes)+1)
+		unquotedBF[len(unquotedBF)-1] = "0" // add null to the end
+
+		for i, byt := range unquotedBytes {
+			unquotedBF[i] = fmt.Sprint(byt)
+		}
+
+		lietralValue = strings.Join(unquotedBF, ",")
 	default:
 		lietralValue = operand.Operand
 	}
