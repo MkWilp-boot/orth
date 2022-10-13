@@ -1,12 +1,6 @@
 @include "std.orth"
 
 proc main in
-    i 10 i 10 + i 20 == if
-        invoke p_if
-    else
-        invoke p_else
-    end
-    
-    var msg = s "I am inside the main entry point!!!"
+    var msg = s "\tHello, World\n\n\n"
     hold msg put_string
 end
