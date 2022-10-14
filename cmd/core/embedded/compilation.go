@@ -59,7 +59,8 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
-	writer.WriteString("	trash dq ?\n")
+	writer.WriteString("	mem  BYTE 640000 dup(?)\n")
+	writer.WriteString("	trash QWORD ?\n")
 
 	// code segment
 	writer.WriteString(".CODE\n")
@@ -96,6 +97,21 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.Push:
 			writer.WriteString("; push\n")
 			writer.WriteString("	push " + op.Operand.Operand + "\n")
+		case orthtypes.Mem:
+			writer.WriteString("; push offset mem\n")
+			writer.WriteString("	mov rax, offset mem\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Load:
+			writer.WriteString("; load\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	xor rbx, rbx\n")
+			writer.WriteString("	mov bl, BYTE PTR [rax]\n")
+			writer.WriteString("	push rbx\n")
+		case orthtypes.Store:
+			writer.WriteString("; store\n")
+			writer.WriteString("	pop rbx ; value to store\n")
+			writer.WriteString("	pop rax ; address of mem\n")
+			writer.WriteString("	mov BYTE PTR [rax], bl\n")
 		case orthtypes.Sum:
 			writer.WriteString("; Sum\n")
 			writer.WriteString("	pop rax\n")

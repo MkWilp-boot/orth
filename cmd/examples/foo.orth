@@ -1,6 +1,23 @@
 @include "std.orth"
 
 proc main in
-    var msg = s "\tHello, World\n\n\n"
-    hold msg put_string
+    // write "abc" to the memory
+    mem i32 0 + i8 97 .
+    mem i32 1 + i8 98 .
+    mem i32 2 + i8 99 .
+
+    // read the "abc"
+    mem i32 0 + , put_u64 hold new_line put_string
+    mem i32 1 + , put_u64 hold new_line put_string
+    mem i32 2 + , put_u64 hold new_line put_string
+
+    // overwrite the "abc" making it "bcd"
+    mem i32 0 + dup , i8 1 + .
+    mem i32 1 + dup , i8 1 + .
+    mem i32 2 + dup , i8 1 + .
+
+    // read the "bcd"
+    mem i32 0 + , put_u64 hold new_line put_string
+    mem i32 1 + , put_u64 hold new_line put_string
+    mem i32 2 + , put_u64 hold new_line put_string
 end
