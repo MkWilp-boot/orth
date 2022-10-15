@@ -3,6 +3,7 @@ package embedded
 import (
 	"bufio"
 	"fmt"
+	"log"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
@@ -18,8 +19,9 @@ func init() {
 
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
+	log.Println("[INFO] Started compilation workflow")
 
-	go embedded_helpers.RetreiveProgramInfo(program, varsAndValues, embedded_helpers.GetVarsAndValues)
+	go embedded_helpers.RetrieveProgramInfo(program, varsAndValues, embedded_helpers.GetVarsAndValues)
 
 	if assemblyType != "masm" {
 		panic("[TEMP]: the current supported assembly is MASM")
@@ -33,11 +35,14 @@ func Compile(program orthtypes.Program, assemblyType string) {
 
 	compileCmd := exec.Command("ml64.exe", "../../output.asm", "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
+	log.Println("[CMD] Running ML64")
 	if err = compileCmd.Run(); err != nil {
 		panic(err)
 	}
+	log.Println("[CMD] Finished running ML64")
 
 	for _, file := range rmvFiles {
+		log.Println("[CMD] Deleting extra files")
 		if err = os.Remove(file); err != nil {
 			panic(err)
 		}
@@ -45,6 +50,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 }
 
 func compileMasm(program orthtypes.Program, output *os.File) {
+	log.Println("[CMD] Writing assembly")
 	defer output.Close()
 
 	// basic header stuff
@@ -112,6 +118,15 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rbx ; value to store\n")
 			writer.WriteString("	pop rax ; address of mem\n")
 			writer.WriteString("	mov BYTE PTR [rax], bl\n")
+		case orthtypes.Syscall5:
+			writer.WriteString("; syscall with 3 params\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	invoke GetStdHandle, rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop r9\n")
+			writer.WriteString("	pop r10\n")
+			writer.WriteString("	pop r11\n")
+			writer.WriteString("	invoke WriteConsole, rax, rbx, r9, r10, r11\n")
 		case orthtypes.Sum:
 			writer.WriteString("; Sum\n")
 			writer.WriteString("	pop rax\n")
@@ -199,4 +214,5 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	}
 	writer.WriteString("end\n")
 	writer.Flush()
+	log.Println("[CMD] Finished writing assembly")
 }

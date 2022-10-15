@@ -47,7 +47,7 @@ func CheckAsmType(flagValue string) string {
 			return v
 		}
 	}
-	panic("nsupported assembly type")
+	panic("unsupported assembly type")
 }
 
 // TypesAreEqual checks if the compared types the same INNER-TYPE variant

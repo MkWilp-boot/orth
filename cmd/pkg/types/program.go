@@ -43,5 +43,6 @@ const (
 	Proc
 	In
 	Invoke
+	Syscall5
 	TotalOps
 )

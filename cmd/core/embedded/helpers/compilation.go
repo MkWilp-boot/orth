@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func RetreiveProgramInfo(program orthtypes.Program, ops chan<- orthtypes.Pair[orthtypes.Operand, orthtypes.Operand], act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
+func RetrieveProgramInfo(program orthtypes.Program, ops chan<- orthtypes.Pair[orthtypes.Operand, orthtypes.Operand], act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
 	for i, operation := range program.Operations {
 		retreive := act(&program, operation, i)
 		for _, op := range retreive {
