@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"fmt"
+	"log"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
@@ -72,6 +73,7 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
 func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program {
+	log.Println("[CMD] Now parsing tokens")
 	program := orthtypes.Program{}
 
 	for i, v := range preProgram {
@@ -253,12 +255,16 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 
 			ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
 			program.Operations = append(program.Operations, ins)
+		case "syscall5":
+			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Syscall5)
+			program.Operations = append(program.Operations, ins)
 		default:
 			if !v.Content.ValidPos {
 				panic(fmt.Errorf("unknow token %q at line: %d colum: %d", v.Content.Content, v.Index, v.Content.Index))
 			}
 		}
 	}
+	log.Println("[CMD] Finished parsing tokens")
 	return program
 }
 

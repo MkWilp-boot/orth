@@ -6,18 +6,18 @@ proc main in
     mem i32 1 + i8 98 .
     mem i32 2 + i8 99 .
 
-    // read the "abc"
-    mem i32 0 + , put_u64 hold new_line put_string
-    mem i32 1 + , put_u64 hold new_line put_string
-    mem i32 2 + , put_u64 hold new_line put_string
+    // WINDOWS ONLY
+    i32 0       // Reserved. not gonna use it
+    dup         // NumberOfCharsWritten. not gona use it
+    i32 3       // size of the buffer to print
+    mem         // buffer
+    i32 -11     // stdout... why -11
+    syscall5    //
 
     // overwrite the "abc" making it "bcd"
     mem i32 0 + dup , i8 1 + .
     mem i32 1 + dup , i8 1 + .
     mem i32 2 + dup , i8 1 + .
 
-    // read the "bcd"
-    mem i32 0 + , put_u64 hold new_line put_string
-    mem i32 1 + , put_u64 hold new_line put_string
-    mem i32 2 + , put_u64 hold new_line put_string
+    i32 0 i32 0 i32 3 mem i32 -11 syscall5 // print the buffer
 end

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"orth/cmd/core/embedded"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
@@ -46,8 +47,9 @@ func main() {
 	case *orth_debug.Simulate:
 		embedded.Simulate(program)
 	case *orth_debug.Compile != "":
-		fmt.Println("[WARN] Be aware that compilation may not work as expected due the fact of me being lazy :)")
+		log.Printf("[INFO] Compilation started. Selected assembly is %q.\n", *orth_debug.Compile)
 		embedded.Compile(program, functions.CheckAsmType(*orth_debug.Compile))
+		log.Println("[INFO] Finished compilation.")
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)
