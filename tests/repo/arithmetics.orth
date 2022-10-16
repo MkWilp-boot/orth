@@ -1,0 +1,8 @@
+var new_line = s "\n"
+
+proc main in
+    i 80 i 20 + put_u64 hold new_line put_string
+    i 10 i 10 * put_u64 hold new_line put_string
+    i 50 i 20 - put_u64 hold new_line put_string
+    i 50 i 50 / put_u64 hold new_line put_string
+end
