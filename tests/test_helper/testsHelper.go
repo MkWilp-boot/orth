@@ -8,6 +8,7 @@ import (
 	"orth/cmd/core/orth_debug"
 	"os"
 	"os/exec"
+	"regexp"
 )
 
 func PrepareComp(fileName string) {
@@ -30,8 +31,10 @@ func ExecOutput() (programOutput string) {
 }
 
 func LoadExpected(fileName string) string {
+	rgx := regexp.MustCompile(`\r`)
 	expected, _ := os.ReadFile(fmt.Sprintf("./expected/%s.txt", fileName))
-	return string(expected)
+
+	return rgx.ReplaceAllString(string(expected), "")
 }
 
 func DumpOutput(out, fileName string) {

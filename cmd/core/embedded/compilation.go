@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
@@ -36,8 +37,13 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	compileCmd := exec.Command("ml64.exe", "../../output.asm", "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
 	orth_debug.LogStep("[CMD] Running ML64")
+	var stdout bytes.Buffer
+
+	compileCmd.Stdout = &stdout
+
 	if err = compileCmd.Run(); err != nil {
-		panic(err)
+		fmt.Println(stdout.String())
+		os.Exit(1)
 	}
 	orth_debug.LogStep("[CMD] Finished running ML64")
 
@@ -210,6 +216,32 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("; Print string\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke StdOut, rax\n")
+		case orthtypes.Mult:
+			writer.WriteString("; Mult\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	imul rax, rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Minus:
+			writer.WriteString("; Sub\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	sub rbx, rax\n")
+			writer.WriteString("	push rbx\n")
+		case orthtypes.Div:
+			writer.WriteString("; Div\n")
+			writer.WriteString("	xor rdx, rdx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	div rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Mod:
+			writer.WriteString("; Mod\n")
+			writer.WriteString("	xor rdx, rdx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	div rbx\n")
+			writer.WriteString("	push rdx\n")
 		}
 	}
 	writer.WriteString("end\n")

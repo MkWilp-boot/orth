@@ -4,5 +4,8 @@ proc main in
     i 80 i 20 + put_u64 hold new_line put_string
     i 10 i 10 * put_u64 hold new_line put_string
     i 50 i 20 - put_u64 hold new_line put_string
-    i 50 i 50 / put_u64 hold new_line put_string
+    i 50 i 10 / put_u64 hold new_line put_string
+    i 50 i 10 % put_u64 hold new_line put_string
+
+    i 34 i 35 + i 30 / i 10 * i 40 - i 25 + put_u64
 end
