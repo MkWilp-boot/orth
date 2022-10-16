@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-func TestArithmetics(t *testing.T) {
-	testhelper.PrepareComp("./repo/arithmetics.orth")
-	expected := testhelper.LoadExpected("TestArithmetics")
+func TestIntegerArithmetics(t *testing.T) {
+	testhelper.PrepareComp("./repo/integer_arithmetics.orth")
+	expected := testhelper.LoadExpected("TestIntegerArithmetics")
 
 	programOutput := testhelper.ExecOutput()
 
 	if programOutput != expected {
-		testhelper.DumpOutput(programOutput, "TestArithmetics")
+		testhelper.DumpOutput(programOutput, "TestIntegerArithmetics")
 		t.FailNow()
 	}
 }
