@@ -2,7 +2,6 @@ package embedded
 
 import (
 	"fmt"
-	"log"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
@@ -73,7 +72,7 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
 func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program {
-	log.Println("[CMD] Now parsing tokens")
+	orth_debug.LogStep("[CMD] Now parsing tokens")
 	program := orthtypes.Program{}
 
 	for i, v := range preProgram {
@@ -264,7 +263,7 @@ func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program 
 			}
 		}
 	}
-	log.Println("[CMD] Finished parsing tokens")
+	orth_debug.LogStep("[CMD] Finished parsing tokens")
 	return program
 }
 

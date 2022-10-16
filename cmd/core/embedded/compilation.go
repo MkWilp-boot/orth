@@ -2,9 +2,10 @@ package embedded
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"log"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
+	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
@@ -19,7 +20,7 @@ func init() {
 
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
-	log.Println("[INFO] Started compilation workflow")
+	orth_debug.LogStep("[INFO] Started compilation workflow")
 
 	go embedded_helpers.RetrieveProgramInfo(program, varsAndValues, embedded_helpers.GetVarsAndValues)
 
@@ -35,14 +36,19 @@ func Compile(program orthtypes.Program, assemblyType string) {
 
 	compileCmd := exec.Command("ml64.exe", "../../output.asm", "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
-	log.Println("[CMD] Running ML64")
+	orth_debug.LogStep("[CMD] Running ML64")
+	var stdout bytes.Buffer
+
+	compileCmd.Stdout = &stdout
+
 	if err = compileCmd.Run(); err != nil {
-		panic(err)
+		fmt.Println(stdout.String())
+		os.Exit(1)
 	}
-	log.Println("[CMD] Finished running ML64")
+	orth_debug.LogStep("[CMD] Finished running ML64")
 
 	for _, file := range rmvFiles {
-		log.Println("[CMD] Deleting extra files")
+		orth_debug.LogStep("[CMD] Deleting extra files")
 		if err = os.Remove(file); err != nil {
 			panic(err)
 		}
@@ -50,7 +56,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 }
 
 func compileMasm(program orthtypes.Program, output *os.File) {
-	log.Println("[CMD] Writing assembly")
+	orth_debug.LogStep("[CMD] Writing assembly")
 	defer output.Close()
 
 	// basic header stuff
@@ -210,9 +216,35 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("; Print string\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke StdOut, rax\n")
+		case orthtypes.Mult:
+			writer.WriteString("; Mult\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	imul rax, rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Minus:
+			writer.WriteString("; Sub\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	sub rbx, rax\n")
+			writer.WriteString("	push rbx\n")
+		case orthtypes.Div:
+			writer.WriteString("; Div\n")
+			writer.WriteString("	xor rdx, rdx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	div rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Mod:
+			writer.WriteString("; Mod\n")
+			writer.WriteString("	xor rdx, rdx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	div rbx\n")
+			writer.WriteString("	push rdx\n")
 		}
 	}
 	writer.WriteString("end\n")
 	writer.Flush()
-	log.Println("[CMD] Finished writing assembly")
+	orth_debug.LogStep("[CMD] Finished writing assembly")
 }

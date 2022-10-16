@@ -1,13 +1,25 @@
 package orth_debug
 
-import "flag"
+import (
+	"flag"
+	"log"
+)
 
 var (
-	Simulate   = flag.Bool("s", false, "Simulates a program")
-	Compile    = flag.String("c", "", "-c[masm|nasm|fasm]")
-	DumpVMCode = flag.Bool("d", false, "Print to stdout the generated orth VM code")
-	Help       = flag.Bool("h", false, "Describes useful thing about the compiler")
+	Simulate   = flag.Bool("sim", false, "Simulates a program")
+	Compile    = flag.String("com", "", "-com[masm|nasm|fasm]")
+	DumpVMCode = flag.Bool("dump", false, "Print to stdout the generated orth VM code")
+	Help       = flag.Bool("help", false, "Describes useful thing about the compiler")
+	Log        = flag.Bool("log", false, "Enable log for each step")
 )
+
+func LogStep(message string) {
+	if !*Log {
+		return
+	}
+
+	log.Println(message)
+}
 
 func ToStringIntruction() map[int]string {
 	m := make(map[int]string)
@@ -38,8 +50,4 @@ func ToStringIntruction() map[int]string {
 	m[24] = "Func"
 	m[25] = "Call"
 	return m
-}
-
-func init() {
-	flag.Parse()
 }
