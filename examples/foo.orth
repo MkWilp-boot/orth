@@ -1,0 +1,23 @@
+@include "std.orth"
+
+proc main in
+    // write "abc" to the memory
+    mem i32 0 + i8 97 .
+    mem i32 1 + i8 98 .
+    mem i32 2 + i8 99 .
+
+    // WINDOWS ONLY
+    i32 0       // Reserved. not gonna use it
+    dup         // NumberOfCharsWritten. not gona use it
+    i32 3       // size of the buffer to print
+    mem         // buffer
+    i32 -11     // stdout... why -11
+    syscall5    //
+
+    // overwrite the "abc" making it "bcd"
+    mem i32 0 + dup , i8 1 + .
+    mem i32 1 + dup , i8 1 + .
+    mem i32 2 + dup , i8 1 + .
+
+    i32 0 i32 0 i32 3 mem i32 -11 syscall5 // print the buffer
+end

@@ -1,0 +1,27 @@
+i 35 i 35 + i 70 ==
+if 
+    s "Equal\n" print
+else
+    s "False!\n" print
+end
+
+i 35 i 35 + i 70 <>
+if 
+    s "false! last item is a 70\n" print
+else
+    s "true! last item is a 70\n" print
+end
+
+i 420 i 70 <
+if 
+    s "true! 420 is greater than 70\n" print
+else
+    s "false! 420 is greater than 70\n" print
+end
+
+i 420 i 70 >
+if 
+    s "true! 420 is greater than 70\n" print
+else
+    s "false! 420 is greater than 70\n" print
+end
