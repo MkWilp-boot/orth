@@ -12,7 +12,6 @@ import (
 )
 
 var varsAndValues chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]
-var rmvFiles = []string{"mllink$.lnk", "output.ilk", "output.obj", "output.pdb"}
 
 func init() {
 	varsAndValues = make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand])
@@ -27,14 +26,17 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	if assemblyType != "masm" {
 		panic("[TEMP]: the current supported assembly is MASM")
 	}
-	output, err := os.Create("../../output.asm")
+
+	finalAsm := fmt.Sprintf("%s.asm", *orth_debug.ObjectName)
+
+	output, err := os.Create(finalAsm)
 	if err != nil {
 		panic(err)
 	}
 
 	compileMasm(program, output)
 
-	compileCmd := exec.Command("ml64.exe", "../../output.asm", "/nologo", "/Zi", "/W3", "/link", "/entry:main")
+	compileCmd := exec.Command("ml64.exe", finalAsm, "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
 	orth_debug.LogStep("[CMD] Running ML64")
 	var stdout bytes.Buffer
@@ -47,12 +49,11 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	}
 	orth_debug.LogStep("[CMD] Finished running ML64")
 
-	for _, file := range rmvFiles {
-		orth_debug.LogStep("[CMD] Deleting extra files")
-		if err = os.Remove(file); err != nil {
-			panic(err)
-		}
+	if *orth_debug.UnclearFiles {
+		orth_debug.LogStep("[CMD] UCLR flag active, files won't be deleted")
+		return
 	}
+	embedded_helpers.CleanUp()
 }
 
 func compileMasm(program orthtypes.Program, output *os.File) {
