@@ -36,8 +36,16 @@ func init() {
 
 func main() {
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
-	tokenProgram := lexer.LexFile(strProgram)
-	program := embedded.CrossReferenceBlocks(embedded.ParseTokenAsOperation(tokenProgram))
+	lexedFiles := lexer.LexFile(strProgram)
+	program, tokenErrors := embedded.ParseTokenAsOperation(lexedFiles)
+	if tokenErrors != nil {
+		for _, err := range tokenErrors {
+			fmt.Printf("error: %v\n", err)
+		}
+		return
+	}
+
+	program = embedded.CrossReferenceBlocks(program)
 
 	switch {
 	case *orth_debug.Compile != "":
