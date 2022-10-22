@@ -58,6 +58,19 @@ type Operand struct {
 	Operand string
 }
 
+type OutOfOrder struct {
+	Vars chan Pair[Operand, Operand]
+}
+
+type SliceOf[T comparable] struct {
+	Slice *[]T
+}
+
+type File[T comparable] struct {
+	Name      string
+	CodeBlock T
+}
+
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
 	return GlobalTypes[TYPE][o.Operand.VarType] != "" ||

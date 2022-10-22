@@ -18,46 +18,70 @@ func getParams(regEx, line string) (paramsMap []string) {
 	return paramsMap
 }
 
-// LoadProgramFromFile receives a path for a program and returns LexFile(path)
-func LoadProgramFromFile(path string) string {
+func LoadProgramFromFile(path string) []orthtypes.File[string] {
 	fileBytes, err := os.ReadFile(path)
+	removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
+	path = removePathToFile.ReplaceAllString(path, "")
+
 	if err != nil {
 		panic(err)
 	}
 
 	strProgram := string(fileBytes)
+	files := make([]orthtypes.File[string], 1)
+
+	files[0] = orthtypes.File[string]{
+		Name:      path,
+		CodeBlock: strProgram,
+	}
+
 	includeFiles := getParams(`(?i)@include\s"(?P<File>\w+\.orth)"`, strProgram)
 
 	for _, v := range includeFiles {
 		rmInclude := regexp.MustCompile(`(?i)@include\s"` + v + `"\r?\n?`)
 		strProgram = rmInclude.ReplaceAllString(strProgram, "")
+		files[0].CodeBlock = strProgram
+
 		includedProgram := LoadProgramFromFile(v)
-		strProgram = includedProgram + strProgram
+		files = append(files, includedProgram...)
 	}
-	return strProgram
+	return files
 }
 
 // LexFile receives a pure text program then
 // separate and enumerates all tokens present within the provided program
-func LexFile(strProgram string) []orthtypes.StringEnum {
-	lines := make([]orthtypes.StringEnum, 0)
-	for lineNumber, line := range strings.Split(strProgram, "\r\n") {
-		if len(line) == 0 {
-			continue
-		}
-		enumeration := make(chan orthtypes.Vec2DString)
+func LexFile(programFiles []orthtypes.File[string]) []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]] {
+	lexedFiles := make([]orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]], 0)
 
-		go EnumerateLine(line, enumeration)
+	for _, file := range programFiles {
+		pLines := strings.Split(file.CodeBlock, "\r\n")
+		lines := make([]orthtypes.StringEnum, 0)
 
-		for enumeratedLine := range enumeration {
-			vec2d := orthtypes.StringEnum{
-				Index:   lineNumber + 1,
-				Content: enumeratedLine,
+		for lineNumber, line := range pLines {
+			if len(line) == 0 {
+				continue
 			}
-			lines = append(lines, vec2d)
+			enumeration := make(chan orthtypes.Vec2DString)
+
+			go EnumerateLine(line, enumeration)
+
+			for enumeratedLine := range enumeration {
+				vec2d := orthtypes.StringEnum{
+					Index:   lineNumber + 1,
+					Content: enumeratedLine,
+				}
+				lines = append(lines, vec2d)
+			}
 		}
+
+		lexedFiles = append(lexedFiles, orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]]{
+			Name: file.Name,
+			CodeBlock: orthtypes.SliceOf[orthtypes.StringEnum]{
+				Slice: &lines,
+			},
+		})
 	}
-	return lines
+	return lexedFiles
 }
 
 // findCol separates the tokens in a `line` starting at `start` by executing a predicate

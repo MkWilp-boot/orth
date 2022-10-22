@@ -32,14 +32,14 @@ func CleanUp() {
 	}
 }
 
-func RetrieveProgramInfo(program orthtypes.Program, ops chan<- orthtypes.Pair[orthtypes.Operand, orthtypes.Operand], act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
+func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
 	for i, operation := range program.Operations {
 		retreive := act(&program, operation, i)
 		for _, op := range retreive {
-			ops <- op
+			outOfOrder.Vars <- op
 		}
 	}
-	close(ops)
+	close(outOfOrder.Vars)
 }
 
 func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand] {

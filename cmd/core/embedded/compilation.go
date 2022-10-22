@@ -11,17 +11,15 @@ import (
 	"os/exec"
 )
 
-var varsAndValues chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]
-
-func init() {
-	varsAndValues = make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand])
-}
-
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
 	orth_debug.LogStep("[INFO] Started compilation workflow")
 
-	go embedded_helpers.RetrieveProgramInfo(program, varsAndValues, embedded_helpers.GetVarsAndValues)
+	outOfOrder := orthtypes.OutOfOrder{
+		Vars: make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]),
+	}
+
+	go embedded_helpers.RetrieveProgramInfo(program, outOfOrder, embedded_helpers.GetVarsAndValues)
 
 	if assemblyType != "masm" {
 		panic("[TEMP]: the current supported assembly is MASM")
@@ -34,7 +32,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 		panic(err)
 	}
 
-	compileMasm(program, output)
+	compileMasm(program, outOfOrder, output)
 
 	compileCmd := exec.Command("ml64.exe", finalAsm, "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
@@ -56,7 +54,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	embedded_helpers.CleanUp()
 }
 
-func compileMasm(program orthtypes.Program, output *os.File) {
+func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, output *os.File) {
 	orth_debug.LogStep("[CMD] Writing assembly")
 	defer output.Close()
 
@@ -66,7 +64,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 	// data segment (pre-defined)
 	writer.WriteString(".DATA\n")
-	for pair := range varsAndValues {
+	for pair := range outOfOrder.Vars {
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
 
@@ -98,6 +96,35 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.WriteString("    ret\n")
 	writer.WriteString("p_dump_ui64 ENDP\n")
 
+	writer.WriteString("; RCX: pointer pointing to where to start slicing\n")
+	writer.WriteString("; RDX: amount of chars to slice\n")
+	writer.WriteString("p_dump_mem proc\n")
+	writer.WriteString("	local buffer[255]: byte\n")
+	writer.WriteString("	push rbx\n")
+	writer.WriteString("	push rax\n")
+	writer.WriteString("	push r8\n")
+	writer.WriteString("\n")
+	writer.WriteString("	xor r8, r8\n")
+	writer.WriteString("	lea rax, buffer\n")
+	writer.WriteString("_begin:\n")
+	writer.WriteString("	xor rbx, rbx\n")
+	writer.WriteString("	mov bl, BYTE PTR [rcx+r8]\n")
+	writer.WriteString("\n")
+	writer.WriteString("	mov [rax+r8], bl\n")
+	writer.WriteString("	inc r8\n")
+	writer.WriteString("	cmp rdx, r8\n")
+	writer.WriteString("	jne _begin\n")
+	writer.WriteString("_end:\n")
+	writer.WriteString("	mov BYTE PTR [rax+r8], 0\n")
+	writer.WriteString("\n")
+	writer.WriteString("	invoke StdOut, rax\n")
+	writer.WriteString("\n")
+	writer.WriteString("	pop r8\n")
+	writer.WriteString("	pop rax\n")
+	writer.WriteString("	pop rbx\n")
+	writer.WriteString("	ret\n")
+	writer.WriteString("p_dump_mem endp\n")
+
 	for ip := 0; ip < len(program.Operations); ip++ {
 		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
 
@@ -125,15 +152,11 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rbx ; value to store\n")
 			writer.WriteString("	pop rax ; address of mem\n")
 			writer.WriteString("	mov BYTE PTR [rax], bl\n")
-		case orthtypes.Syscall5:
-			writer.WriteString("; syscall with 3 params\n")
-			writer.WriteString("	pop rax\n")
-			writer.WriteString("	invoke GetStdHandle, rax\n")
+		case orthtypes.DumpMem:
+			writer.WriteString("; dump_mem\n")
 			writer.WriteString("	pop rbx\n")
-			writer.WriteString("	pop r9\n")
-			writer.WriteString("	pop r10\n")
-			writer.WriteString("	pop r11\n")
-			writer.WriteString("	invoke WriteConsole, rax, rbx, r9, r10, r11\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	invoke p_dump_mem, rbx, rax\n")
 		case orthtypes.Sum:
 			writer.WriteString("; Sum\n")
 			writer.WriteString("	pop rax\n")

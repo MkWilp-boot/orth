@@ -1,0 +1,4 @@
+error: unknow token "o" in "repo/compilation_error.orth" at line: 2 colum: 4
+error: unknow token "psdsa" in "repo/compilation_error.orth" at line: 2 colum: 6
+error: unknow token "k" in "repo/compilation_error.orth" at line: 3 colum: 4
+error: unknow token "999" in "repo/compilation_error.orth" at line: 3 colum: 6

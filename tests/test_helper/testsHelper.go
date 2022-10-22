@@ -11,13 +11,25 @@ import (
 	"regexp"
 )
 
-func PrepareComp(fileName string) {
-	program := embedded.CrossReferenceBlocks(
-		embedded.ParseTokenAsOperation(
-			lexer.LexFile(
-				lexer.LoadProgramFromFile(fileName))))
+func ErrSliceToStringSlice(errs []error) []string {
+	sErrors := make([]string, len(errs), cap(errs))
+	for i, err := range errs {
+		sErrors[i] = err.Error()
+	}
+	return sErrors
+}
 
-	embedded.Compile(program, *orth_debug.Compile)
+func PrepareComp(fileName string) []error {
+	strProgram := lexer.LoadProgramFromFile(fileName)
+	lexedFiles := lexer.LexFile(strProgram)
+	program, tokenErrors := embedded.ParseTokenAsOperation(lexedFiles)
+
+	if len(tokenErrors) == 0 {
+		program = embedded.CrossReferenceBlocks(program)
+		embedded.Compile(program, *orth_debug.Compile)
+	}
+
+	return tokenErrors
 }
 
 func ExecOutput() (programOutput string) {
