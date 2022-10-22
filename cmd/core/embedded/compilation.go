@@ -16,7 +16,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	orth_debug.LogStep("[INFO] Started compilation workflow")
 
 	outOfOrder := orthtypes.OutOfOrder{
-		Vars: make(chan orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]),
+		Vars: make(chan orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]),
 	}
 
 	go embedded_helpers.RetrieveProgramInfo(program, outOfOrder, embedded_helpers.GetVarsAndValues)
@@ -103,22 +103,18 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("	push rbx\n")
 	writer.WriteString("	push rax\n")
 	writer.WriteString("	push r8\n")
-	writer.WriteString("\n")
 	writer.WriteString("	xor r8, r8\n")
 	writer.WriteString("	lea rax, buffer\n")
 	writer.WriteString("_begin:\n")
 	writer.WriteString("	xor rbx, rbx\n")
 	writer.WriteString("	mov bl, BYTE PTR [rcx+r8]\n")
-	writer.WriteString("\n")
 	writer.WriteString("	mov [rax+r8], bl\n")
 	writer.WriteString("	inc r8\n")
 	writer.WriteString("	cmp rdx, r8\n")
 	writer.WriteString("	jne _begin\n")
 	writer.WriteString("_end:\n")
 	writer.WriteString("	mov BYTE PTR [rax+r8], 0\n")
-	writer.WriteString("\n")
 	writer.WriteString("	invoke StdOut, rax\n")
-	writer.WriteString("\n")
 	writer.WriteString("	pop r8\n")
 	writer.WriteString("	pop rax\n")
 	writer.WriteString("	pop rbx\n")
@@ -234,7 +230,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	invoke p_dump_ui64, rax\n")
 		case orthtypes.Hold:
 			writer.WriteString("; Hold var\n")
-			writer.WriteString("	lea rax, " + op.Operand.Operand + "\n")
+			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(op) + "\n")
 			writer.WriteString("	push rax\n")
 		case orthtypes.PutString:
 			writer.WriteString("; Print string\n")

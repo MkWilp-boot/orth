@@ -6,6 +6,7 @@ import (
 	"orth/cmd/core/embedded"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
+	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
 	"regexp"
@@ -20,16 +21,33 @@ func ErrSliceToStringSlice(errs []error) []string {
 }
 
 func PrepareComp(fileName string) []error {
+	errs := make([]error, 0)
 	strProgram := lexer.LoadProgramFromFile(fileName)
 	lexedFiles := lexer.LexFile(strProgram)
-	program, tokenErrors := embedded.ParseTokenAsOperation(lexedFiles)
 
-	if len(tokenErrors) == 0 {
-		program = embedded.CrossReferenceBlocks(program)
-		embedded.Compile(program, *orth_debug.Compile)
+	parseTokenResult := make(chan orthtypes.Pair[orthtypes.Program, error])
+	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
+
+	result := <-parseTokenResult
+
+	if result.VarValue != nil {
+		errs = append(errs, result.VarValue)
+		return errs
 	}
 
-	return tokenErrors
+	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
+	go embedded.CrossReferenceBlocks(result.VarName, crossRefererenceResult)
+
+	result = <-crossRefererenceResult
+
+	if result.VarValue != nil {
+		errs = append(errs, result.VarValue)
+		return errs
+	}
+	program := result.VarName
+	embedded.Compile(program, *orth_debug.Compile)
+
+	return errs
 }
 
 func ExecOutput() (programOutput string) {

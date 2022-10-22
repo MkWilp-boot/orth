@@ -17,6 +17,18 @@ func TestCompilationErrorMessages(t *testing.T) {
 	}
 }
 
+func TestVarMangle(t *testing.T) {
+	errors := testhelper.PrepareComp("./repo/var_mangle.orth")
+	expected := testhelper.LoadExpected("TestVarMangle")
+
+	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
+
+	if programErros != expected {
+		testhelper.DumpOutput(programErros, "TestVarMangle")
+		t.FailNow()
+	}
+}
+
 func TestIntegerArithmetics(t *testing.T) {
 	testhelper.PrepareComp("./repo/integer_arithmetics.orth")
 	expected := testhelper.LoadExpected("TestIntegerArithmetics")

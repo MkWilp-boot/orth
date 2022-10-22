@@ -35,17 +35,28 @@ func init() {
 }
 
 func main() {
+	var program orthtypes.Program
+
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
 	lexedFiles := lexer.LexFile(strProgram)
-	program, tokenErrors := embedded.ParseTokenAsOperation(lexedFiles)
-	if tokenErrors != nil {
-		for _, err := range tokenErrors {
-			fmt.Printf("error: %v\n", err)
-		}
-		return
-	}
 
-	program = embedded.CrossReferenceBlocks(program)
+	parseTokenResult := make(chan orthtypes.Pair[orthtypes.Program, error])
+	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
+
+	result := <-parseTokenResult
+	if result.VarValue != nil {
+		fmt.Printf("%v\n", result.VarValue)
+		os.Exit(1)
+	}
+	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
+	go embedded.CrossReferenceBlocks(result.VarName, crossRefererenceResult)
+
+	result = <-crossRefererenceResult
+	if result.VarValue != nil {
+		fmt.Printf("%v\n", result.VarValue)
+		os.Exit(1)
+	}
+	program = result.VarName
 
 	switch {
 	case *orth_debug.Compile != "":
