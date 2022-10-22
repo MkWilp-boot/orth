@@ -1,12 +1,14 @@
+var space = s " "
+
 proc main in
     // write "abc " to the memory
     mem i32 0 + i8 97 .
     mem i32 1 + i8 98 .
     mem i32 2 + i8 99 .
-    mem i32 3 + i8 32 .
 
-    // WINDOWS ONLY
-    i 4 mem dump_mem
+    i 3 mem dump_mem
+
+    hold space put_string
 
     // overwrite the "abc" making it "bcd"
     mem i32 0 + dup , i8 1 + .

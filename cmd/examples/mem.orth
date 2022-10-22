@@ -1,2 +1,0 @@
-mem address 0 s "I am in the 'mem' storage!" .
-mem address 0 , print
