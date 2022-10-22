@@ -3,7 +3,7 @@ package orthtypes
 // Program is the main struct for a transpiled
 // orth code into machine code
 type Program struct {
-	Id         uint
+	Id         int
 	Operations []Operation
 }
 
@@ -43,6 +43,6 @@ const (
 	Proc
 	In
 	Invoke
-	Syscall5
+	DumpMem
 	TotalOps
 )

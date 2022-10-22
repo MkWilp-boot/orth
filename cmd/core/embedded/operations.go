@@ -71,200 +71,211 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 }
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
-func ParseTokenAsOperation(preProgram []orthtypes.StringEnum) orthtypes.Program {
-	orth_debug.LogStep("[CMD] Now parsing tokens")
-	program := orthtypes.Program{}
+func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]]) (orthtypes.Program, []error) {
+	program := orthtypes.Program{
+		Id: len(tokenFiles),
+	}
+	tokenErrors := make([]error, 0)
 
-	for i, v := range preProgram {
-		if v.Content.ValidPos {
-			continue
-		}
-		switch v.Content.Content {
-		case orthtypes.ADDR:
-			fallthrough
-		case orthtypes.PrimitiveRNT:
-			fallthrough
-		case orthtypes.PrimitiveInt:
-			fallthrough
-		case orthtypes.PrimitiveI8:
-			fallthrough
-		case orthtypes.PrimitiveI16:
-			fallthrough
-		case orthtypes.PrimitiveI32:
-			fallthrough
-		case orthtypes.PrimitiveI64:
-			fallthrough
-		case orthtypes.PrimitiveF32:
-			fallthrough
-		case orthtypes.PrimitiveF64:
-			fallthrough
-		case orthtypes.PrimitiveBOOL:
-			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
-			program.Operations = append(program.Operations, ins)
-		case orthtypes.PrimitiveSTR:
-			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push)
-			program.Operations = append(program.Operations, ins)
-		case "+":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)
-			program.Operations = append(program.Operations, ins)
-		case "-":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Minus)
-			program.Operations = append(program.Operations, ins)
-		case "*":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mult)
-			program.Operations = append(program.Operations, ins)
-		case "/":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
-			program.Operations = append(program.Operations, ins)
-		case "put_u64":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.PutU64)
-			program.Operations = append(program.Operations, ins)
-		case "==":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)
-			program.Operations = append(program.Operations, ins)
-		case "<>":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.NotEqual)
-			program.Operations = append(program.Operations, ins)
-		case "<":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Lt)
-			program.Operations = append(program.Operations, ins)
-		case ">":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Gt)
-			program.Operations = append(program.Operations, ins)
-		case "if":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.If)
-			program.Operations = append(program.Operations, ins)
-		case "else":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else)
-			program.Operations = append(program.Operations, ins)
-		case "end":
-			ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End)
-			program.Operations = append(program.Operations, ins)
-		case "put_string":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
-			program.Operations = append(program.Operations, ins)
-		case "dup":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup)
-			program.Operations = append(program.Operations, ins)
-		case "while":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While)
-			program.Operations = append(program.Operations, ins)
-		case "proc":
-			preProgram[i+1].Content.ValidPos = true
-			pName := preProgram[i+1].Content.Content
+	for fIndex, file := range tokenFiles {
+		for i, v := range *file.CodeBlock.Slice {
+			preProgram := (*tokenFiles[fIndex].CodeBlock.Slice)
 
-			ins := parseToken(orthtypes.PrimitiveProc, pName, orthtypes.Proc)
-			program.Operations = append(program.Operations, ins)
-		case "in":
-			ins := parseToken(orthtypes.PrimitiveIn, "", orthtypes.In)
-			program.Operations = append(program.Operations, ins)
-		case "do":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do)
-			program.Operations = append(program.Operations, ins)
-		case "drop":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Drop)
-			program.Operations = append(program.Operations, ins)
-		case "swap":
-			ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Swap)
-			program.Operations = append(program.Operations, ins)
-		case "%":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mod)
-			program.Operations = append(program.Operations, ins)
-		case orthtypes.PrimitiveMem:
-			ins := parseToken(orthtypes.PrimitiveMem, orthtypes.PrimitiveMem, orthtypes.Mem)
-			program.Operations = append(program.Operations, ins)
-		case ".":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Store)
-			program.Operations = append(program.Operations, ins)
-		case ",":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
-			program.Operations = append(program.Operations, ins)
-		case "call":
-			_, ok := functions.Functions[preProgram[i+1].Content.Content]
-			if !ok {
-				panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Content))
+			if v.Content.ValidPos {
+				continue
 			}
-			preProgram[i+1].Content.ValidPos = true
-			ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
-			program.Operations = append(program.Operations, ins)
-		case ",!":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay)
-			program.Operations = append(program.Operations, ins)
-		case "type":
-			preProgram[i+1].Content.ValidPos = true
-
-			ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
-
-			program.Operations = append(program.Operations, ins)
-		case "var":
-			re := regexp.MustCompile(`[^\w]`)
-
-			// check name
-			if re.Match([]byte(preProgram[i+1].Content.Content)) {
-				panic("var has invalid characters in it's composition")
-			}
-			// check if has a value
-			if preProgram[i+2].Content.Content != "=" {
-				switch {
-				// used as a func param
-				case preProgram[i+2].Content.Content == "call":
-					preProgram[i+1].Content.ValidPos = true
-					ins := parseToken(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, orthtypes.Push)
-					program.Operations = append(program.Operations, ins)
-					continue
-				default:
-					panic("var must be initialized with `=` sign")
-				}
-			}
-
-			for x := 1; x < 5; x++ {
-				preProgram[i+x].Content.ValidPos = true
-			}
-
-			vName := preProgram[i+1].Content.Content
-			vType := preProgram[i+3].Content.Content
-
-			var vValue string
-
-			switch vType {
-			case orthtypes.PrimitiveSTR:
+			switch v.Content.Content {
+			case orthtypes.ADDR:
 				fallthrough
-			case orthtypes.RNGABL:
-				vValue = preProgram[i+4].Content.Content[1 : len(preProgram[i+4].Content.Content)-1]
+			case orthtypes.PrimitiveRNT:
+				fallthrough
+			case orthtypes.PrimitiveInt:
+				fallthrough
+			case orthtypes.PrimitiveI8:
+				fallthrough
+			case orthtypes.PrimitiveI16:
+				fallthrough
+			case orthtypes.PrimitiveI32:
+				fallthrough
+			case orthtypes.PrimitiveI64:
+				fallthrough
+			case orthtypes.PrimitiveF32:
+				fallthrough
+			case orthtypes.PrimitiveF64:
+				fallthrough
+			case orthtypes.PrimitiveBOOL:
+				preProgram[i+1].Content.ValidPos = true
+				ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
+				program.Operations = append(program.Operations, ins)
+			case orthtypes.PrimitiveSTR:
+				preProgram[i+1].Content.ValidPos = true
+				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push)
+				program.Operations = append(program.Operations, ins)
+			case "+":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)
+				program.Operations = append(program.Operations, ins)
+			case "-":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Minus)
+				program.Operations = append(program.Operations, ins)
+			case "*":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mult)
+				program.Operations = append(program.Operations, ins)
+			case "/":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
+				program.Operations = append(program.Operations, ins)
+			case "put_u64":
+				ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.PutU64)
+				program.Operations = append(program.Operations, ins)
+			case "==":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Equal)
+				program.Operations = append(program.Operations, ins)
+			case "<>":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.NotEqual)
+				program.Operations = append(program.Operations, ins)
+			case "<":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Lt)
+				program.Operations = append(program.Operations, ins)
+			case ">":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Gt)
+				program.Operations = append(program.Operations, ins)
+			case "if":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.If)
+				program.Operations = append(program.Operations, ins)
+			case "else":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else)
+				program.Operations = append(program.Operations, ins)
+			case "end":
+				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End)
+				program.Operations = append(program.Operations, ins)
+			case "put_string":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
+				program.Operations = append(program.Operations, ins)
+			case "dup":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup)
+				program.Operations = append(program.Operations, ins)
+			case "while":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While)
+				program.Operations = append(program.Operations, ins)
+			case "proc":
+				preProgram[i+1].Content.ValidPos = true
+				pName := preProgram[i+1].Content.Content
+
+				ins := parseToken(orthtypes.PrimitiveProc, pName, orthtypes.Proc)
+				program.Operations = append(program.Operations, ins)
+			case "in":
+				ins := parseToken(orthtypes.PrimitiveIn, "", orthtypes.In)
+				program.Operations = append(program.Operations, ins)
+			case "do":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Do)
+				program.Operations = append(program.Operations, ins)
+			case "drop":
+				ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Drop)
+				program.Operations = append(program.Operations, ins)
+			case "swap":
+				ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.Swap)
+				program.Operations = append(program.Operations, ins)
+			case "%":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Mod)
+				program.Operations = append(program.Operations, ins)
+			case orthtypes.PrimitiveMem:
+				ins := parseToken(orthtypes.PrimitiveMem, orthtypes.PrimitiveMem, orthtypes.Mem)
+				program.Operations = append(program.Operations, ins)
+			case ".":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Store)
+				program.Operations = append(program.Operations, ins)
+			case ",":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
+				program.Operations = append(program.Operations, ins)
+			case "call":
+				_, ok := functions.Functions[preProgram[i+1].Content.Content]
+				if !ok {
+					panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Content))
+				}
+				preProgram[i+1].Content.ValidPos = true
+				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
+				program.Operations = append(program.Operations, ins)
+			case ",!":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay)
+				program.Operations = append(program.Operations, ins)
+			case "type":
+				preProgram[i+1].Content.ValidPos = true
+
+				ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
+
+				program.Operations = append(program.Operations, ins)
+			case "var":
+				re := regexp.MustCompile(`[^\w]`)
+
+				// check name
+				if re.Match([]byte(preProgram[i+1].Content.Content)) {
+					panic("var has invalid characters in it's composition")
+				}
+				// check if has a value
+				if preProgram[i+2].Content.Content != "=" {
+					switch {
+					// used as a func param
+					case preProgram[i+2].Content.Content == "call":
+						preProgram[i+1].Content.ValidPos = true
+						ins := parseToken(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, orthtypes.Push)
+						program.Operations = append(program.Operations, ins)
+						continue
+					default:
+						panic("var must be initialized with `=` sign")
+					}
+				}
+
+				for x := 1; x < 5; x++ {
+					preProgram[i+x].Content.ValidPos = true
+				}
+
+				vName := preProgram[i+1].Content.Content
+				vType := preProgram[i+3].Content.Content
+
+				var vValue string
+
+				switch vType {
+				case orthtypes.PrimitiveSTR:
+					fallthrough
+				case orthtypes.RNGABL:
+					vValue = preProgram[i+4].Content.Content[1 : len(preProgram[i+4].Content.Content)-1]
+				default:
+					vValue = preProgram[i+4].Content.Content
+				}
+
+				ins := parseToken(vType, vValue, orthtypes.Push)
+				program.Operations = append(program.Operations, ins)
+
+				ins = parseToken(orthtypes.PrimitiveVar, vName, orthtypes.Var)
+				program.Operations = append(program.Operations, ins)
+			case "hold":
+				preProgram[i+1].Content.ValidPos = true
+				vName := preProgram[i+1].Content.Content
+
+				ins := parseToken(orthtypes.PrimitiveHold, vName, orthtypes.Hold)
+				program.Operations = append(program.Operations, ins)
+			case "invoke":
+				preProgram[i+1].Content.ValidPos = true
+				pName := preProgram[i+1].Content.Content
+
+				ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
+				program.Operations = append(program.Operations, ins)
+			case "dump_mem":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.DumpMem)
+				program.Operations = append(program.Operations, ins)
 			default:
-				vValue = preProgram[i+4].Content.Content
-			}
-
-			ins := parseToken(vType, vValue, orthtypes.Push)
-			program.Operations = append(program.Operations, ins)
-
-			ins = parseToken(orthtypes.PrimitiveVar, vName, orthtypes.Var)
-			program.Operations = append(program.Operations, ins)
-		case "hold":
-			preProgram[i+1].Content.ValidPos = true
-			vName := preProgram[i+1].Content.Content
-
-			ins := parseToken(orthtypes.PrimitiveHold, vName, orthtypes.Hold)
-			program.Operations = append(program.Operations, ins)
-		case "invoke":
-			preProgram[i+1].Content.ValidPos = true
-			pName := preProgram[i+1].Content.Content
-
-			ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
-			program.Operations = append(program.Operations, ins)
-		case "syscall5":
-			ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Syscall5)
-			program.Operations = append(program.Operations, ins)
-		default:
-			if !v.Content.ValidPos {
-				panic(fmt.Errorf("unknow token %q at line: %d colum: %d", v.Content.Content, v.Index, v.Content.Index))
+				if !v.Content.ValidPos {
+					err := fmt.Errorf("error: unknow token %q in %q at line: %d colum: %d", v.Content.Content, file.Name, v.Index, v.Content.Index)
+					tokenErrors = append(tokenErrors, err)
+				}
 			}
 		}
 	}
-	orth_debug.LogStep("[CMD] Finished parsing tokens")
-	return program
+
+	if len(tokenErrors) != 0 {
+		return orthtypes.Program{}, tokenErrors
+	}
+
+	return program, nil
 }
 
 // parseToken parses a single token into a instruction

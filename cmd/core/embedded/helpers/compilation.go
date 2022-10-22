@@ -2,19 +2,44 @@ package embedded_helpers
 
 import (
 	"fmt"
+	"log"
+	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
+	"os"
 	"strconv"
 	"strings"
 )
 
-func RetrieveProgramInfo(program orthtypes.Program, ops chan<- orthtypes.Pair[orthtypes.Operand, orthtypes.Operand], act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
+func CleanUp() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("CleanUp Error:", fmt.Sprintf("%v", err))
+		}
+	}()
+
+	var rmvFiles = []string{
+		"mllink$.lnk",
+		*orth_debug.ObjectName + ".ilk",
+		*orth_debug.ObjectName + ".obj",
+		*orth_debug.ObjectName + ".pdb",
+	}
+
+	for _, file := range rmvFiles {
+		orth_debug.LogStep("[CMD] Deleting extra files")
+		if err := os.Remove(file); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
 	for i, operation := range program.Operations {
 		retreive := act(&program, operation, i)
 		for _, op := range retreive {
-			ops <- op
+			outOfOrder.Vars <- op
 		}
 	}
-	close(ops)
+	close(outOfOrder.Vars)
 }
 
 func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand] {

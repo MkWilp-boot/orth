@@ -1,0 +1,5 @@
+proc main in
+    o psdsa
+    k 999
+    i 900 put_u64
+end
