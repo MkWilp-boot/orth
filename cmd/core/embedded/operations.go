@@ -8,6 +8,8 @@ import (
 	"regexp"
 )
 
+const globalScope = "Global"
+
 func PopLast[T comparable](root *[]T) T {
 	stack := *root
 	ret := stack[len(stack)-1]
@@ -17,8 +19,11 @@ func PopLast[T comparable](root *[]T) T {
 
 // CrossReferenceBlocks loops over a program and define all inter references
 // needed for execution. Ex: if-else-do blocks
-func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
+func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtypes.Pair[orthtypes.Program, error]) {
+
 	stack := make([]orthtypes.Pair[int, orthtypes.Operation], 0)
+	orthVars := make(map[string]map[string]int) // context -> var_name -> vars_declared
+	context := globalScope
 
 	// program.Operations[ip] is actually the current position in loop
 	for ip, v := range program.Operations {
@@ -27,9 +32,35 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 			VarValue: v,
 		}
 		switch v.Instruction {
+		case orthtypes.Var:
+			_, ok := orthVars[context]
+			if !ok {
+				orthVars[context] = make(map[string]int)
+			}
+			orthVars[context][v.Operand.Operand]++
+
+			if orthVars[context][v.Operand.Operand] != 1 || (context != globalScope && orthVars[globalScope][v.Operand.Operand] == 1) {
+				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
+					VarName:  orthtypes.Program{},
+					VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "Var", v.Operand.Operand, context),
+				}
+				close(crossResult)
+				return
+			}
+			program.Operations[ip].Context = context
+		case orthtypes.Hold:
+			holds := program.Filter(func(op orthtypes.Operation) bool {
+				return op == v
+			})
+			vD := program.Filter(func(op orthtypes.Operation) bool {
+				return op.Operand.VarType == orthtypes.PrimitiveVar && op.Operand.Operand == holds[0].VarValue.Operand.Operand
+			})
+
+			program.Operations[holds[0].VarName].Context = vD[0].VarValue.Context
 		case orthtypes.If:
 			fallthrough
 		case orthtypes.Proc:
+			context = v.Operand.Operand
 			fallthrough
 		case orthtypes.While:
 			stack = append(stack, pair)
@@ -45,10 +76,13 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 		case orthtypes.End:
 			blockIp := PopLast(&stack)
 			switch {
-			case program.Operations[blockIp.VarName].Instruction == orthtypes.If || program.Operations[blockIp.VarName].Instruction == orthtypes.Else:
+			case program.Operations[blockIp.VarName].Instruction == orthtypes.If:
+				fallthrough
+			case program.Operations[blockIp.VarName].Instruction == orthtypes.Else:
 				program.Operations[blockIp.VarName].RefBlock = ip
 				program.Operations[ip].RefBlock = ip + 1 // end block
 			case program.Operations[blockIp.VarName].Instruction == orthtypes.In:
+				context = globalScope
 				fallthrough
 			case program.Operations[blockIp.VarName].Instruction == orthtypes.Do:
 				if program.Operations[blockIp.VarName].RefBlock == -1 {
@@ -67,15 +101,20 @@ func CrossReferenceBlocks(program orthtypes.Program) orthtypes.Program {
 			stack = append(stack, pair)
 		}
 	}
-	return program
+	crossResult <- orthtypes.Pair[orthtypes.Program, error]{
+		VarName:  program,
+		VarValue: nil,
+	}
+	close(crossResult)
 }
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
-func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]]) (orthtypes.Program, []error) {
+func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]], parseTokenResult chan<- orthtypes.Pair[orthtypes.Program, error]) {
 	program := orthtypes.Program{
 		Id: len(tokenFiles),
 	}
-	tokenErrors := make([]error, 0)
+	var context string
+	procNames := make(map[string]int)
 
 	for fIndex, file := range tokenFiles {
 		for i, v := range *file.CodeBlock.Slice {
@@ -145,7 +184,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.Else)
 				program.Operations = append(program.Operations, ins)
 			case "end":
-				ins := parseToken(orthtypes.PrimitiveBOOL, "", orthtypes.End)
+				ins := parseToken(orthtypes.PrimitiveEND, "", orthtypes.End)
 				program.Operations = append(program.Operations, ins)
 			case "put_string":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
@@ -159,6 +198,18 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "proc":
 				preProgram[i+1].Content.ValidPos = true
 				pName := preProgram[i+1].Content.Content
+
+				procNames[pName]++
+				if procNames[pName] != 1 {
+					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
+						VarName:  orthtypes.Program{},
+						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_02, "PROC", pName, file.Name, v.Index, v.Content.Index),
+					}
+					close(parseTokenResult)
+					return
+				}
+
+				context = pName
 
 				ins := parseToken(orthtypes.PrimitiveProc, pName, orthtypes.Proc)
 				program.Operations = append(program.Operations, ins)
@@ -216,7 +267,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					// used as a func param
 					case preProgram[i+2].Content.Content == "call":
 						preProgram[i+1].Content.ValidPos = true
-						ins := parseToken(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, orthtypes.Push)
+						ins := parseTokenWithContext(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, context, orthtypes.Push)
 						program.Operations = append(program.Operations, ins)
 						continue
 					default:
@@ -242,10 +293,10 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					vValue = preProgram[i+4].Content.Content
 				}
 
-				ins := parseToken(vType, vValue, orthtypes.Push)
+				ins := parseTokenWithContext(vType, vValue, context, orthtypes.Push)
 				program.Operations = append(program.Operations, ins)
 
-				ins = parseToken(orthtypes.PrimitiveVar, vName, orthtypes.Var)
+				ins = parseTokenWithContext(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
 				program.Operations = append(program.Operations, ins)
 			case "hold":
 				preProgram[i+1].Content.ValidPos = true
@@ -264,18 +315,21 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				program.Operations = append(program.Operations, ins)
 			default:
 				if !v.Content.ValidPos {
-					err := fmt.Errorf("error: unknow token %q in %q at line: %d colum: %d", v.Content.Content, file.Name, v.Index, v.Content.Index)
-					tokenErrors = append(tokenErrors, err)
+					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
+						VarName:  orthtypes.Program{},
+						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Content, file.Name, v.Index, v.Content.Index),
+					}
+					close(parseTokenResult)
+					return
 				}
 			}
 		}
 	}
-
-	if len(tokenErrors) != 0 {
-		return orthtypes.Program{}, tokenErrors
+	parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
+		VarName:  program,
+		VarValue: nil,
 	}
-
-	return program, nil
+	close(parseTokenResult)
 }
 
 // parseToken parses a single token into a instruction
@@ -286,6 +340,18 @@ func parseToken(varType, operand string, op int) orthtypes.Operation {
 			VarType: varType,
 			Operand: operand,
 		},
+		RefBlock: -1,
+	}
+}
+
+func parseTokenWithContext(varType, operand, context string, op int) orthtypes.Operation {
+	return orthtypes.Operation{
+		Instruction: op,
+		Operand: orthtypes.Operand{
+			VarType: varType,
+			Operand: operand,
+		},
+		Context:  context,
 		RefBlock: -1,
 	}
 }

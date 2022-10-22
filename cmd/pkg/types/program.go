@@ -7,6 +7,19 @@ type Program struct {
 	Operations []Operation
 }
 
+func (p *Program) Filter(predicate func(op Operation) bool) []Pair[int, Operation] {
+	ops := make([]Pair[int, Operation], 0)
+	for i, op := range p.Operations {
+		if predicate(op) {
+			ops = append(ops, Pair[int, Operation]{
+				VarName:  i,
+				VarValue: op,
+			})
+		}
+	}
+	return ops
+}
+
 const (
 	Push int = iota
 	Sum

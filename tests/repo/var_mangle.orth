@@ -1,7 +1,7 @@
-var teste = s "teste"
+var space = s " "
 
 proc main in
     i 80 put_u64
-    var teste = i 89
+    var space = s "non space char"
     hold teste put_string
 end

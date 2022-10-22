@@ -32,7 +32,7 @@ func CleanUp() {
 	}
 }
 
-func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) {
+func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) {
 	for i, operation := range program.Operations {
 		retreive := act(&program, operation, i)
 		for _, op := range retreive {
@@ -42,11 +42,11 @@ func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOr
 	close(outOfOrder.Vars)
 }
 
-func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operand, orthtypes.Operand] {
-	retreive := make([]orthtypes.Pair[orthtypes.Operand, orthtypes.Operand], 0, cap(program.Operations))
+func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operation, orthtypes.Operand] {
+	retreive := make([]orthtypes.Pair[orthtypes.Operation, orthtypes.Operand], 0, cap(program.Operations))
 	if operation.Instruction == orthtypes.Var && program.Operations[i-1].Instruction == orthtypes.Push {
-		retreive = append(retreive, orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]{
-			VarName:  operation.Operand,
+		retreive = append(retreive, orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
+			VarName:  operation,
 			VarValue: program.Operations[i-1].Operand,
 		})
 		program.Operations[i].Instruction = orthtypes.Skip
@@ -105,6 +105,10 @@ func VarValueToAsmSyntax(operand orthtypes.Operand) string {
 	return lietralValue
 }
 
-func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operand, orthtypes.Operand]) string {
-	return oVar.VarName.Operand + " " + VarTypeToAsmType(oVar.VarValue) + " " + VarValueToAsmSyntax(oVar.VarValue)
+func MangleVarName(o orthtypes.Operation) string {
+	return "_@" + o.Context + "@" + o.Operand.Operand
+}
+
+func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
+	return MangleVarName(oVar.VarName) + " " + VarTypeToAsmType(oVar.VarValue) + " " + VarValueToAsmSyntax(oVar.VarValue)
 }

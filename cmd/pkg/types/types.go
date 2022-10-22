@@ -17,6 +17,7 @@ const (
 	PrimitiveF32     = "f32"
 	PrimitiveSTR     = "s"
 	PrimitiveBOOL    = "b"
+	PrimitiveEND     = "end"
 	PrimitiveVOID    = "void"
 	PrimitiveRNT     = "rnt"
 	PrimitiveMem     = "mem"
@@ -42,7 +43,7 @@ const (
 	INVALIDTYPE = ""
 )
 
-type Pair[T1, T2 comparable] struct {
+type Pair[T1, T2 any] struct {
 	VarName  T1
 	VarValue T2
 }
@@ -50,6 +51,7 @@ type Pair[T1, T2 comparable] struct {
 type Operation struct {
 	Instruction int
 	Operand     Operand
+	Context     string
 	RefBlock    int
 }
 
@@ -59,7 +61,7 @@ type Operand struct {
 }
 
 type OutOfOrder struct {
-	Vars chan Pair[Operand, Operand]
+	Vars chan Pair[Operation, Operand]
 }
 
 type SliceOf[T comparable] struct {
