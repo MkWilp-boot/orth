@@ -41,6 +41,18 @@ func TestIntegerArithmetics(t *testing.T) {
 	}
 }
 
+func TestLoops(t *testing.T) {
+	testhelper.PrepareComp("./repo/loops.orth")
+	expected := testhelper.LoadExpected("TestLoops")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestLoops")
+		t.FailNow()
+	}
+}
+
 func TestMem(t *testing.T) {
 	testhelper.PrepareComp("./repo/simple_mem.orth")
 	expected := testhelper.LoadExpected("TestMem")
@@ -49,6 +61,18 @@ func TestMem(t *testing.T) {
 
 	if programOutput != expected {
 		testhelper.DumpOutput(programOutput, "TestMem")
+		t.FailNow()
+	}
+}
+
+func TestInvalidMemUsage(t *testing.T) {
+	errors := testhelper.PrepareComp("./repo/mem_invalid_usage.orth")
+	expected := testhelper.LoadExpected("TestInvalidMemUsage")
+
+	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
+
+	if programErros != expected {
+		testhelper.DumpOutput(programErros, "TestInvalidMemUsage")
 		t.FailNow()
 	}
 }

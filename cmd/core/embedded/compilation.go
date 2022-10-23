@@ -148,6 +148,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	pop rbx ; value to store\n")
 			writer.WriteString("	pop rax ; address of mem\n")
 			writer.WriteString("	mov BYTE PTR [rax], bl\n")
+			writer.WriteString("	xor rax, rax\n")
 		case orthtypes.DumpMem:
 			writer.WriteString("; dump_mem\n")
 			writer.WriteString("	pop rbx\n")
@@ -262,6 +263,13 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	div rbx\n")
 			writer.WriteString("	push rdx\n")
+		case orthtypes.Swap:
+			writer.WriteString("; Swap\n")
+			writer.WriteString("pop rax\n")
+			writer.WriteString("pop rbx\n")
+			writer.WriteString("push rbx\n")
+			writer.WriteString("push rax\n")
+
 		}
 	}
 	writer.WriteString("end\n")

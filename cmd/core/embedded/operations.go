@@ -32,6 +32,16 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			VarValue: v,
 		}
 		switch v.Instruction {
+		case orthtypes.Mem:
+			if context == globalScope {
+				msg := fmt.Sprintf(orth_debug.InvalidUsageOfTokenOutside, orthtypes.PrimitiveMem, orthtypes.PrimitiveProc, context)
+				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
+					VarName:  orthtypes.Program{},
+					VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_04, "Mem", msg),
+				}
+				close(crossResult)
+				return
+			}
 		case orthtypes.Var:
 			_, ok := orthVars[context]
 			if !ok {
