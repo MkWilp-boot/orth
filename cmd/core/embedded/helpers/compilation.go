@@ -106,7 +106,7 @@ func VarValueToAsmSyntax(operand orthtypes.Operand) string {
 }
 
 func MangleVarName(o orthtypes.Operation) string {
-	return "_@" + o.Context + "@" + o.Operand.Operand
+	return "_@" + o.Context + "@Var@" + o.Operand.Operand
 }
 
 func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
