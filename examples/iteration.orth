@@ -1,4 +1,17 @@
-i 0 while dup i 5 > do
-    i 300 dump
-    i 1 +
+proc main in
+    mem i 0 + i 10 .
+    mem i 1 + i 97 .
+    mem i 2 + i 98 .
+
+    i 0 while dup i 5 > do
+        i 1 mem i 1 + dump_mem
+
+        i 0 while dup i 5 > do
+            i 1 mem i 2 + dump_mem
+            i 1 +
+        end drop
+        i 1 mem dump_mem
+
+        i 1 +
+    end drop
 end

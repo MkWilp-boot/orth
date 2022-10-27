@@ -6,6 +6,18 @@ import (
 	"testing"
 )
 
+func TestBitWise(t *testing.T) {
+	testhelper.PrepareComp("./repo/bitwise.orth")
+	expected := testhelper.LoadExpected("TestBitWise")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestBitWise")
+		t.FailNow()
+	}
+}
+
 func TestCompilationErrorMessages(t *testing.T) {
 	errors := testhelper.PrepareComp("./repo/compilation_error.orth")
 	expected := testhelper.LoadExpected("TestCompilationErrorMessages")

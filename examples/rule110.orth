@@ -1,0 +1,18 @@
+proc main in
+    mem i 28 + i 1 .                        // seed
+
+    i32 0 while dup i32 30 > do
+        i32 0 while dup i32 30 > do
+            dup mem + , if
+                mem i32 30 + i8 42 .        // '*' char
+            else
+                mem i32 30 + i8 32 .        // ' ' cahr
+            end
+            i32 1 mem i32 30 + dump_mem     // prints whatever is in 30
+            i32 1 +
+        end drop
+        mem i32 30 + i8 10 .                // '\n' char
+        i32 1 mem i32 30 + dump_mem         // prints '\n'
+        i32 1 +
+    end drop
+end
