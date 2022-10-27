@@ -4,6 +4,6 @@ proc main in
     i32 1 i32 3 lshift put_u64 i 1 mem dump_mem
     i32 8 i32 3 rshift put_u64 i 1 mem dump_mem
     i32 3 i32 2 land put_u64 i 1 mem dump_mem
-    i32 3 i32 2 lor put_u64 i 1 mem dump_mem
+    i32 3 i32 2 lor put_u64
 
 end

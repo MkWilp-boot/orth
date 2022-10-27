@@ -57,5 +57,9 @@ const (
 	In
 	Invoke
 	DumpMem
+	LShift
+	RShift
+	LAnd
+	LOr
 	TotalOps
 )

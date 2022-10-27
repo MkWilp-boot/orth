@@ -205,6 +205,18 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "while":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.While)
 				program.Operations = append(program.Operations, ins)
+			case "lshift":
+				ins := parseToken(orthtypes.Bitwise, "", orthtypes.LShift)
+				program.Operations = append(program.Operations, ins)
+			case "rshift":
+				ins := parseToken(orthtypes.Bitwise, "", orthtypes.RShift)
+				program.Operations = append(program.Operations, ins)
+			case "land":
+				ins := parseToken(orthtypes.Bitwise, "", orthtypes.LAnd)
+				program.Operations = append(program.Operations, ins)
+			case "lor":
+				ins := parseToken(orthtypes.Bitwise, "", orthtypes.LOr)
+				program.Operations = append(program.Operations, ins)
 			case "proc":
 				preProgram[i+1].Content.ValidPos = true
 				pName := preProgram[i+1].Content.Content
