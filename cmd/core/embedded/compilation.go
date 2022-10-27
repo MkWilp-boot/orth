@@ -265,11 +265,34 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	push rdx\n")
 		case orthtypes.Swap:
 			writer.WriteString("; Swap\n")
-			writer.WriteString("pop rax\n")
-			writer.WriteString("pop rbx\n")
-			writer.WriteString("push rbx\n")
-			writer.WriteString("push rax\n")
-
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.LShift:
+			writer.WriteString("; shift left\n")
+			writer.WriteString("	pop rcx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	shl rbx, cl\n")
+			writer.WriteString("	push rbx\n")
+		case orthtypes.RShift:
+			writer.WriteString("; shift right\n")
+			writer.WriteString("	pop rcx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	shr rbx, cl\n")
+			writer.WriteString("	push rbx\n")
+		case orthtypes.LAnd:
+			writer.WriteString("; bitwise and\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	and rax, rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.LOr:
+			writer.WriteString("; bitwise or\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	or rax, rbx\n")
+			writer.WriteString("	push rax\n")
 		}
 	}
 	writer.WriteString("end\n")

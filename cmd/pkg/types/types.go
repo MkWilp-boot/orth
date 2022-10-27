@@ -27,6 +27,7 @@ const (
 	PrimitiveProc    = "proc"
 	PrimitiveIn      = "in"
 	PrimitiveInvalid = ""
+	Bitwise          = "bitwise"
 )
 
 const (
