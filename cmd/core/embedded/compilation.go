@@ -215,6 +215,21 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rax\n")
+		case orthtypes.TwoDup:
+			writer.WriteString("; 2Dup\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	push rax\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Over:
+			writer.WriteString("; Over\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	push rax\n")
+			writer.WriteString("	push rbx\n")
 		case orthtypes.While:
 			writer.WriteString("; While\n")
 		case orthtypes.Do:
@@ -267,8 +282,8 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("; Swap\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
-			writer.WriteString("	push rbx\n")
 			writer.WriteString("	push rax\n")
+			writer.WriteString("	push rbx\n")
 		case orthtypes.LShift:
 			writer.WriteString("; shift left\n")
 			writer.WriteString("	pop rcx\n")

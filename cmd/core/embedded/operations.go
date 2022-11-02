@@ -199,6 +199,12 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "put_string":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
 				program.Operations = append(program.Operations, ins)
+			case "over":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Over)
+				program.Operations = append(program.Operations, ins)
+			case "2dup":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.TwoDup)
+				program.Operations = append(program.Operations, ins)
 			case "dup":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Dup)
 				program.Operations = append(program.Operations, ins)
