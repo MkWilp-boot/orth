@@ -1,23 +1,25 @@
-proc main in
-    mem i 28 + i 1 .
+const star = s "*"
+const space = s " "
+const new_line = s "\n"
 
-    i32 0 while dup i32 28 > do
-        i32 0 while dup i32 30 > do
+proc main in
+    mem i 98 + i 1 .
+
+    i32 0 while dup i32 98 > do
+        i32 0 while dup i32 100 > do
             dup mem + , if
-                mem i32 30 + i8 42 .
+                hold star put_string
             else
-                mem i32 30 + i8 32 .
+                hold space put_string
             end
-            i32 1 mem i32 30 + dump_mem
             i32 1 +
         end drop
 
-        mem i32 30 + i8 10 .
-        i32 1 mem i32 30 + dump_mem
+        hold new_line put_string
 
         mem i 0 + , i 1 lshift mem i32 1 + , lor
         
-        i32 1 while dup i32 28 > do
+        i32 1 while dup i32 98 > do
             swap
             i 1 lshift i 7 land
             over mem + i 1 + , lor 

@@ -63,7 +63,7 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 				return op == v
 			})
 			vD := program.Filter(func(op orthtypes.Operation) bool {
-				return op.Operand.VarType == orthtypes.PrimitiveVar && op.Operand.Operand == holds[0].VarValue.Operand.Operand
+				return op.Operand.VarType == orthtypes.PrimitiveConst && op.Operand.Operand == holds[0].VarValue.Operand.Operand
 			})
 
 			program.Operations[holds[0].VarName].Context = vD[0].VarValue.Context
@@ -282,7 +282,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
 
 				program.Operations = append(program.Operations, ins)
-			case "var":
+			case "const":
 				re := regexp.MustCompile(`[^\w]`)
 
 				// check name
@@ -295,7 +295,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					// used as a func param
 					case preProgram[i+2].Content.Content == "call":
 						preProgram[i+1].Content.ValidPos = true
-						ins := parseTokenWithContext(orthtypes.PrimitiveVar, preProgram[i+1].Content.Content, context, orthtypes.Push)
+						ins := parseTokenWithContext(orthtypes.PrimitiveConst, preProgram[i+1].Content.Content, context, orthtypes.Push)
 						program.Operations = append(program.Operations, ins)
 						continue
 					default:
@@ -324,7 +324,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				ins := parseTokenWithContext(vType, vValue, context, orthtypes.Push)
 				program.Operations = append(program.Operations, ins)
 
-				ins = parseTokenWithContext(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
+				ins = parseTokenWithContext(orthtypes.PrimitiveConst, vName, context, orthtypes.Var)
 				program.Operations = append(program.Operations, ins)
 			case "hold":
 				preProgram[i+1].Content.ValidPos = true

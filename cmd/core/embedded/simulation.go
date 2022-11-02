@@ -263,7 +263,7 @@ func Simulate(program orthtypes.Program) {
 			//			vName					Value
 			vars[stackItem.Operand.Operand] = helpers.StackPop(&stack)
 			stack = append(stack, orthtypes.Operand{
-				VarType: orthtypes.PrimitiveVar,
+				VarType: orthtypes.PrimitiveConst,
 				Operand: stackItem.Operand.Operand,
 			})
 			ip++
