@@ -71,7 +71,7 @@ func init() {
 			panic(fmt.Errorf(orth_debug.VariableUndefined, vName.Operand))
 		}
 
-		if vName.VarType != orthtypes.PrimitiveVar {
+		if vName.VarType != orthtypes.PrimitiveConst {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, vName.VarType, "free_var"))
 		}
 		delete(vars, vName.Operand)

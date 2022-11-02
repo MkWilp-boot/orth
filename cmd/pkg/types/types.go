@@ -22,7 +22,7 @@ const (
 	PrimitiveRNT     = "rnt"
 	PrimitiveMem     = "mem"
 	PrimitiveType    = "type"
-	PrimitiveVar     = "var"
+	PrimitiveConst   = "const"
 	PrimitiveHold    = "hold"
 	PrimitiveProc    = "proc"
 	PrimitiveIn      = "in"
