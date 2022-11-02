@@ -1,9 +1,21 @@
+var sp = s " "
+var a1 = s "here\n"
+
 proc main in
-    mem i8 10 .
+    mem i 1  + i 1 .
+    mem i 28 + i 1 .
 
-    i32 1 i32 3 lshift put_u64 i 1 mem dump_mem
-    i32 8 i32 3 rshift put_u64 i 1 mem dump_mem
-    i32 3 i32 2 land put_u64 i 1 mem dump_mem
-    i32 3 i32 2 lor put_u64 i 1 mem dump_mem
+    // (board[0] << 1) | board[1]
+    mem i 0 + , i 1 lshift mem i32 1 + , lor
 
+    i32 1 while dup i32 28 > do
+        swap                                // swap(pattern, index) -> [index, pattern]
+        i 1 lshift i 7 land                 // [index, pattern] -> (pattern << 1) & 7
+        over mem + i 1 + , lor              // [index, new_pattern] -> (((index + mem) + 1) | new_pattern)
+        2dup i 110 swap rshift i 1 land     // [index, lor_pattern] -> index lor_pattern index ((110 >> lor_pattern) & 1)
+        swap mem + swap .                   // [index, lor_pattern, index, land_pattern] -> index lor_pattern land_pattern index mem +
+        swap                                // [index, lor_pattern] -> lor_pattern, index
+        hold a1 put_string
+        i 1 +                               
+    end drop
 end
