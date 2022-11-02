@@ -6,6 +6,18 @@ import (
 	"testing"
 )
 
+func TestRule110(t *testing.T) {
+	testhelper.PrepareComp("./repo/rule110.orth")
+	expected := testhelper.LoadExpected("TestRule110")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestRule110")
+		t.FailNow()
+	}
+}
+
 func TestBitWise(t *testing.T) {
 	testhelper.PrepareComp("./repo/bitwise.orth")
 	expected := testhelper.LoadExpected("TestBitWise")

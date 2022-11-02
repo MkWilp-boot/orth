@@ -34,6 +34,7 @@ const (
 	Gt
 	NotEqual
 	Dup
+	TwoDup
 	PutU64
 	PutString
 	Do
@@ -61,5 +62,6 @@ const (
 	RShift
 	LAnd
 	LOr
+	Over
 	TotalOps
 )
