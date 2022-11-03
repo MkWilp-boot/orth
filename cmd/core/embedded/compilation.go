@@ -65,7 +65,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("include C:\\masm64\\include64\\masm64rt.inc\n")
 
 	// data segment (pre-defined)
-	writer.WriteString(".DATA\n")
+	writer.WriteString(".DATA ; constants\n")
 	for pair := range outOfOrder.Vars {
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
@@ -124,7 +124,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("p_dump_mem endp\n")
 
 	var immediateStringCount int
-	immediateStrings := make([]orthtypes.Operand, 0)
+	immediateStrings := make(map[orthtypes.Operand]int)
 
 	for ip := 0; ip < len(program.Operations); ip++ {
 		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
@@ -139,10 +139,14 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("; push\n")
 			writer.WriteString("	push " + op.Operand.Operand + "\n")
 		case orthtypes.PushStr:
+			strNum, ok := immediateStrings[op.Operand]
+			if !ok {
+				immediateStrings[op.Operand] = immediateStringCount
+				strNum = immediateStringCount
+			}
 			writer.WriteString("; push string\n")
-			writer.WriteString("	mov rax, offset str_" + fmt.Sprint(immediateStringCount) + "\n")
+			writer.WriteString("	mov rax, offset str_" + fmt.Sprint(strNum) + "\n")
 			writer.WriteString("	push rax\n")
-			immediateStrings = append(immediateStrings, op.Operand)
 			immediateStringCount++
 		case orthtypes.Mem:
 			writer.WriteString("; push offset mem\n")
@@ -321,9 +325,9 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	push rax\n")
 		}
 	}
-	writer.WriteString(".DATA ;immediate strings\n")
-	for i, s := range immediateStrings {
-		writer.WriteString(fmt.Sprintf("	str_%d db %s \n", i, embedded_helpers.VarValueToAsmSyntax(s)))
+	writer.WriteString(".DATA ; immediate strings\n")
+	for v, i := range immediateStrings {
+		writer.WriteString(fmt.Sprintf("	str_%d db %s \n", i, embedded_helpers.VarValueToAsmSyntax(v)))
 	}
 	writer.WriteString("end\n")
 	writer.Flush()
