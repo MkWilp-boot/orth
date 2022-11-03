@@ -1,6 +1,3 @@
-const sp = s " "
-const a1 = s "\n"
-
 proc main in
-    
+    s "Hello World\n" puts
 end

@@ -158,7 +158,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				program.Operations = append(program.Operations, ins)
 			case orthtypes.PrimitiveSTR:
 				preProgram[i+1].Content.ValidPos = true
-				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.Push)
+				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.PushStr)
 				program.Operations = append(program.Operations, ins)
 			case "+":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)
@@ -172,7 +172,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "/":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Div)
 				program.Operations = append(program.Operations, ins)
-			case "put_u64":
+			case "putui":
 				ins := parseToken(orthtypes.PrimitiveVOID, "", orthtypes.PutU64)
 				program.Operations = append(program.Operations, ins)
 			case "==":
@@ -196,7 +196,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "end":
 				ins := parseToken(orthtypes.PrimitiveEND, "", orthtypes.End)
 				program.Operations = append(program.Operations, ins)
-			case "put_string":
+			case "puts":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.PutString)
 				program.Operations = append(program.Operations, ins)
 			case "over":
