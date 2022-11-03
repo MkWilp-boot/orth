@@ -99,7 +99,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("; RCX: pointer pointing to where to start slicing\n")
 	writer.WriteString("; RDX: amount of chars to slice\n")
 	writer.WriteString("p_dump_mem proc\n")
-	writer.WriteString("	local buffer[255]: byte\n")
+	writer.WriteString("	local buffer[1024]: byte\n")
 	writer.WriteString("	push rbx\n")
 	writer.WriteString("	push rax\n")
 	writer.WriteString("	push r8\n")
