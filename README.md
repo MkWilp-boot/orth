@@ -16,7 +16,7 @@ This language is under development
 ## Missing features
 
 * Functions (halfway there)
-* Local scope
+* Local scope (DONE)
 
 ## Getting started
 
@@ -28,14 +28,15 @@ The installer can be found [here](https://go.dev/dl/).
 As mentioned, Orth is a stack-based language and the way of reading/writing a program is a bit different than usual. First create a file called **hello.orth** then write this code:
 
 ```orth
-var hello = s "Hello world in orth!"
-hold hello put_string
+proc main in
+    s "Hello world in orth!" puts
+end
 ```
 
 and run using the executable
 
 ```console
-.\core -c=masm hello.orth && .\output.exe
+.\core -com=masm hello.orth && .\output.exe
 
 $ Hello world in orth!
 ```
@@ -43,38 +44,48 @@ $ Hello world in orth!
 Really simple, isn't it? this program just pushes a string value into the stack and prints using the instruction `print` but it can get more complicated as things starts to grow.
 
 ```orth
-var a = i 0  drop
-var b = i 1  drop
-var c = i 0  drop
-var n = i 15 drop
+proc main in
+    mem i 28 + i 1 .
 
-hold n i 0 == if
-    hold a print
-else
-    i 2 while dup hold n > do
-        hold a // read a
-        hold b // read b
-        dup
-        var d call grab_last // backup b
-        +
-        dup // produce c
-        var c call grab_last // c = a + b
-        hold d // b backed up
-        var a call grab_last // a = b
-        var b call grab_last // b = c
-        i 1 +
-    end
+    i32 0 while dup i32 28 > do
+        i32 0 while dup i32 30 > do
+            dup mem + , if
+                dup i32 30 + mem + i8 42 .
+            else
+                dup i32 30 + mem + i8 32 .
+            end
+            i32 1 +
+        end drop
+
+        mem i32 30 + i8 10 .
+
+        i32 31 mem i32 30 + dump_mem
+        
+        mem i 0 + , i 1 lshift mem i32 1 + , lor
+
+        i32 1 while dup i32 28 > do
+            swap
+            i 1 lshift i 7 land
+            over mem + i 1 + , lor
+            2dup i 110 swap rshift i 1 land
+            swap mem + swap .
+            swap
+            i 1 +
+        end drop
+        drop
+
+        i32 1 +
+    end drop
 end
-s "The number is " hold b call to_string + print
 ```
 
-So, what do you think this program does? if you said it's the fibonacci sequence, then you are right!</br>
-If didn't said it correctly, don't worry, 99% of the people reading this will probably fail, don't worry we will get to the point where this code will look readable.
+So, what do you think this program does? Of course it is the Rule 110! isn't it obvious?!?!?!</br>
+Yes, I am joking, but this program is in fact the Rule 110 implementation, you just can't read it (yet)
 
-## Compiled Orth and simulated Orth
+## Compiled Orth
 
-Yes, orth has two modes, **Simulation** and **Compilation**. Nowadays (2022-10-12) I am currently migrating all simulation code<br/>
-to compilation mode, my plans are to support NASM and MASM but only MASM is working.
+Yes **Compilation**. You can compile your program to native code by using the "-com=" flag followed by the one of the supported assemblers.<br/>
+I have plans to support both NASM and MASM but only MASM is working.
 
 ## Types
 
@@ -92,11 +103,12 @@ Currently Orth have 6 different super types
 
 Orth has 5 integer variants
 
-1. `i64` representes a 64 bit number
-2. `i32` representes a 32 bit number
-3. `i16` representes a 16 bit number
-4. `i8` representes a 8 bit number
-5. `i` let the compiler decide which integer type will be used, it can be any of the previous mentioned, but it's not sure what it is going to be
+1. `i64` representes a 64 bit number (QWORD)
+2. `i32` representes a 32 bit number (DWORD)
+3. `i16` representes a 16 bit number (WORD)
+4. `i8` representes a 8 bit number   (BYTE)
+5. `i` let the compiler decide which integer type will be used, it can be any of the previous mentioned, but it's not sure what it is going to be.</br>
+This is usually used for just pushing a number, like a unit
 
 ### Floats
 
@@ -112,14 +124,13 @@ and are defined by preceding an variable using _b_
 
 ### Strings
 
-Orth strings are literal string, that means what ever you put in a string, it will be used the way it got stored.</br>
-**with the exception of "\n" that will always print a new line at the end**</br>
+Orth string are defined by using the type _s_ followed by the string literal between _" "_</br>
 We plan to have other string variants like
 
 * `sl` Will represent a string literal
 * `si` Will represent a string that can be interpolated
 
-But for now, wel only have **s** as the only string type available
+But for now, wel only have _s_ as the only string type available
 
 ### RNT
 
@@ -128,20 +139,14 @@ RNT stands for Runtime, this variable's type will calculated at runtime without 
 ### VOID
 
 Like in C or C++, Orth's **VOID** stands for everything that will not return anything.</br>
-They are used mainly by operators such as **"+","-","*"**, functions for side effects and so on
+They are used mainly by these operations **"putui","puts","invoke","end"**, functions for side effects and so on
 
-## Variables
+## Constants
 
-As you may guess, orth has variables that store values. To create a variable, use the keyword `var` following by it's name and value:
+As you may guess, orth has constants that store values. To create a variable, use the keyword `const` following by it's name, type and value:
 ```orth
-var name = s "John"
-var age = i 20
-```
-**orth's variables must be initialized when declared**
-
-To use a variable, use the keyword `hold`
-```orth
-hold name put_string // John
+const name = s "John"
+const age = i 20
 ```
 ## Conditions
 
@@ -149,7 +154,7 @@ Conditions in Orth are very simple and are made by the `if-end` blocks</br>
 first: if you want something to be true or false, the last item on the stack **must** be a bool type.
 
 ```orth
-i 10 i 10 + i 20 == print
+i 10 i 10 + i 20 == putui
 ```
 
 the code above will produce a bool type that can be used by if blocks
@@ -157,9 +162,9 @@ the code above will produce a bool type that can be used by if blocks
 ```orth
 i 10 i 10 + i 20 ==
 if 
-    s "Yes, this is a true statement print
+    s "Yes, this is a true statement puts
 else 
-    s "Yes, this is a true statement print
+    s "Yes, this is a true statement puts
 end
 ```
 
@@ -173,7 +178,7 @@ a while loop basic consists of a "until thisis true, then keep doing", that's ba
 
 ```orth
 i 0 while dup i 10 > do
-    dup call to_string s "\n" + print
+    dup putui s "\n" + puts
     i 1 +
 end drop
 ```
@@ -186,19 +191,23 @@ So, as you can see we:
 
 and until 10 is > 0 we add 1 to the last item on the stack, as simple as this
 
-## Functions (simulation only)
+## Mem
+Orth has a special way of using memory, by default you have a array of 640000 bytes (A LOT) and you can operate in this array by storing or reading values from this arrray.</br>
+The _mem_ keyword essentially pushes a pointer pointing to the beginning of the array and can be offseted by adding a number to it:
+```orth
+mem i32 0 + i8 97 .
+mem i32 1 + i8 98 .
+mem i32 2 + i8 99 .
 
-Orth have some bultin functions to help people's life:
-* to_string (rnt n)
-* size_of (s string)
-* length_of (s string)
-* make_array (type atype, i capacity)
-* free_var (var to_free)
-* dump_mem ()
-* dump_stack ()
-* dump_vars ()
-* exit (i code)
-* fill (rnt value, x|x+1 rangeable)
-* index (i relative_pos)
-* grab_at (i absolute_pos)
-* grab_last (stack > 1)
+i 3 mem i 0 + dump_mem
+```
+Here we are storing the BYTES</br>
+97 at offset 0</br>
+98 at offset 1</br>
+99 at offset 2</br>
+In other words we are storing the string "abc" into the array.</br>
+The dump_mem instruction takes 2 values, the amount of elements to print and the start point (which is mem offseted by 0 in this case) </br>
+The result is:
+```
+abc
+```
