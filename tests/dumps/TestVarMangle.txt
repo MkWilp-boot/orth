@@ -1,1 +1,1 @@
-ORTH_ERR_03: Redeclaration of "Var" -> "teste" in block "main"
+ORTH_ERR_01: Undefined token unknow token "put_string" in "repo/var_mangle.orth" at line: 6 colum: 15

@@ -34,21 +34,23 @@ func Compile(program orthtypes.Program, assemblyType string) {
 
 	compileMasm(program, outOfOrder, output)
 
-	compileCmd := exec.Command("ml64.exe", finalAsm, "/nologo", "/Zi", "/W3", "/link", "/entry:main")
+	if !*orth_debug.NoLink {
+		compileCmd := exec.Command("ml64.exe", finalAsm, "/nologo", "/Zi", "/W3", "/link", "/entry:main")
 
-	orth_debug.LogStep("[CMD] Running ML64")
-	var stdout bytes.Buffer
+		orth_debug.LogStep("[CMD] Running ML64")
+		var stdout bytes.Buffer
 
-	compileCmd.Stdout = &stdout
+		compileCmd.Stdout = &stdout
 
-	if err = compileCmd.Run(); err != nil {
-		fmt.Println(stdout.String())
-		os.Exit(1)
+		if err = compileCmd.Run(); err != nil {
+			fmt.Println(stdout.String())
+			os.Exit(1)
+		}
 	}
 	orth_debug.LogStep("[CMD] Finished running ML64")
 
-	if *orth_debug.UnclearFiles {
-		orth_debug.LogStep("[CMD] UCLR flag active, files won't be deleted")
+	if *orth_debug.UnclearFiles || *orth_debug.NoLink {
+		orth_debug.LogStep("[CMD] UCLR or NL flag active, files won't be deleted")
 		return
 	}
 	embedded_helpers.CleanUp()
@@ -121,6 +123,9 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("	ret\n")
 	writer.WriteString("p_dump_mem endp\n")
 
+	var immediateStringCount int
+	immediateStrings := make([]orthtypes.Operand, 0)
+
 	for ip := 0; ip < len(program.Operations); ip++ {
 		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
 
@@ -133,6 +138,12 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		case orthtypes.Push:
 			writer.WriteString("; push\n")
 			writer.WriteString("	push " + op.Operand.Operand + "\n")
+		case orthtypes.PushStr:
+			writer.WriteString("; push string\n")
+			writer.WriteString("	mov rax, offset str_" + fmt.Sprint(immediateStringCount) + "\n")
+			writer.WriteString("	push rax\n")
+			immediateStrings = append(immediateStrings, op.Operand)
+			immediateStringCount++
 		case orthtypes.Mem:
 			writer.WriteString("; push offset mem\n")
 			writer.WriteString("	mov rax, offset mem\n")
@@ -309,6 +320,10 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	or rax, rbx\n")
 			writer.WriteString("	push rax\n")
 		}
+	}
+	writer.WriteString(".DATA ;immediate strings\n")
+	for i, s := range immediateStrings {
+		writer.WriteString(fmt.Sprintf("	str_%d db %s \n", i, embedded_helpers.VarValueToAsmSyntax(s)))
 	}
 	writer.WriteString("end\n")
 	writer.Flush()
