@@ -1,32 +1,38 @@
-const star = s "*"
-const space = s " "
-const new_line = s "\n"
-
 proc main in
-    mem i 98 + i 1 .
+    // seed
+    mem i 28 + i 1 .
 
-    i32 0 while dup i32 98 > do
-        i32 0 while dup i32 100 > do
+    i32 0 while dup i32 28 > do
+        i32 0 while dup i32 30 > do
             dup mem + , if
-                hold star put_string
+                // dup -> index, alocando um buffer de 30 partindo de mem[30]
+                // i8 42 -> "*"
+                dup i32 30 + mem + i8 42 .
             else
-                hold space put_string
+                // i8 32 -> " "
+                dup i32 30 + mem + i8 32 .
             end
             i32 1 +
         end drop
 
-        hold new_line put_string
+        // colocando um "\n" no final do buffer
+        mem i32 30 + i8 10 .
 
-        mem i 0 + , i 1 lshift mem i32 1 + , lor
+        // exibindo 30 caracteres + 1 (esse 1+ é o "\n") partindo de mem[30]
+        // é extremamente mais rápido desta forma do que exibir caracter por caracter
+        i32 31 mem i32 30 + dump_mem
         
-        i32 1 while dup i32 98 > do
+        // pattern
+        mem i 0 + , i 1 lshift mem i32 1 + , lor
+
+        i32 1 while dup i32 28 > do
             swap
             i 1 lshift i 7 land
-            over mem + i 1 + , lor 
+            over mem + i 1 + , lor
             2dup i 110 swap rshift i 1 land
-            swap mem + swap .   
+            swap mem + swap .
             swap
-            i 1 +                               
+            i 1 +
         end drop
         drop
 
