@@ -22,6 +22,7 @@ func (p *Program) Filter(predicate func(op Operation) bool) []Pair[int, Operatio
 
 const (
 	Push int = iota
+	PushStr
 	Sum
 	Minus
 	Mult
