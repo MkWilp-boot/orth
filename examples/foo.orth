@@ -1,6 +1,7 @@
+@define MAX_CAP i 900
+@define SOME_STR s "Hello world from define directive\n"
+
 proc main in
-    s "Hello World\n" puts
-    s "Hello World 1\n" puts
-    s "Hello World\n" puts
-    s "Hello World 2\n" puts
+    SOME_STR puts
+    MAX_CAP putui
 end
