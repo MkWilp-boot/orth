@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"regexp"
@@ -18,6 +19,19 @@ func getParams(regEx, line string) (paramsMap []string) {
 	return paramsMap
 }
 
+func getParamsMap(regEx, line string) (paramsMap []map[string]string) {
+	var compRegEx = regexp.MustCompile(regEx)
+	matchs := compRegEx.FindAllStringSubmatch(line, -1)
+	paramsMap = make([]map[string]string, 0)
+
+	for _, match := range matchs {
+		matchMap := make(map[string]string)
+		matchMap[match[1]] = match[2]
+		paramsMap = append(paramsMap, matchMap)
+	}
+	return paramsMap
+}
+
 func LoadProgramFromFile(path string) []orthtypes.File[string] {
 	fileBytes, err := os.ReadFile(path)
 	removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
@@ -28,8 +42,18 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 	}
 
 	strProgram := string(fileBytes)
-	files := make([]orthtypes.File[string], 1)
 
+	defineDirective := getParamsMap(`@define\s(?P<DName>\w+)\s(?P<Replacement>[\w #$%*\(\)\\\/"]*)`, strProgram)
+
+	for _, s := range defineDirective {
+		for k, v := range s {
+			str := fmt.Sprintf("@define %s %s", k, v)
+			strProgram = strings.ReplaceAll(strProgram, str, "")
+			strProgram = strings.ReplaceAll(strProgram, k, v)
+		}
+	}
+
+	files := make([]orthtypes.File[string], 1)
 	files[0] = orthtypes.File[string]{
 		Name:      path,
 		CodeBlock: strProgram,
