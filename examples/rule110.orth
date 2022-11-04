@@ -1,31 +1,34 @@
+@define BOARD_CAP i 30
+@define BOARD_MINUS_TWO i 28
+
 proc main in
     // seed
-    mem i 28 + i 1 .
+    mem BOARD_MINUS_TWO + i 1 .
 
-    i32 0 while dup i32 28 > do
-        i32 0 while dup i32 30 > do
+    i32 0 while dup BOARD_MINUS_TWO > do
+        i32 0 while dup BOARD_CAP > do
             dup mem + , if
-                // dup -> index, alocando um buffer de 30 partindo de mem[30]
+                // dup -> index, alocando um buffer de BOARD_CAP partindo de mem[BOARD_CAP]
                 // i8 42 -> "*"
-                dup i32 30 + mem + i8 42 .
+                dup BOARD_CAP + mem + i8 42 .
             else
                 // i8 32 -> " "
-                dup i32 30 + mem + i8 32 .
+                dup BOARD_CAP + mem + i8 32 .
             end
             i32 1 +
         end drop
 
         // colocando um "\n" no final do buffer
-        mem i32 30 + i8 10 .
+        mem BOARD_CAP + i8 10 .
 
-        // exibindo 30 caracteres + 1 (esse 1+ é o "\n") partindo de mem[30]
+        // exibindo BOARD_CAP caracteres + 1 (esse 1+ é o "\n") partindo de mem[BOARD_CAP]
         // é extremamente mais rápido desta forma do que exibir caracter por caracter
-        i32 31 mem i32 30 + dump_mem
+        i32 31 mem BOARD_CAP + dump_mem
         
         // pattern
         mem i 0 + , i 1 lshift mem i32 1 + , lor
 
-        i32 1 while dup i32 28 > do
+        i32 1 while dup BOARD_MINUS_TWO > do
             swap
             i 1 lshift i 7 land
             over mem + i 1 + , lor
