@@ -1,7 +1,13 @@
 @define MAX_CAP i 900
-@define SOME_STR s "Hello world from define directive\n"
+@define SOME_STR s "Hello world from pre-directive\n"
+
+proc new_proc in
+    SOME_STR puts
+    i 90 exit
+end
 
 proc main in
-    SOME_STR puts
+    i32 10 i32 20 + putui s "\n" puts
+    invoke new_proc
     MAX_CAP putui
 end
