@@ -338,6 +338,9 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 
 				ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
 				program.Operations = append(program.Operations, ins)
+			case "exit":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Exit)
+				program.Operations = append(program.Operations, ins)
 			case "dump_mem":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.DumpMem)
 				program.Operations = append(program.Operations, ins)

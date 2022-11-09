@@ -255,6 +255,10 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		case orthtypes.Drop:
 			writer.WriteString("; Drop\n")
 			writer.WriteString("	pop trash\n")
+		case orthtypes.Exit:
+			writer.WriteString("; Exit program\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	invoke ExitProcess, rax\n")
 		case orthtypes.PutU64:
 			writer.WriteString("; DumpUI64\n")
 			writer.WriteString("	pop rax\n")

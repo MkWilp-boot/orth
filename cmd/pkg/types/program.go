@@ -64,5 +64,6 @@ const (
 	LAnd
 	LOr
 	Over
+	Exit
 	TotalOps
 )
