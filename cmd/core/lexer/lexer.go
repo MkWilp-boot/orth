@@ -43,13 +43,13 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 
 	strProgram := string(fileBytes)
 
-	defineDirective := getParamsMap(`@define\s(?P<DName>\w+)\s(?P<Replacement>[\w #$%*\-_+=()\\/"'\.ªº{}\[\]]*)`, strProgram)
+	defineDirective := getParamsMap(`(?m)^@define\s(?P<DName>\w+)\s(?P<Replacement>.*)$`, strProgram)
 
 	for _, s := range defineDirective {
 		for k, v := range s {
-			str := fmt.Sprintf("@define %s %s", k, v)
+			str := fmt.Sprintf("@define %s %s", k, strings.TrimSpace(v))
 			strProgram = strings.ReplaceAll(strProgram, str, "")
-			strProgram = strings.ReplaceAll(strProgram, k, v)
+			strProgram = strings.ReplaceAll(strProgram, k, strings.TrimSpace(v))
 		}
 	}
 
