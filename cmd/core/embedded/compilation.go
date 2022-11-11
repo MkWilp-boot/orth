@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
+	"orth/cmd/pkg/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
 )
+
+const MASM_LINE_MAX_CHAR_8BIT_LIMIT float64 = 20.0
 
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
@@ -331,9 +335,33 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	}
 	writer.WriteString(".DATA ; immediate strings\n")
 	for v, i := range immediateStrings {
-		writer.WriteString(fmt.Sprintf("	str_%d db %s \n", i, embedded_helpers.VarValueToAsmSyntax(v)))
+		length := float64(len(v.Operand))
+
+		// checks if the string is larger than this weird masm exclusive constant
+		if length > MASM_LINE_MAX_CHAR_8BIT_LIMIT {
+			// gets the amount of slices the string must have afte helpers.Chunks
+			size := int(math.Ceil(length / MASM_LINE_MAX_CHAR_8BIT_LIMIT))
+
+			// chunk the string into slices of MASM_LINE_MAX_CHAR_8BIT_LIMIT size
+			chunks := helpers.Chunks(v.Operand, int(MASM_LINE_MAX_CHAR_8BIT_LIMIT))
+
+			// writes the string label definition
+			writer.WriteString(fmt.Sprintf("	str_%d \\\n", i))
+			for i, c := range chunks {
+				var endWithNullByte bool
+
+				// if it's the last element, must end in a '0' byte
+				if i == size-1 {
+					endWithNullByte = true
+				}
+				// writes the bytes
+				writer.WriteString(fmt.Sprintf("\t\tdb %s\n", embedded_helpers.StringToByteRep(c, endWithNullByte)))
+			}
+			continue
+		}
+		writer.WriteString(fmt.Sprintf("	str_%d db %s \n", i, embedded_helpers.VarValueToAsmSyntax(v, true)))
 	}
-	writer.WriteString("end\n")
+	writer.WriteString("end ; code segment\n")
 	writer.Flush()
 	orth_debug.LogStep("[CMD] Finished writing assembly")
 }
