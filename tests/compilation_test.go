@@ -18,6 +18,18 @@ func TestRule110(t *testing.T) {
 	}
 }
 
+func TestBigStrings(t *testing.T) {
+	testhelper.PrepareComp("./repo/big_strings.orth")
+	expected := testhelper.LoadExpected("TestBigStrings")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestBigStrings")
+		t.FailNow()
+	}
+}
+
 func TestBitWise(t *testing.T) {
 	testhelper.PrepareComp("./repo/bitwise.orth")
 	expected := testhelper.LoadExpected("TestBitWise")
