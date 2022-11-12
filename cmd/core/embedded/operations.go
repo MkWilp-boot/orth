@@ -133,7 +133,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			if v.Content.ValidPos {
 				continue
 			}
-			switch v.Content.Content {
+			switch v.Content.Token {
 			case orthtypes.ADDR:
 				fallthrough
 			case orthtypes.PrimitiveRNT:
@@ -154,11 +154,11 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				fallthrough
 			case orthtypes.PrimitiveBOOL:
 				preProgram[i+1].Content.ValidPos = true
-				ins := parseToken(v.Content.Content, preProgram[i+1].Content.Content, orthtypes.Push)
+				ins := parseToken(v.Content.Token, preProgram[i+1].Content.Token, orthtypes.Push)
 				program.Operations = append(program.Operations, ins)
 			case orthtypes.PrimitiveSTR:
 				preProgram[i+1].Content.ValidPos = true
-				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content[1:len(preProgram[i+1].Content.Content)-1], orthtypes.PushStr)
+				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Token[1:len(preProgram[i+1].Content.Token)-1], orthtypes.PushStr)
 				program.Operations = append(program.Operations, ins)
 			case "+":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Sum)
@@ -225,7 +225,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				program.Operations = append(program.Operations, ins)
 			case "proc":
 				preProgram[i+1].Content.ValidPos = true
-				pName := preProgram[i+1].Content.Content
+				pName := preProgram[i+1].Content.Token
 
 				procNames[pName]++
 				if procNames[pName] != 1 {
@@ -266,12 +266,12 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
 				program.Operations = append(program.Operations, ins)
 			case "call":
-				_, ok := functions.Functions[preProgram[i+1].Content.Content]
+				_, ok := functions.Functions[preProgram[i+1].Content.Token]
 				if !ok {
-					panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Content))
+					panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Token))
 				}
 				preProgram[i+1].Content.ValidPos = true
-				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Content, orthtypes.Call)
+				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Token, orthtypes.Call)
 				program.Operations = append(program.Operations, ins)
 			case ",!":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.LoadStay)
@@ -279,23 +279,23 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "type":
 				preProgram[i+1].Content.ValidPos = true
 
-				ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Content, orthtypes.Push)
+				ins := parseToken(orthtypes.PrimitiveType, preProgram[i+1].Content.Token, orthtypes.Push)
 
 				program.Operations = append(program.Operations, ins)
 			case "const":
 				re := regexp.MustCompile(`[^\w]`)
 
 				// check name
-				if re.Match([]byte(preProgram[i+1].Content.Content)) {
+				if re.Match([]byte(preProgram[i+1].Content.Token)) {
 					panic("var has invalid characters in it's composition")
 				}
 				// check if has a value
-				if preProgram[i+2].Content.Content != "=" {
+				if preProgram[i+2].Content.Token != "=" {
 					switch {
 					// used as a func param
-					case preProgram[i+2].Content.Content == "call":
+					case preProgram[i+2].Content.Token == "call":
 						preProgram[i+1].Content.ValidPos = true
-						ins := parseTokenWithContext(orthtypes.PrimitiveConst, preProgram[i+1].Content.Content, context, orthtypes.Push)
+						ins := parseTokenWithContext(orthtypes.PrimitiveConst, preProgram[i+1].Content.Token, context, orthtypes.Push)
 						program.Operations = append(program.Operations, ins)
 						continue
 					default:
@@ -307,8 +307,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					preProgram[i+x].Content.ValidPos = true
 				}
 
-				vName := preProgram[i+1].Content.Content
-				vType := preProgram[i+3].Content.Content
+				vName := preProgram[i+1].Content.Token
+				vType := preProgram[i+3].Content.Token
 
 				var vValue string
 
@@ -316,9 +316,9 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				case orthtypes.PrimitiveSTR:
 					fallthrough
 				case orthtypes.RNGABL:
-					vValue = preProgram[i+4].Content.Content[1 : len(preProgram[i+4].Content.Content)-1]
+					vValue = preProgram[i+4].Content.Token[1 : len(preProgram[i+4].Content.Token)-1]
 				default:
-					vValue = preProgram[i+4].Content.Content
+					vValue = preProgram[i+4].Content.Token
 				}
 
 				ins := parseTokenWithContext(vType, vValue, context, orthtypes.Push)
@@ -328,13 +328,13 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				program.Operations = append(program.Operations, ins)
 			case "hold":
 				preProgram[i+1].Content.ValidPos = true
-				vName := preProgram[i+1].Content.Content
+				vName := preProgram[i+1].Content.Token
 
 				ins := parseToken(orthtypes.PrimitiveHold, vName, orthtypes.Hold)
 				program.Operations = append(program.Operations, ins)
 			case "invoke":
 				preProgram[i+1].Content.ValidPos = true
-				pName := preProgram[i+1].Content.Content
+				pName := preProgram[i+1].Content.Token
 
 				ins := parseToken(orthtypes.PrimitiveRNT, pName, orthtypes.Invoke)
 				program.Operations = append(program.Operations, ins)
@@ -348,7 +348,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				if !v.Content.ValidPos {
 					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
 						VarName:  orthtypes.Program{},
-						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Content, file.Name, v.Index, v.Content.Index),
+						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Token, file.Name, v.Index, v.Content.Index),
 					}
 					close(parseTokenResult)
 					return
