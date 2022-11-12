@@ -138,8 +138,8 @@ func EnumerateLine(line string, enumeration chan<- orthtypes.Vec2DString) {
 		})
 
 		enumeration <- orthtypes.Vec2DString{
-			Index:   col,
-			Content: line[col:colEnd],
+			Index: col,
+			Token: line[col:colEnd],
 		}
 
 		col = findCol(line, colEnd, func(s string) bool {
