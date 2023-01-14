@@ -104,7 +104,7 @@ func (o Operand) GrabRootType() string {
 type Vec2DString struct {
 	Index    int
 	ValidPos bool
-	Content  string
+	Token    string
 }
 
 type StringEnum struct {

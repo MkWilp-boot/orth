@@ -11,6 +11,7 @@ import (
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 const MASM_LINE_MAX_CHAR_8BIT_LIMIT float64 = 20.0
@@ -70,6 +71,9 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 	// data segment (pre-defined)
 	writer.WriteString(".DATA ; constants\n")
+	for i := 0; i < 32; i++ {
+		writer.WriteString(fmt.Sprintf("	proc_arg_%d QWORD 0\n", i))
+	}
 	for pair := range outOfOrder.Vars {
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
@@ -81,6 +85,13 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 	// code segment
 	writer.WriteString(".CODE\n")
+	writer.WriteString("clear_proc_params PROC\n")
+	for i := 0; i < 32; i++ {
+		writer.WriteString(fmt.Sprintf("	mov proc_arg_%d, 0\n", i))
+	}
+	writer.WriteString("	ret\n")
+	writer.WriteString("clear_proc_params ENDP\n")
+
 	writer.WriteString("p_dump_ui64 PROC\n")
 	writer.WriteString("	local buf[10]: BYTE\n")
 	writer.WriteString("	push	rbx\n")
@@ -217,17 +228,46 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		case orthtypes.Proc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operand.Operand + " proc\n")
+		case orthtypes.With:
+			writer.WriteString("; Proc\n")
+			procParamsCount, err := strconv.Atoi(op.Operand.Operand)
+			if err != nil {
+				panic(err)
+			}
+			for i := 0; i < procParamsCount && i < 32; i++ {
+				writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
+			}
 		case orthtypes.End:
 			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
 				writer.WriteString("; Endp\n")
+				writer.WriteString("	invoke clear_proc_params\n")
 				writer.WriteString("	ret\n")
 				writer.WriteString(program.Operations[op.RefBlock].Operand.Operand + " endp\n")
 				continue
 			}
 			writer.WriteString("; End\n")
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
-		case orthtypes.Invoke:
+		case orthtypes.Call:
 			writer.WriteString("; invoke\n")
+			procSignature := program.Filter(func(fop orthtypes.Operation, i int) bool {
+				if i >= len(program.Operations) {
+					return false
+				}
+				isProc := fop.Instruction == orthtypes.Proc && op.Operand.Operand == fop.Operand.Operand
+				hasWith := isProc && program.Operations[i+1].Instruction == orthtypes.With
+				return hasWith
+			})
+			if len(procSignature) != 1 {
+				panic("Unknow")
+			}
+			withInst := program.Operations[procSignature[0].VarName+1]
+			withAmount, err := strconv.Atoi(withInst.Operand.Operand)
+			if err != nil {
+				panic(err)
+			}
+			for i := 0; i < withAmount; i++ {
+				writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
+			}
 			writer.WriteString("	invoke " + op.Operand.Operand + "\n")
 		case orthtypes.Dup:
 			writer.WriteString("; Dup\n")

@@ -27,6 +27,8 @@ const (
 	ORTH_ERR_02 = "ORTH_ERR_02: Redeclaration of %q -> %q " + commomFileSpecificationStruct
 	ORTH_ERR_03 = "ORTH_ERR_03: Redeclaration of %q -> %q in block %q"
 	ORTH_ERR_04 = "ORTH_ERR_04: Invalid operation of type %q\nDetails:\n%s"
+	ORTH_ERR_05 = "ORTH_ERR_05: The instruction of type %q requires a parameter of type %q, but found token %q\n\t" + commomFileSpecificationStruct
+	ORTH_ERR_06 = "ORTH_ERR_06: A procedure can only have a maximum of %d but found %d\n\t" + commomFileSpecificationStruct
 )
 
 func BuildErrorMessage(message string, params ...interface{}) error {
