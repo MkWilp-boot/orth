@@ -101,6 +101,18 @@ func TestMem(t *testing.T) {
 	}
 }
 
+func TestProc(t *testing.T) {
+	testhelper.PrepareComp("./repo/procs.orth")
+	expected := testhelper.LoadExpected("Procs")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "Procs")
+		t.FailNow()
+	}
+}
+
 func TestInvalidMemUsage(t *testing.T) {
 	errors := testhelper.PrepareComp("./repo/mem_invalid_usage.orth")
 	expected := testhelper.LoadExpected("TestInvalidMemUsage")

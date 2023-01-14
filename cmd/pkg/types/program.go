@@ -7,10 +7,10 @@ type Program struct {
 	Operations []Operation
 }
 
-func (p *Program) Filter(predicate func(op Operation) bool) []Pair[int, Operation] {
+func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {
 	ops := make([]Pair[int, Operation], 0)
 	for i, op := range p.Operations {
-		if predicate(op) {
+		if predicate(op, i) {
 			ops = append(ops, Pair[int, Operation]{
 				VarName:  i,
 				VarValue: op,
@@ -19,6 +19,10 @@ func (p *Program) Filter(predicate func(op Operation) bool) []Pair[int, Operatio
 	}
 	return ops
 }
+
+const (
+	MAX_PROC_PARAM_COUNT = 32
+)
 
 const (
 	Push int = iota
@@ -65,5 +69,6 @@ const (
 	LOr
 	Over
 	Exit
+	With
 	TotalOps
 )
