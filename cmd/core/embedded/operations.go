@@ -3,9 +3,9 @@ package embedded
 import (
 	"fmt"
 	"orth/cmd/core/orth_debug"
-	"orth/cmd/pkg/helpers/functions"
 	orthtypes "orth/cmd/pkg/types"
 	"regexp"
+	"strconv"
 )
 
 const globalScope = "Global"
@@ -59,10 +59,10 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			}
 			program.Operations[ip].Context = context
 		case orthtypes.Hold:
-			holds := program.Filter(func(op orthtypes.Operation) bool {
+			holds := program.Filter(func(op orthtypes.Operation, i int) bool {
 				return op == v
 			})
-			vD := program.Filter(func(op orthtypes.Operation) bool {
+			vD := program.Filter(func(op orthtypes.Operation, i int) bool {
 				return op.Operand.VarType == orthtypes.PrimitiveConst && op.Operand.Operand == holds[0].VarValue.Operand.Operand
 			})
 
@@ -266,10 +266,6 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Load)
 				program.Operations = append(program.Operations, ins)
 			case "call":
-				_, ok := functions.Functions[preProgram[i+1].Content.Token]
-				if !ok {
-					panic(fmt.Errorf(orth_debug.UndefinedFunction, preProgram[i+1].Content.Token))
-				}
 				preProgram[i+1].Content.ValidPos = true
 				ins := parseToken(orthtypes.PrimitiveSTR, preProgram[i+1].Content.Token, orthtypes.Call)
 				program.Operations = append(program.Operations, ins)
@@ -340,6 +336,34 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				program.Operations = append(program.Operations, ins)
 			case "exit":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Exit)
+				program.Operations = append(program.Operations, ins)
+			case "with":
+				preProgram[i+1].Content.ValidPos = true
+				amountStr := preProgram[i+1].Content.Token
+
+				amount, err := strconv.Atoi(amountStr)
+				if err != nil {
+					errStr := orth_debug.BuildErrorMessage(
+						orth_debug.ORTH_ERR_05,
+						"with",
+						"i~",
+						amountStr,
+						file.Name, v.Index, v.Content.Index,
+					)
+					panic(errStr)
+				}
+
+				if amount > orthtypes.MAX_PROC_PARAM_COUNT {
+					errStr := orth_debug.BuildErrorMessage(
+						orth_debug.ORTH_ERR_06,
+						orthtypes.MAX_PROC_PARAM_COUNT,
+						amount,
+						file.Name, v.Index, v.Content.Index,
+					)
+					panic(errStr)
+				}
+
+				ins := parseToken(orthtypes.PrimitiveRNT, amountStr, orthtypes.With)
 				program.Operations = append(program.Operations, ins)
 			case "dump_mem":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.DumpMem)
