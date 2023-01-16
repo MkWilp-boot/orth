@@ -234,8 +234,9 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			if err != nil {
 				panic(err)
 			}
-			for i := 0; i < procParamsCount && i < 32; i++ {
+			for i := procParamsCount - 1; i >= 0; i-- {
 				writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
+
 			}
 		case orthtypes.End:
 			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
@@ -258,7 +259,8 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 				return hasWith
 			})
 			if len(procSignature) != 1 {
-				panic("Unknow")
+				errStr := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_07, "A procedure must especify the number of arguments taken. Did you mean `with 0`?")
+				panic(errStr)
 			}
 			withInst := program.Operations[procSignature[0].VarName+1]
 			withAmount, err := strconv.Atoi(withInst.Operand.Operand)
