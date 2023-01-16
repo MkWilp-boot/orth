@@ -1,1 +1,1 @@
-ORTH_ERR_01: Undefined token unknow token "put_string" in "repo/var_mangle.orth" at line: 6 colum: 15
+Redeclaration of "Var" -> "space" in block "main"
