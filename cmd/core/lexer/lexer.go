@@ -59,7 +59,7 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 		CodeBlock: strProgram,
 	}
 
-	includeFiles := getParams(`(?i)@include\s"(?P<File>\w+\.orth)"`, strProgram)
+	includeFiles := getParams(`(?i)@include\s"(?P<File>[^"]*\.orth)"`, strProgram)
 
 	for _, v := range includeFiles {
 		rmInclude := regexp.MustCompile(`(?i)@include\s"` + v + `"\r?\n?`)
