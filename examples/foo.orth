@@ -1,15 +1,5 @@
-proc print_is_odd with 1 in
-    dup i 2 % i 0 == if
-        s "No the number: " puts putui s " is even\n" puts
-    else
-        s "Yes the number: " puts putui s " is odd\n" puts
-    end
-end
+@include "libs/stdlib.orth"
 
 proc main in
-    i 1 while dup i 6 > do
-        dup
-        call print_is_odd
-        i 1 +
-    end drop
+    call print_2
 end
