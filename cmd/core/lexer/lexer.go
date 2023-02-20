@@ -32,6 +32,48 @@ func getParamsMap(regEx, line string) (paramsMap []map[string]string) {
 	return paramsMap
 }
 
+func ppDefineDirective(line string) (string, string) {
+	const directive = "define"
+	name := ""
+	for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
+		name += string(line[i])
+	}
+	value := ""
+	for i := len(directive) + len(name) + 3; i < len(line); i++ {
+		value += string(line[i])
+	}
+	return strings.TrimSpace(name), strings.TrimSpace(value)
+}
+
+func proProccessFile(file string) string {
+	lines := strings.Split(file, "\n")
+
+	for _, line := range lines {
+		if len(line) <= 0 || !strings.HasPrefix(line, "@") {
+			continue
+		}
+
+		directive := ""
+
+		for i := 1; i < len(line) && line[i] != ' '; i++ {
+			directive += string(line[i])
+		}
+
+		switch directive {
+		case "define":
+			name, value := ppDefineDirective(line)
+			file = strings.Replace(file, fmt.Sprintf("@define %s %s", name, value), "", -1)
+			file = strings.ReplaceAll(file, name, value)
+		case "include":
+		default:
+			fmt.Printf("unknow directive found: %q is not recognized as an internal or external directive\n", directive)
+			os.Exit(2)
+		}
+	}
+
+	return file
+}
+
 func LoadProgramFromFile(path string) []orthtypes.File[string] {
 	fileBytes, err := os.ReadFile(path)
 	removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
@@ -41,17 +83,7 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 		panic(err)
 	}
 
-	strProgram := string(fileBytes)
-
-	defineDirective := getParamsMap(`(?m)^@define\s(?P<DName>\w+)\s(?P<Replacement>.*)$`, strProgram)
-
-	for _, s := range defineDirective {
-		for k, v := range s {
-			str := fmt.Sprintf("@define %s %s", k, strings.TrimSpace(v))
-			strProgram = strings.ReplaceAll(strProgram, str, "")
-			strProgram = strings.ReplaceAll(strProgram, k, strings.TrimSpace(v))
-		}
-	}
+	strProgram := proProccessFile(string(fileBytes))
 
 	files := make([]orthtypes.File[string], 1)
 	files[0] = orthtypes.File[string]{

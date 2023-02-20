@@ -1,5 +1,5 @@
-@include "libs/stdlib.orth"
+@define dois i 2
 
 proc main in
-    call print_2
+    dois putui
 end
