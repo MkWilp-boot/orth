@@ -1,5 +1,9 @@
 package orthtypes
 
+import (
+	"reflect"
+)
+
 const FileType = "orth"
 
 const (
@@ -74,6 +78,16 @@ type File[T comparable] struct {
 	CodeBlock T
 }
 
+// UpdateCodeReference takes an argument of type string and then updated the current codeblock to the passed one
+func (f *File[T]) UpdateCodeReference(codeBlock T) {
+	isString := reflect.TypeOf(codeBlock).Kind() == reflect.String
+	if !isString {
+		panic("cannot have a non string as a codeblock")
+	}
+
+	f.CodeBlock = codeBlock
+}
+
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
 	return GlobalTypes[TYPE][o.Operand.VarType] != "" ||
@@ -141,7 +155,7 @@ func init() {
 	GlobalTypes[BOOL] = make(map[string]string, 0)
 	GlobalTypes[BOOL][PrimitiveBOOL] = "b"
 
-	GlobalTypes[VOID] = make(map[string]string, 0)
+	GlobalTypes[VOID] = make(map[string]string)
 	GlobalTypes[VOID][PrimitiveVOID] = "v"
 
 	GlobalTypes[RNT] = make(map[string]string, 0)
