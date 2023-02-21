@@ -39,7 +39,7 @@ func main() {
 
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
 	lexedFiles := lexer.LexFile(strProgram)
-	os.Exit(1)
+
 	parseTokenResult := make(chan orthtypes.Pair[orthtypes.Program, error])
 	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
 

@@ -2,6 +2,6 @@
 @define dois i 2
 
 proc main in
-    print_2 call
+    call print_2
     dois putui
 end

@@ -45,8 +45,13 @@ func ppDefineDirective(line string) (string, string) {
 	return strings.TrimSpace(name), strings.TrimSpace(value)
 }
 
-func proProccessFile(file, path string) string {
-	lines := strings.Split(file, "\n")
+func proProccessFile(rawFile, path string, parsedFiles chan orthtypes.File[string]) {
+	lines := strings.Split(rawFile, "\n")
+
+	oFile := orthtypes.File[string]{
+		Name:      path,
+		CodeBlock: rawFile,
+	}
 
 	for _, line := range lines {
 		if len(line) <= 0 || !strings.HasPrefix(line, "@") {
@@ -62,8 +67,10 @@ func proProccessFile(file, path string) string {
 		switch directive {
 		case "define":
 			name, value := ppDefineDirective(line)
-			file = strings.Replace(file, fmt.Sprintf("@define %s %s", name, value), "", -1)
-			file = strings.ReplaceAll(file, name, value)
+			rawFile = strings.Replace(rawFile, fmt.Sprintf("@define %s %s", name, value), "", -1)
+			rawFile = strings.ReplaceAll(rawFile, name, value)
+
+			oFile.UpdateCodeReference(rawFile)
 		case "include":
 			includeFile := ""
 			for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
@@ -75,19 +82,29 @@ func proProccessFile(file, path string) string {
 			includeFileContent, err := os.ReadFile(includeFile)
 
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
+				os.Exit(1)
 			}
 
-			file = strings.Replace(file, fmt.Sprintf(`@include "%s"`, includeFile), string(includeFileContent), -1)
+			rawFile = strings.Replace(rawFile, fmt.Sprintf(`@include "%s"`, includeFile), "", -1)
+			oFile.UpdateCodeReference(rawFile)
 
-			file = proProccessFile(file, includeFile)
+			filesToParse := make(chan orthtypes.File[string])
+
+			go proProccessFile(string(includeFileContent), includeFile, filesToParse)
+
+			for file := range filesToParse {
+				parsedFiles <- file
+			}
 		default:
 			fmt.Printf("unknow directive found: %q is not recognized as an internal or external directive\n", directive)
 			os.Exit(2)
 		}
 	}
 
-	return file
+	parsedFiles <- oFile
+
+	close(parsedFiles)
 }
 
 func LoadProgramFromFile(path string) []orthtypes.File[string] {
@@ -99,10 +116,16 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 		panic(err)
 	}
 
-	file := proProccessFile(string(fileBytes), path)
-	fmt.Printf("%v\n", file)
+	filesParsed := make(chan orthtypes.File[string])
+	go proProccessFile(string(fileBytes), path, filesParsed)
 
-	return nil
+	files := make([]orthtypes.File[string], 0)
+
+	for file := range filesParsed {
+		files = append(files, file)
+	}
+
+	return files
 }
 
 // LexFile receives a pure text program then
