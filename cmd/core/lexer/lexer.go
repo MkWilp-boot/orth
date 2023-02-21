@@ -45,7 +45,7 @@ func ppDefineDirective(line string) (string, string) {
 	return strings.TrimSpace(name), strings.TrimSpace(value)
 }
 
-func proProccessFile(file string) string {
+func proProccessFile(file, path string) string {
 	lines := strings.Split(file, "\n")
 
 	for _, line := range lines {
@@ -65,6 +65,22 @@ func proProccessFile(file string) string {
 			file = strings.Replace(file, fmt.Sprintf("@define %s %s", name, value), "", -1)
 			file = strings.ReplaceAll(file, name, value)
 		case "include":
+			includeFile := ""
+			for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
+				includeFile += string(line[i])
+			}
+			includeFile = strings.ReplaceAll(includeFile, `"`, "")
+			includeFile = strings.TrimSpace(includeFile)
+
+			includeFileContent, err := os.ReadFile(includeFile)
+
+			if err != nil {
+				panic(err)
+			}
+
+			file = strings.Replace(file, fmt.Sprintf(`@include "%s"`, includeFile), string(includeFileContent), -1)
+
+			file = proProccessFile(file, includeFile)
 		default:
 			fmt.Printf("unknow directive found: %q is not recognized as an internal or external directive\n", directive)
 			os.Exit(2)
@@ -83,25 +99,10 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 		panic(err)
 	}
 
-	strProgram := proProccessFile(string(fileBytes))
+	file := proProccessFile(string(fileBytes), path)
+	fmt.Printf("%v\n", file)
 
-	files := make([]orthtypes.File[string], 1)
-	files[0] = orthtypes.File[string]{
-		Name:      path,
-		CodeBlock: strProgram,
-	}
-
-	includeFiles := getParams(`(?i)@include\s"(?P<File>[^"]*\.orth)"`, strProgram)
-
-	for _, v := range includeFiles {
-		rmInclude := regexp.MustCompile(`(?i)@include\s"` + v + `"\r?\n?`)
-		strProgram = rmInclude.ReplaceAllString(strProgram, "")
-		files[0].CodeBlock = strProgram
-
-		includedProgram := LoadProgramFromFile(v)
-		files = append(files, includedProgram...)
-	}
-	return files
+	return nil
 }
 
 // LexFile receives a pure text program then
