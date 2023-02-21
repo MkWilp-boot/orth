@@ -32,6 +32,81 @@ func getParamsMap(regEx, line string) (paramsMap []map[string]string) {
 	return paramsMap
 }
 
+func ppDefineDirective(line string) (string, string) {
+	const directive = "define"
+	name := ""
+	for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
+		name += string(line[i])
+	}
+	value := ""
+	for i := len(directive) + len(name) + 3; i < len(line); i++ {
+		value += string(line[i])
+	}
+	return strings.TrimSpace(name), strings.TrimSpace(value)
+}
+
+func proProccessFile(rawFile, path string, parsedFiles chan orthtypes.File[string]) {
+	lines := strings.Split(rawFile, "\n")
+
+	oFile := orthtypes.File[string]{
+		Name:      path,
+		CodeBlock: rawFile,
+	}
+
+	for _, line := range lines {
+		if len(line) <= 0 || !strings.HasPrefix(line, "@") {
+			continue
+		}
+
+		directive := ""
+
+		for i := 1; i < len(line) && line[i] != ' '; i++ {
+			directive += string(line[i])
+		}
+
+		switch directive {
+		case "define":
+			name, value := ppDefineDirective(line)
+			rawFile = strings.Replace(rawFile, fmt.Sprintf("@define %s %s", name, value), "", -1)
+			rawFile = strings.ReplaceAll(rawFile, name, value)
+
+			oFile.UpdateCodeReference(rawFile)
+		case "include":
+			includeFile := ""
+			for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
+				includeFile += string(line[i])
+			}
+			includeFile = strings.ReplaceAll(includeFile, `"`, "")
+			includeFile = strings.TrimSpace(includeFile)
+
+			includeFileContent, err := os.ReadFile(includeFile)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			rawFile = strings.Replace(rawFile, fmt.Sprintf(`@include "%s"`, includeFile), "", -1)
+			oFile.UpdateCodeReference(rawFile)
+
+			filesToParse := make(chan orthtypes.File[string])
+
+			go proProccessFile(string(includeFileContent), includeFile, filesToParse)
+
+			for file := range filesToParse {
+				parsedFiles <- file
+			}
+		default:
+			fmt.Printf("unknow directive found: %q is not recognized as an internal or external directive\n", directive)
+			os.Exit(2)
+		}
+	}
+
+	parsedFiles <- oFile
+
+	close(parsedFiles)
+}
+
 func LoadProgramFromFile(path string) []orthtypes.File[string] {
 	fileBytes, err := os.ReadFile(path)
 	removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
@@ -41,34 +116,15 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 		panic(err)
 	}
 
-	strProgram := string(fileBytes)
+	filesParsed := make(chan orthtypes.File[string])
+	go proProccessFile(string(fileBytes), path, filesParsed)
 
-	defineDirective := getParamsMap(`(?m)^@define\s(?P<DName>\w+)\s(?P<Replacement>.*)$`, strProgram)
+	files := make([]orthtypes.File[string], 0)
 
-	for _, s := range defineDirective {
-		for k, v := range s {
-			str := fmt.Sprintf("@define %s %s", k, strings.TrimSpace(v))
-			strProgram = strings.ReplaceAll(strProgram, str, "")
-			strProgram = strings.ReplaceAll(strProgram, k, strings.TrimSpace(v))
-		}
+	for file := range filesParsed {
+		files = append(files, file)
 	}
 
-	files := make([]orthtypes.File[string], 1)
-	files[0] = orthtypes.File[string]{
-		Name:      path,
-		CodeBlock: strProgram,
-	}
-
-	includeFiles := getParams(`(?i)@include\s"(?P<File>\w+\.orth)"`, strProgram)
-
-	for _, v := range includeFiles {
-		rmInclude := regexp.MustCompile(`(?i)@include\s"` + v + `"\r?\n?`)
-		strProgram = rmInclude.ReplaceAllString(strProgram, "")
-		files[0].CodeBlock = strProgram
-
-		includedProgram := LoadProgramFromFile(v)
-		files = append(files, includedProgram...)
-	}
 	return files
 }
 
