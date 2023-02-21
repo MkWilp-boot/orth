@@ -1,4 +1,4 @@
-proc main in
+proc main with 0 out 0 in
     // write "abc" to the memory
     mem i32 0 + i8 97 .
     mem i32 1 + i8 98 .

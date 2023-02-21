@@ -74,6 +74,9 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	for i := 0; i < 32; i++ {
 		writer.WriteString(fmt.Sprintf("	proc_arg_%d QWORD 0\n", i))
 	}
+	for i := 0; i < 32; i++ {
+		writer.WriteString(fmt.Sprintf("	proc_ret_%d QWORD 0\n", i))
+	}
 	for pair := range outOfOrder.Vars {
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
@@ -91,6 +94,13 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	}
 	writer.WriteString("	ret\n")
 	writer.WriteString("clear_proc_params ENDP\n")
+
+	writer.WriteString("clear_proc_returns PROC\n")
+	for i := 0; i < 32; i++ {
+		writer.WriteString(fmt.Sprintf("	mov proc_ret_%d, 0\n", i))
+	}
+	writer.WriteString("	ret\n")
+	writer.WriteString("clear_proc_returns ENDP\n")
 
 	writer.WriteString("p_dump_ui64 PROC\n")
 	writer.WriteString("	local buf[10]: BYTE\n")
@@ -236,16 +246,29 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			}
 			for i := procParamsCount - 1; i >= 0; i-- {
 				writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
-
 			}
+
 		case orthtypes.End:
 			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
 				writer.WriteString("; Endp\n")
+
+				if op.RefBlock+2 > len(program.Operations) || program.Operations[op.RefBlock+2].Instruction != orthtypes.Out {
+					continue
+				}
+				outInstruction := program.Operations[op.RefBlock+2]
+				outAmount, _ := strconv.Atoi(outInstruction.Operand.Operand)
+				if outAmount > 0 {
+					for i := outAmount - 1; i >= 0; i-- {
+						writer.WriteString(fmt.Sprintf("	pop proc_ret_%d\n", i))
+					}
+				}
+
 				writer.WriteString("	invoke clear_proc_params\n")
 				writer.WriteString("	ret\n")
 				writer.WriteString(program.Operations[op.RefBlock].Operand.Operand + " endp\n")
 				continue
 			}
+
 			writer.WriteString("; End\n")
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
 		case orthtypes.Call:
@@ -271,6 +294,14 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 				writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
 			}
 			writer.WriteString("	invoke " + op.Operand.Operand + "\n")
+
+			outInstruction := program.Operations[procSignature[0].VarName+2]
+			outAmount, _ := strconv.Atoi(outInstruction.Operand.Operand)
+			for i := 0; i < outAmount; i++ {
+				writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
+			}
+
+			writer.WriteString("	invoke clear_proc_returns\n")
 		case orthtypes.Dup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")
