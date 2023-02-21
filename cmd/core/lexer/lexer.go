@@ -8,30 +8,6 @@ import (
 	"strings"
 )
 
-func getParams(regEx, line string) (paramsMap []string) {
-	var compRegEx = regexp.MustCompile(regEx)
-	match := compRegEx.FindAllStringSubmatch(line, -1)
-
-	paramsMap = make([]string, 0)
-	for i := range match {
-		paramsMap = append(paramsMap, match[i][1])
-	}
-	return paramsMap
-}
-
-func getParamsMap(regEx, line string) (paramsMap []map[string]string) {
-	var compRegEx = regexp.MustCompile(regEx)
-	matchs := compRegEx.FindAllStringSubmatch(line, -1)
-	paramsMap = make([]map[string]string, 0)
-
-	for _, match := range matchs {
-		matchMap := make(map[string]string)
-		matchMap[match[1]] = match[2]
-		paramsMap = append(paramsMap, matchMap)
-	}
-	return paramsMap
-}
-
 func ppDefineDirective(line string) (string, string) {
 	const directive = "define"
 	name := ""

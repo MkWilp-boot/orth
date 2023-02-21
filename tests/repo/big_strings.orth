@@ -1,7 +1,7 @@
 @define SOME_STR s "Hello, I am a reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallllllllllllllly big string :)\n"
 @define NORMAL s "Normal size string\n"
 
-proc main in
+proc main with 0 out 0 in
     SOME_STR puts
     NORMAL puts
 end

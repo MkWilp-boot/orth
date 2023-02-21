@@ -337,6 +337,34 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			case "exit":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Exit)
 				program.Operations = append(program.Operations, ins)
+			case "out":
+				preProgram[i+1].Content.ValidPos = true
+				amountStr := preProgram[i+1].Content.Token
+
+				amount, err := strconv.Atoi(amountStr)
+				if err != nil {
+					errStr := orth_debug.BuildErrorMessage(
+						orth_debug.ORTH_ERR_05,
+						"out",
+						"i~",
+						amountStr,
+						file.Name, v.Index, v.Content.Index,
+					)
+					panic(errStr)
+				}
+
+				if amount > orthtypes.MAX_PROC_OUTPUT_COUNT {
+					errStr := orth_debug.BuildErrorMessage(
+						orth_debug.ORTH_ERR_06,
+						orthtypes.MAX_PROC_OUTPUT_COUNT,
+						amount,
+						file.Name, v.Index, v.Content.Index,
+					)
+					panic(errStr)
+				}
+
+				ins := parseToken(orthtypes.PrimitiveRNT, amountStr, orthtypes.Out)
+				program.Operations = append(program.Operations, ins)
 			case "with":
 				preProgram[i+1].Content.ValidPos = true
 				amountStr := preProgram[i+1].Content.Token

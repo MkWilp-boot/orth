@@ -1,4 +1,4 @@
-proc main in
+proc main with 0 out 0 in
     mem i 0 + i 10 .
     mem i 1 + i 97 .
     mem i 2 + i 98 .

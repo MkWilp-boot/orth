@@ -1,7 +1,7 @@
 @define BOARD_CAP i 30
 @define BOARD_MINUS_TWO i 28
 
-proc main in
+proc main with 0 out 0 in
     // seed
     mem BOARD_MINUS_TWO + i 1 .
 
