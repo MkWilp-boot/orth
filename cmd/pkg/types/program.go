@@ -21,7 +21,8 @@ func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, O
 }
 
 const (
-	MAX_PROC_PARAM_COUNT = 32
+	MAX_PROC_PARAM_COUNT  = 32
+	MAX_PROC_OUTPUT_COUNT = 32
 )
 
 const (
@@ -70,5 +71,6 @@ const (
 	Over
 	Exit
 	With
+	Out
 	TotalOps
 )

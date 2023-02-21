@@ -1,4 +1,4 @@
-proc main in
+proc main with 0 out 0 in
     mem i 28 + i 1 .
 
     i32 0 while dup i32 28 > do

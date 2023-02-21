@@ -1,7 +1,7 @@
 @define simple_equation i32 100 i64 900 + i 2 * i 10 / i 300 + putui
 @define SOME_STR s "Hello\n"
 
-proc main in
+proc main with 0 out 0 in
     simple_equation
     SOME_STR puts
 end

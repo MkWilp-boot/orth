@@ -1,6 +1,6 @@
 const new_line = s "\n"
 
-proc main in
+proc main with 0 out 0 in
     i 80 i 20 + putui s "\n" puts
     i 10 i 10 * putui s "\n" puts
     i 50 i 20 - putui s "\n" puts

@@ -1,4 +1,4 @@
-proc print_is_odd with 1 in
+proc print_is_odd with 1 out 0 in
     dup i 2 % i 0 == if
         s "No the number: " puts putui s " is even\n" puts
     else
@@ -6,7 +6,7 @@ proc print_is_odd with 1 in
     end
 end
 
-proc main in
+proc main with 0 out 0 in
     i 1 while dup i 6 > do
         dup  call print_is_odd
         i 1 +

@@ -1,6 +1,6 @@
 const space = s " "
 
-proc main in
+proc main with 0 out 0 in
     i 80 putui
     const space = s "non space char"
     hold teste puts

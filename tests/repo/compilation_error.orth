@@ -1,4 +1,4 @@
-proc main in
+proc main with 0 out 0 in
     o psdsa
     k 999
     i 900 put_u64
