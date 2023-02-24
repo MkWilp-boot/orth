@@ -342,7 +342,12 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	invoke p_dump_ui64, rax\n")
 		case orthtypes.Hold:
 			writer.WriteString("; Hold var\n")
-			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(op) + "\n")
+
+			if op.RefBlock > len(program.Operations) || op.RefBlock < 0 {
+				fmt.Fprint(os.Stderr, "Error, tried to point to a variable that does not exist")
+			}
+			memoryVariable := program.Operations[op.RefBlock]
+			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(memoryVariable) + "\n")
 			writer.WriteString("	push rax\n")
 		case orthtypes.PutString:
 			writer.WriteString("; Print string\n")

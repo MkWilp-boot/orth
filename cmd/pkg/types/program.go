@@ -55,7 +55,9 @@ const (
 	Func
 	Call
 	OType
+	Const
 	Var
+	Set
 	Gvar
 	Hold
 	Skip
