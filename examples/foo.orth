@@ -1,7 +1,11 @@
-@include "libs/stdlib.orth"
+proc display_const with 0 out 0 in
+    const memory_block = s "I am a const variable\n"
+    hold memory_block puts
+end
 
 proc main with 0 out 0 in
-    call simple_proc
+    var memory_block = s "I am a var variable\n"
+    hold memory_block puts
 
-    s "I do some stuff at " puts putui s " and what is this? '" puts putui s "'?" puts
+    call display_const
 end

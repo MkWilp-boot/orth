@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -42,6 +43,8 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 				close(crossResult)
 				return
 			}
+		case orthtypes.Const:
+			fallthrough
 		case orthtypes.Var:
 			_, ok := orthVars[context]
 			if !ok {
@@ -52,7 +55,7 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			if orthVars[context][v.Operand.Operand] != 1 || (context != globalScope && orthVars[globalScope][v.Operand.Operand] == 1) {
 				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
 					VarName:  orthtypes.Program{},
-					VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "Var", v.Operand.Operand, context),
+					VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "variable", v.Operand.Operand, context),
 				}
 				close(crossResult)
 				return
@@ -63,10 +66,18 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 				return op == v
 			})
 			vD := program.Filter(func(op orthtypes.Operation, i int) bool {
-				return op.Operand.VarType == orthtypes.PrimitiveConst && op.Operand.Operand == holds[0].VarValue.Operand.Operand
+				return (op.Operand.VarType == orthtypes.PrimitiveConst || op.Operand.VarType == orthtypes.PrimitiveVar) &&
+					op.Operand.Operand == holds[0].VarValue.Operand.Operand &&
+					op.Context == context
 			})
 
+			if len(vD) == 0 {
+				fmt.Fprintln(os.Stderr, "Could not find a variable to hold")
+				os.Exit(1)
+			}
+
 			program.Operations[holds[0].VarName].Context = vD[0].VarValue.Context
+			program.Operations[holds[0].VarName].RefBlock = vD[0].VarName
 		case orthtypes.If:
 			fallthrough
 		case orthtypes.Proc:
@@ -78,7 +89,8 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			blockIp := PopLast(&stack)
 
 			if program.Operations[blockIp.VarName].Instruction != orthtypes.If {
-				panic("Invalid Else clause")
+				fmt.Fprintln(os.Stderr, "Invalid Else clause")
+				os.Exit(1)
 			}
 
 			program.Operations[blockIp.VarName].RefBlock = ip + 1
@@ -96,12 +108,14 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 				fallthrough
 			case program.Operations[blockIp.VarName].Instruction == orthtypes.Do:
 				if program.Operations[blockIp.VarName].RefBlock == -1 {
-					panic("Not enought arguments for a cross-refernce block operation")
+					fmt.Fprintln(os.Stderr, "Not enought arguments for a cross-refernce block operation")
+					os.Exit(1)
 				}
 				program.Operations[ip].RefBlock = program.Operations[blockIp.VarName].RefBlock
 				program.Operations[blockIp.VarName].RefBlock = ip + 1
 			default:
-				panic("End block can only close [if | else | do | proc in] blocks")
+				fmt.Fprintln(os.Stderr, "End block can only close [if | else | do | proc in] blocks")
+				os.Exit(1)
 			}
 		case orthtypes.In:
 			fallthrough
@@ -279,49 +293,22 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 
 				program.Operations = append(program.Operations, ins)
 			case "const":
-				re := regexp.MustCompile(`[^\w]`)
-
-				// check name
-				if re.Match([]byte(preProgram[i+1].Content.Token)) {
-					panic("var has invalid characters in it's composition")
-				}
-				// check if has a value
-				if preProgram[i+2].Content.Token != "=" {
-					switch {
-					// used as a func param
-					case preProgram[i+2].Content.Token == "call":
-						preProgram[i+1].Content.ValidPos = true
-						ins := parseTokenWithContext(orthtypes.PrimitiveConst, preProgram[i+1].Content.Token, context, orthtypes.Push)
-						program.Operations = append(program.Operations, ins)
-						continue
-					default:
-						panic("var must be initialized with `=` sign")
-					}
-				}
-
-				for x := 1; x < 5; x++ {
-					preProgram[i+x].Content.ValidPos = true
-				}
-
-				vName := preProgram[i+1].Content.Token
-				vType := preProgram[i+3].Content.Token
-
-				var vValue string
-
-				switch vType {
-				case orthtypes.PrimitiveSTR:
-					fallthrough
-				case orthtypes.RNGABL:
-					vValue = preProgram[i+4].Content.Token[1 : len(preProgram[i+4].Content.Token)-1]
-				default:
-					vValue = preProgram[i+4].Content.Token
-				}
+				vValue, vType, vName := grabVariableDefinition(preProgram, i, &program)
 
 				ins := parseTokenWithContext(vType, vValue, context, orthtypes.Push)
 				program.Operations = append(program.Operations, ins)
 
-				ins = parseTokenWithContext(orthtypes.PrimitiveConst, vName, context, orthtypes.Var)
+				ins = parseTokenWithContext(orthtypes.PrimitiveConst, vName, context, orthtypes.Const)
 				program.Operations = append(program.Operations, ins)
+			case "var":
+				vValue, vType, vName := grabVariableDefinition(preProgram, i, &program)
+
+				ins := parseTokenWithContext(vType, vValue, context, orthtypes.Push)
+				program.Operations = append(program.Operations, ins)
+
+				ins = parseTokenWithContext(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
+				program.Operations = append(program.Operations, ins)
+			case "set":
 			case "hold":
 				preProgram[i+1].Content.ValidPos = true
 				vName := preProgram[i+1].Content.Token
@@ -413,6 +400,50 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 		VarValue: nil,
 	}
 	close(parseTokenResult)
+}
+
+func grabVariableDefinition(preProgram []orthtypes.StringEnum, i int, program *orthtypes.Program) (string, string, string) {
+	re := regexp.MustCompile(`[^\w]`)
+
+	// check name
+	if re.Match([]byte(preProgram[i+1].Content.Token)) {
+		fmt.Fprintf(os.Stderr, "%s has invalid characters in it's composition\n", "const")
+		os.Exit(1)
+	}
+	// check if has a value
+	if preProgram[i+2].Content.Token != "=" {
+		switch {
+		// used as a func param is currently disabled
+		// case preProgram[i+2].Content.Token == "call":
+		// 	preProgram[i+1].Content.ValidPos = true
+		// 	ins := parseTokenWithContext(orthtypes.PrimitiveConst, preProgram[i+1].Content.Token, context, orthtypes.Push)
+		// 	program.Operations = append(program.Operations, ins)
+		// 	continue
+		default:
+			fmt.Fprintln(os.Stderr, "var must be initialized with `=` sign")
+			os.Exit(1)
+		}
+	}
+
+	for x := 1; x < 5; x++ {
+		preProgram[i+x].Content.ValidPos = true
+	}
+
+	vName := preProgram[i+1].Content.Token
+	vType := preProgram[i+3].Content.Token
+
+	var vValue string
+
+	switch vType {
+	case orthtypes.PrimitiveSTR:
+		fallthrough
+	case orthtypes.RNGABL:
+		vValue = preProgram[i+4].Content.Token[1 : len(preProgram[i+4].Content.Token)-1]
+	default:
+		vValue = preProgram[i+4].Content.Token
+	}
+
+	return vValue, vType, vName
 }
 
 // parseToken parses a single token into a instruction
