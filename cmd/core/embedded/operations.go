@@ -308,8 +308,10 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 
 				ins = parseTokenWithContext(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
 				program.Operations = append(program.Operations, ins)
-			case "set":
-			case "hold":
+			case "deref":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", orthtypes.Deref)
+				program.Operations = append(program.Operations, ins)
+			case orthtypes.PrimitiveHold:
 				preProgram[i+1].Content.ValidPos = true
 				vName := preProgram[i+1].Content.Token
 

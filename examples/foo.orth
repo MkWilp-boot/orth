@@ -1,11 +1,9 @@
-proc display_const with 0 out 0 in
-    const memory_block = s "I am a const variable\n"
-    hold memory_block puts
-end
+// proc display_const with 0 out 0 in
+//     const memory_block = s "I am a const variable\n"
+//     hold memory_block puts
+// end
 
 proc main with 0 out 0 in
-    var memory_block = s "I am a var variable\n"
-    hold memory_block puts
-
-    call display_const
+    var memory_block = i 30
+    hold memory_block deref putui
 end
