@@ -57,7 +57,6 @@ const (
 	OType
 	Const
 	Var
-	Set
 	Gvar
 	Hold
 	Skip
@@ -74,5 +73,6 @@ const (
 	Exit
 	With
 	Out
+	Deref
 	TotalOps
 )

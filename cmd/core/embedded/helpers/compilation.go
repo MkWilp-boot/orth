@@ -123,7 +123,10 @@ func MangleVarName(o orthtypes.Operation) string {
 		memType = "Var"
 	} else if o.Instruction == orthtypes.Const || o.Operand.VarType == orthtypes.PrimitiveConst {
 		memType = "Const"
+	} else {
+		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
 	}
+
 	return fmt.Sprintf("_@%s@%s@%s", o.Context, memType, o.Operand.Operand)
 }
 

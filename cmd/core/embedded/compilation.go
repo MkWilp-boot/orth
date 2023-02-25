@@ -177,6 +177,14 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("; push offset mem\n")
 			writer.WriteString("	mov rax, offset mem\n")
 			writer.WriteString("	push rax\n")
+		case orthtypes.Deref:
+			writer.WriteString("; deref\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	mov rbx, [rax]\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	mov rbx, rax\n")
 		case orthtypes.Load:
 			writer.WriteString("; load\n")
 			writer.WriteString("	pop rax\n")
