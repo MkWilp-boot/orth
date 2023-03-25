@@ -1,27 +1,27 @@
 i 35 i 35 + i 70 ==
 if 
-    s "Equal\n" print
+    s "Equal\n" puts
 else
-    s "False!\n" print
+    s "False!\n" puts
 end
 
 i 35 i 35 + i 70 <>
 if 
-    s "false! last item is a 70\n" print
+    s "false! last item is a 70\n" puts
 else
-    s "true! last item is a 70\n" print
+    s "true! last item is a 70\n" puts
 end
 
 i 420 i 70 <
 if 
-    s "true! 420 is greater than 70\n" print
+    s "true! 420 is greater than 70\n" puts
 else
-    s "false! 420 is greater than 70\n" print
+    s "false! 420 is greater than 70\n" puts
 end
 
 i 420 i 70 >
 if 
-    s "true! 420 is greater than 70\n" print
+    s "true! 420 is greater than 70\n" puts
 else
-    s "false! 420 is greater than 70\n" print
+    s "false! 420 is greater than 70\n" puts
 end

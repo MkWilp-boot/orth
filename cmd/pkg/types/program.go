@@ -55,6 +55,7 @@ const (
 	Func
 	Call
 	OType
+	Const
 	Var
 	Gvar
 	Hold
@@ -72,5 +73,8 @@ const (
 	Exit
 	With
 	Out
+	Deref
+	SetNumber
+	SetString
 	TotalOps
 )

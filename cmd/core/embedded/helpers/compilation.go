@@ -6,6 +6,7 @@ import (
 	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -44,7 +45,8 @@ func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOr
 
 func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operation, orthtypes.Operand] {
 	retreive := make([]orthtypes.Pair[orthtypes.Operation, orthtypes.Operand], 0, cap(program.Operations))
-	if operation.Instruction == orthtypes.Var && program.Operations[i-1].Instruction == orthtypes.Push {
+	if (operation.Instruction == orthtypes.Var || operation.Instruction == orthtypes.Const) &&
+		program.Operations[i-1].Instruction == orthtypes.Push {
 		retreive = append(retreive, orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
 			VarName:  operation,
 			VarValue: program.Operations[i-1].Operand,
@@ -66,6 +68,8 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 		asmTypeInstruction = "dw"
 	case orthtypes.PrimitiveI32:
 		asmTypeInstruction = "dd"
+	case orthtypes.PrimitiveInt:
+		fallthrough
 	case orthtypes.PrimitiveI64:
 		asmTypeInstruction = "dq"
 	case orthtypes.PrimitiveF32:
@@ -73,7 +77,11 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 	case orthtypes.PrimitiveF64:
 		asmTypeInstruction = "real8"
 	default:
-		asmTypeInstruction = "dd"
+		if strings.Contains(runtime.GOARCH, "64") {
+			asmTypeInstruction = "dw"
+		} else {
+			asmTypeInstruction = "dd"
+		}
 	}
 	return asmTypeInstruction
 }
@@ -116,9 +124,19 @@ func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string
 }
 
 func MangleVarName(o orthtypes.Operation) string {
-	return "_@" + o.Context + "@Var@" + o.Operand.Operand
+	var memType string
+
+	if o.Instruction == orthtypes.Var || o.Operand.VarType == orthtypes.PrimitiveVar {
+		memType = "Var"
+	} else if o.Instruction == orthtypes.Const || o.Operand.VarType == orthtypes.PrimitiveConst {
+		memType = "Const"
+	} else {
+		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
+	}
+
+	return fmt.Sprintf("_@%s@%s@%s", o.Context, memType, o.Operand.Operand)
 }
 
 func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
-	return MangleVarName(oVar.VarName) + " " + VarTypeToAsmType(oVar.VarValue) + " " + VarValueToAsmSyntax(oVar.VarValue, true)
+	return fmt.Sprintf("%s %s %s", MangleVarName(oVar.VarName), VarTypeToAsmType(oVar.VarValue), VarValueToAsmSyntax(oVar.VarValue, true))
 }
