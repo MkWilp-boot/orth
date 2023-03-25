@@ -136,3 +136,27 @@ func TestInvalidMemUsage(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestSetIntegerVariables(t *testing.T) {
+	testhelper.PrepareComp("./repo/set_integer_variables.orth")
+	expected := testhelper.LoadExpected("TestSetIntegerVariables")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestSetIntegerVariables")
+		t.FailNow()
+	}
+}
+
+func TestSetStringVariables(t *testing.T) {
+	testhelper.PrepareComp("./repo/set_string_variables.orth")
+	expected := testhelper.LoadExpected("TestSetStringVariables")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestSetStringVariables")
+		t.FailNow()
+	}
+}

@@ -1,5 +1,0 @@
-Yes the number: 1 is odd
-No the number: 2 is even
-Yes the number: 3 is odd
-No the number: 4 is even
-Yes the number: 5 is odd

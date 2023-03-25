@@ -1,15 +1,15 @@
 proc main with 0 out 0 in
-    // write "abc" to the memory
-    mem i32 0 + i8 97 .
-    mem i32 1 + i8 98 .
-    mem i32 2 + i8 99 .
-    mem i32 3 + i8 32 .
+    # write "abc" to the memory
+    mem i64 0 + i8 97 .
+    mem i64 1 + i8 98 .
+    mem i64 2 + i8 99 .
+    mem i64 3 + i8 32 .
 
     i 4 mem dump_mem
     
-    mem i32 0 + dup , i8 1 + .
-    mem i32 1 + dup , i8 1 + .
-    mem i32 2 + dup , i8 1 + .
+    mem i64 0 + dup , i8 1 + .
+    mem i64 1 + dup , i8 1 + .
+    mem i64 2 + dup , i8 1 + .
 
     i 3 mem dump_mem
 end

@@ -6,6 +6,7 @@ import (
 	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -67,6 +68,8 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 		asmTypeInstruction = "dw"
 	case orthtypes.PrimitiveI32:
 		asmTypeInstruction = "dd"
+	case orthtypes.PrimitiveInt:
+		fallthrough
 	case orthtypes.PrimitiveI64:
 		asmTypeInstruction = "dq"
 	case orthtypes.PrimitiveF32:
@@ -74,7 +77,11 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 	case orthtypes.PrimitiveF64:
 		asmTypeInstruction = "real8"
 	default:
-		asmTypeInstruction = "dd"
+		if strings.Contains(runtime.GOARCH, "64") {
+			asmTypeInstruction = "dw"
+		} else {
+			asmTypeInstruction = "dd"
+		}
 	}
 	return asmTypeInstruction
 }

@@ -1,1 +1,0 @@
-Undefined token unknow token "o" in "repo/compilation_error.orth" at line: 2 colum: 4
