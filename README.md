@@ -5,7 +5,7 @@ It uses [GO](https://github.com/golang/go) as the mastermind for the entire proj
 
 ## UNDER DEVELOPMENT
 
-This language is under development
+This language is under development so don't expect too much
 
 ## What are our goals?
 
@@ -15,8 +15,7 @@ This language is under development
 
 ## Missing features
 
-* Functions (halfway there)
-* Local scope (DONE)
+* Local scope for if/else/while(DONE)
 
 ## Getting started
 
@@ -41,29 +40,32 @@ and run using the executable
 $ Hello world in orth!
 ```
 
-Really simple, isn't it? this program just pushes a string value into the stack and prints using the instruction `print` but it can get more complicated as things starts to grow.
+Really simple, isn't it? this program just pushes a string value into the stack and prints using the instruction `puts` but it can get more complicated as things start to grow.
 
 ```orth
-proc main in
-    mem i 28 + i 1 .
+@define BOARD_CAP i 30
+@define BOARD_MINUS_TWO i 28
 
-    i32 0 while dup i32 28 > do
-        i32 0 while dup i32 30 > do
+proc main with 0 out 0 in
+    mem BOARD_MINUS_TWO + i 1 .
+
+    i32 0 while dup BOARD_MINUS_TWO > do
+        i32 0 while dup BOARD_CAP > do
             dup mem + , if
-                dup i32 30 + mem + i8 42 .
+                dup BOARD_CAP + mem + i8 42 .
             else
-                dup i32 30 + mem + i8 32 .
+                dup BOARD_CAP + mem + i8 32 .
             end
             i32 1 +
         end drop
 
-        mem i32 30 + i8 10 .
+        mem BOARD_CAP + i8 10 .
 
-        i32 31 mem i32 30 + dump_mem
-        
+        i32 31 mem BOARD_CAP + dump_mem
+
         mem i 0 + , i 1 lshift mem i32 1 + , lor
 
-        i32 1 while dup i32 28 > do
+        i32 1 while dup BOARD_MINUS_TWO > do
             swap
             i 1 lshift i 7 land
             over mem + i 1 + , lor
@@ -107,7 +109,7 @@ Orth has 5 integer variants
 2. `i32` representes a 32 bit number (DWORD)
 3. `i16` representes a 16 bit number (WORD)
 4. `i8` representes a 8 bit number   (BYTE)
-5. `i` let the compiler decide which integer type will be used, it can be any of the previous mentioned, but it's not sure what it is going to be.</br>
+5. `i` let the compiler decide which integer type will be used, it will be a 32 bit integer on a 32 bit machine and a 64 bit integer on a 64 bit machine.</br>
 This is usually used for just pushing a number, like a unit
 
 ### Floats
@@ -127,7 +129,6 @@ and are defined by preceding an variable using _b_
 Orth string are defined by using the type _s_ followed by the string literal between _" "_</br>
 We plan to have other string variants like
 
-* `sl` Will represent a string literal
 * `si` Will represent a string that can be interpolated
 
 But for now, wel only have _s_ as the only string type available
@@ -148,6 +149,21 @@ As you may guess, orth has constants that store values. To create a variable, us
 const name = s "John"
 const age = i 20
 ```
+
+## changing a variable
+
+Variables are just like _constants_ but they can be modified at runtime.
+```orth
+var some_number = i64 57
+
+i 60 # new value for some_number
+hold some_number set_number
+hold some_number deref putui
+```
+
+As you can see, some_number can be changed by using the bultin instruction `set_number` that works for every non decimal number<br/>
+It takes two parameters: a pointer to a variable and the new value (they should be on the stack)
+
 ## Conditions
 
 Conditions in Orth are very simple and are made by the `if-end` blocks</br>

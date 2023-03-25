@@ -151,7 +151,7 @@ func findCol(line string, start int, predicate func(string) bool) int {
 // EnumerateLine receives a single line and parses and enumerates
 // all tokens in that line feeding the `enumeration` chan
 func EnumerateLine(line string, enumeration chan<- orthtypes.Vec2DString) {
-	line = strings.Split(line, "//")[0]
+	line = strings.Split(line, "#")[0]
 	col := findCol(line, 0, func(s string) bool {
 		return s != " "
 	})

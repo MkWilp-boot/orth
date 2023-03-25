@@ -1,3 +1,0 @@
-Invalid operation of type "Mem"
-Details:
-COMP_ERR: The token "mem" can only be used inside a "proc" context, rigth now it is been used in "Global"

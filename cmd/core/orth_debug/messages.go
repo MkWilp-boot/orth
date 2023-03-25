@@ -30,6 +30,9 @@ const (
 	ORTH_ERR_05 = "The instruction of type %q requires a parameter of type %q, but found token %q\n\t" + commomFileSpecificationStruct
 	ORTH_ERR_06 = "A procedure can only have a maximum of %d but found %d\n\t" + commomFileSpecificationStruct
 	ORTH_ERR_07 = "Syntax error. %s"
+	ORTH_ERR_08 = "Instruction %q requires: (%q, %q). But found: (%q, %q)\n"
+	ORTH_ERR_09 = "Stack underflow!. Instruction %q requires values that are not part of the stack!\n"
+	ORTH_ERR_10 = "The instruction of type %q requires a parameter of type %q, but found %q\n"
 )
 
 func BuildErrorMessage(message string, params ...interface{}) error {

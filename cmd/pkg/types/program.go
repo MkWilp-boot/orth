@@ -74,5 +74,7 @@ const (
 	With
 	Out
 	Deref
+	SetNumber
+	SetString
 	TotalOps
 )

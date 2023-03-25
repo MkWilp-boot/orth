@@ -36,7 +36,7 @@ func BasedOnType(
 	case orthtypes.RNT:
 		stack = append(stack, act(superType, operands[0], operands[1]))
 	default:
-		panic(fmt.Errorf("INVALID TYPE OF %q\n", originalType))
+		panic(fmt.Errorf("invalid type of %q", originalType))
 	}
 
 	*root = stack
