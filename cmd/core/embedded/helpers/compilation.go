@@ -48,8 +48,8 @@ func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation,
 	if (operation.Instruction == orthtypes.Var || operation.Instruction == orthtypes.Const) &&
 		program.Operations[i-1].Instruction == orthtypes.Push {
 		retreive = append(retreive, orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
-			VarName:  operation,
-			VarValue: program.Operations[i-1].Operator,
+			Left:  operation,
+			Right: program.Operations[i-1].Operator,
 		})
 		program.Operations[i].Instruction = orthtypes.Skip
 		program.Operations[i-1].Instruction = orthtypes.Skip
@@ -137,6 +137,6 @@ func MangleVarName(o orthtypes.Operation) string {
 	return fmt.Sprintf("_@%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
 }
 
-func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
-	return fmt.Sprintf("%s %s %s", MangleVarName(oVar.VarName), VarTypeToAsmType(oVar.VarValue), VarValueToAsmSyntax(oVar.VarValue, true))
+func BuildVarDataSeg(variable orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
+	return fmt.Sprintf("%s %s %s", MangleVarName(variable.Left), VarTypeToAsmType(variable.Right), VarValueToAsmSyntax(variable.Right, true))
 }

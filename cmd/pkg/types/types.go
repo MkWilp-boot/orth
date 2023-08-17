@@ -57,10 +57,9 @@ type Context struct {
 	InnerContext []*Context
 }
 
-// TODO: pleeeeeeeease change VarName and VarValue, wtf is this?
 type Pair[T1, T2 any] struct {
-	VarName  T1
-	VarValue T2
+	Left  T1
+	Right T2
 }
 
 type Operation struct {
