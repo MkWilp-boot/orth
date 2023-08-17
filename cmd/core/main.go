@@ -35,8 +35,6 @@ func init() {
 }
 
 func main() {
-	var program orthtypes.Program
-
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
 	lexedFiles := lexer.LexFile(strProgram)
 
@@ -56,7 +54,7 @@ func main() {
 		fmt.Printf("%v\n", result.VarValue)
 		os.Exit(1)
 	}
-	program = result.VarName
+	program := result.VarName
 
 	switch {
 	case *orth_debug.Compile != "":

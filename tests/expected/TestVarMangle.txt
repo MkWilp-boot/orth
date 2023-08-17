@@ -1,1 +1,1 @@
-Redeclaration of "variable" -> "space" in block "main"
+Redeclaration of "constant" -> "space" in block "c?_proc_main_0$"
