@@ -14,8 +14,7 @@ import (
 	"strconv"
 )
 
-// TODO change to a better name
-const MASM_LINE_MAX_CHAR_8BIT_LIMIT float64 = 20.0
+const MASM_MAX_8BIT_CHAR_PER_LINE float64 = 20.0
 
 // Compile compiles a program into assembly
 func Compile(program orthtypes.Program, assemblyType string) {
@@ -302,7 +301,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 				errStr := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_07, "A procedure must especify the number of arguments taken. Did you mean `with 0`?")
 				panic(errStr)
 			}
-			withInst := program.Operations[procSignature[0].VarName+1]
+			withInst := program.Operations[procSignature[0].Left+1]
 			withAmount, err := strconv.Atoi(withInst.Operator.Operand)
 			if err != nil {
 				panic(err)
@@ -312,7 +311,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			}
 			writer.WriteString("	invoke " + op.Operator.Operand + "\n")
 
-			outInstruction := program.Operations[procSignature[0].VarName+2]
+			outInstruction := program.Operations[procSignature[0].Left+2]
 			outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
 			for i := 0; i < outAmount; i++ {
 				writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
@@ -434,12 +433,12 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		length := float64(len(v.Operand))
 
 		// checks if the string is larger than this weird masm exclusive constant
-		if length > MASM_LINE_MAX_CHAR_8BIT_LIMIT {
+		if length > MASM_MAX_8BIT_CHAR_PER_LINE {
 			// gets the amount of slices the string must have afte helpers.Chunks
-			size := int(math.Ceil(length / MASM_LINE_MAX_CHAR_8BIT_LIMIT))
+			size := int(math.Ceil(length / MASM_MAX_8BIT_CHAR_PER_LINE))
 
-			// chunk the string into slices of MASM_LINE_MAX_CHAR_8BIT_LIMIT size
-			chunks := helpers.Chunks(v.Operand, int(MASM_LINE_MAX_CHAR_8BIT_LIMIT))
+			// chunk the string into slices of MASM_MAX_8BIT_CHAR_PER_LINE size
+			chunks := helpers.Chunks(v.Operand, int(MASM_MAX_8BIT_CHAR_PER_LINE))
 
 			// writes the string label definition
 			writer.WriteString(fmt.Sprintf("	str_%d \\\n", i))
