@@ -25,7 +25,7 @@ func Simulate(program orthtypes.Program) {
 		if !stackItem.IsValidType() {
 			fmt.Println("====================================")
 			fmt.Printf("Error At instruction number %d ->'%#v'", ip, stackItem)
-			fmt.Printf("The argument %s has a invalid type of %q\n", stackItem.Operand, stackItem.Operand.VarType)
+			fmt.Printf("The argument %s has a invalid type of %q\n", stackItem.Operator, stackItem.Operator.VarType)
 			fmt.Println("====================================")
 			panic(orth_debug.DefaultRuntimeException)
 		}
@@ -34,7 +34,7 @@ func Simulate(program orthtypes.Program) {
 			if len(stack) >= memCap {
 				panic("stack overflow!")
 			}
-			stack = append(stack, stackItem.Operand)
+			stack = append(stack, stackItem.Operator)
 			ip++
 		case orthtypes.Sum:
 			o1 := helpers.StackPop(&stack)
@@ -252,7 +252,7 @@ func Simulate(program orthtypes.Program) {
 			//fmt.Println(stack)
 			ip++
 		case orthtypes.Call:
-			fn := functions.Functions[stackItem.Operand.Operand]
+			fn := functions.Functions[stackItem.Operator.Operand]
 			fn(&stack, &mem, vars)
 			ip++
 		case orthtypes.LoadStay:
@@ -261,14 +261,14 @@ func Simulate(program orthtypes.Program) {
 			ip++
 		case orthtypes.Var:
 			//			vName					Value
-			vars[stackItem.Operand.Operand] = helpers.StackPop(&stack)
+			vars[stackItem.Operator.Operand] = helpers.StackPop(&stack)
 			stack = append(stack, orthtypes.Operand{
 				VarType: orthtypes.PrimitiveConst,
-				Operand: stackItem.Operand.Operand,
+				Operand: stackItem.Operator.Operand,
 			})
 			ip++
 		case orthtypes.Hold:
-			vName := stackItem.Operand.Operand
+			vName := stackItem.Operator.Operand
 			v, ok := vars[vName]
 			if !ok {
 				panic(fmt.Errorf(orth_debug.VariableUndefined, vName))

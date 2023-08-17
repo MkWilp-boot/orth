@@ -14,6 +14,7 @@ import (
 	"strconv"
 )
 
+// TODO change to a better name
 const MASM_LINE_MAX_CHAR_8BIT_LIMIT float64 = 20.0
 
 // Compile compiles a program into assembly
@@ -157,11 +158,11 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		switch op.Instruction {
 		case orthtypes.Push:
 			writer.WriteString("; push\n")
-			writer.WriteString("	push " + op.Operand.Operand + "\n")
+			writer.WriteString("	push " + op.Operator.Operand + "\n")
 		case orthtypes.PushStr:
-			strNum, ok := immediateStrings[op.Operand]
+			strNum, ok := immediateStrings[op.Operator]
 			if !ok {
-				immediateStrings[op.Operand] = immediateStringCount
+				immediateStrings[op.Operator] = immediateStringCount
 				strNum = immediateStringCount
 			}
 			writer.WriteString("; push string\n")
@@ -253,10 +254,10 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
 		case orthtypes.Proc:
 			writer.WriteString("; Proc\n")
-			writer.WriteString(op.Operand.Operand + " proc\n")
+			writer.WriteString(op.Operator.Operand + " proc\n")
 		case orthtypes.With:
 			writer.WriteString("; Proc\n")
-			procParamsCount, err := strconv.Atoi(op.Operand.Operand)
+			procParamsCount, err := strconv.Atoi(op.Operator.Operand)
 			if err != nil {
 				panic(err)
 			}
@@ -272,7 +273,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 					continue
 				}
 				outInstruction := program.Operations[op.RefBlock+2]
-				outAmount, _ := strconv.Atoi(outInstruction.Operand.Operand)
+				outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
 				if outAmount > 0 {
 					for i := outAmount - 1; i >= 0; i-- {
 						writer.WriteString(fmt.Sprintf("	pop proc_ret_%d\n", i))
@@ -281,7 +282,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 				writer.WriteString("	invoke clear_proc_params\n")
 				writer.WriteString("	ret\n")
-				writer.WriteString(program.Operations[op.RefBlock].Operand.Operand + " endp\n")
+				writer.WriteString(program.Operations[op.RefBlock].Operator.Operand + " endp\n")
 				continue
 			}
 
@@ -293,7 +294,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 				if i >= len(program.Operations) {
 					return false
 				}
-				isProc := fop.Instruction == orthtypes.Proc && op.Operand.Operand == fop.Operand.Operand
+				isProc := fop.Instruction == orthtypes.Proc && op.Operator.Operand == fop.Operator.Operand
 				hasWith := isProc && program.Operations[i+1].Instruction == orthtypes.With
 				return hasWith
 			})
@@ -302,17 +303,17 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 				panic(errStr)
 			}
 			withInst := program.Operations[procSignature[0].VarName+1]
-			withAmount, err := strconv.Atoi(withInst.Operand.Operand)
+			withAmount, err := strconv.Atoi(withInst.Operator.Operand)
 			if err != nil {
 				panic(err)
 			}
 			for i := 0; i < withAmount; i++ {
 				writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
 			}
-			writer.WriteString("	invoke " + op.Operand.Operand + "\n")
+			writer.WriteString("	invoke " + op.Operator.Operand + "\n")
 
 			outInstruction := program.Operations[procSignature[0].VarName+2]
-			outAmount, _ := strconv.Atoi(outInstruction.Operand.Operand)
+			outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
 			for i := 0; i < outAmount; i++ {
 				writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
 			}
@@ -361,6 +362,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 			if op.RefBlock > len(program.Operations) || op.RefBlock < 0 {
 				fmt.Fprint(os.Stderr, "Error, tried to point to a variable that does not exist")
+				os.Exit(1)
 			}
 			memoryVariable := program.Operations[op.RefBlock]
 			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(memoryVariable) + "\n")

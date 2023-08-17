@@ -49,6 +49,15 @@ const (
 	INVALIDTYPE = ""
 )
 
+type Context struct {
+	Name         string
+	Order        uint
+	Parent       *Context
+	Declarations []string
+	InnerContext []*Context
+}
+
+// TODO: pleeeeeeeease change VarName and VarValue, wtf is this?
 type Pair[T1, T2 any] struct {
 	VarName  T1
 	VarValue T2
@@ -56,8 +65,8 @@ type Pair[T1, T2 any] struct {
 
 type Operation struct {
 	Instruction int
-	Operand     Operand
-	Context     string
+	Operator    Operand
+	Context     *Context
 	RefBlock    int
 }
 
@@ -79,6 +88,26 @@ type File[T comparable] struct {
 	CodeBlock T
 }
 
+func (ctx *Context) MountFullLengthContext(name string) string {
+	if ctx == nil {
+		return name
+	}
+	name += ctx.Parent.MountFullLengthContext(name) + "_" + ctx.Name
+	return name
+}
+
+func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
+	for ctx != nil {
+		for _, v := range ctx.Declarations {
+			if v == variable {
+				return true
+			}
+		}
+		ctx = ctx.Parent
+	}
+	return false
+}
+
 // UpdateCodeReference takes an argument of type string and then updated the current codeblock to the passed one
 func (f *File[T]) UpdateCodeReference(codeBlock T) {
 	isString := reflect.TypeOf(codeBlock).Kind() == reflect.String
@@ -91,14 +120,14 @@ func (f *File[T]) UpdateCodeReference(codeBlock T) {
 
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
-	return GlobalTypes[TYPE][o.Operand.VarType] != "" ||
-		GlobalTypes[INTS][o.Operand.VarType] != "" ||
-		GlobalTypes[FLOATS][o.Operand.VarType] != "" ||
-		GlobalTypes[STRING][o.Operand.VarType] != "" ||
-		GlobalTypes[BOOL][o.Operand.VarType] != "" ||
-		GlobalTypes[VOID][o.Operand.VarType] != "" ||
-		GlobalTypes[RNT][o.Operand.VarType] != "" ||
-		GlobalTypes[MEM][o.Operand.VarType] != ""
+	return GlobalTypes[TYPE][o.Operator.VarType] != "" ||
+		GlobalTypes[INTS][o.Operator.VarType] != "" ||
+		GlobalTypes[FLOATS][o.Operator.VarType] != "" ||
+		GlobalTypes[STRING][o.Operator.VarType] != "" ||
+		GlobalTypes[BOOL][o.Operator.VarType] != "" ||
+		GlobalTypes[VOID][o.Operator.VarType] != "" ||
+		GlobalTypes[RNT][o.Operator.VarType] != "" ||
+		GlobalTypes[MEM][o.Operator.VarType] != ""
 }
 
 func (o Operand) GrabRootType() string {
