@@ -42,19 +42,19 @@ func main() {
 	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
 
 	result := <-parseTokenResult
-	if result.VarValue != nil {
-		fmt.Printf("%v\n", result.VarValue)
+	if result.Right != nil {
+		fmt.Printf("%v\n", result.Right)
 		os.Exit(1)
 	}
 	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.CrossReferenceBlocks(result.VarName, crossRefererenceResult)
+	go embedded.CrossReferenceBlocks(result.Left, crossRefererenceResult)
 
 	result = <-crossRefererenceResult
-	if result.VarValue != nil {
-		fmt.Printf("%v\n", result.VarValue)
+	if result.Right != nil {
+		fmt.Printf("%v\n", result.Right)
 		os.Exit(1)
 	}
-	program := result.VarName
+	program := result.Left
 
 	switch {
 	case *orth_debug.Compile != "":

@@ -27,16 +27,16 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 
 	for ip, currentOperation := range program.Operations {
 		pair := orthtypes.Pair[int, orthtypes.Operation]{
-			VarName:  ip,
-			VarValue: currentOperation,
+			Left:  ip,
+			Right: currentOperation,
 		}
 		switch currentOperation.Instruction {
 		case orthtypes.Mem:
 			if currentOperation.Context.Name == MainScope {
 				msg := fmt.Sprintf(orth_debug.InvalidUsageOfTokenOutside, orthtypes.PrimitiveMem, orthtypes.PrimitiveProc, MainScope)
 				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-					VarName:  orthtypes.Program{},
-					VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_04, "Mem", msg),
+					Left:  orthtypes.Program{},
+					Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_04, "Mem", msg),
 				}
 				close(crossResult)
 				return
@@ -46,8 +46,8 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			if !variableDeclared {
 				err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_11, currentOperation.Operator.Operand, "hold")
 				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-					VarName:  orthtypes.Program{},
-					VarValue: err,
+					Left:  orthtypes.Program{},
+					Right: err,
 				}
 				continue
 			}
@@ -82,8 +82,8 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 					newValue.Operator.VarType,
 				)
 				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-					VarName:  orthtypes.Program{},
-					VarValue: err,
+					Left:  orthtypes.Program{},
+					Right: err,
 				}
 				continue
 			}
@@ -108,13 +108,12 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 					newValue.Operator.VarType,
 				)
 				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-					VarName:  orthtypes.Program{},
-					VarValue: err,
+					Left:  orthtypes.Program{},
+					Right: err,
 				}
 				continue
 			}
 		case orthtypes.If:
-			// TODO: create a local scope for if statements (else, whiles, etc... D: )
 			fallthrough
 		case orthtypes.Proc:
 			fallthrough
@@ -123,31 +122,31 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 		case orthtypes.Else:
 			blockIp := PopLast(&stack)
 
-			if program.Operations[blockIp.VarName].Instruction != orthtypes.If {
+			if program.Operations[blockIp.Left].Instruction != orthtypes.If {
 				fmt.Fprintln(os.Stderr, "Invalid Else clause")
 				os.Exit(1)
 			}
 
-			program.Operations[blockIp.VarName].RefBlock = ip + 1
+			program.Operations[blockIp.Left].RefBlock = ip + 1
 			stack = append(stack, pair)
 		case orthtypes.End:
 			blockIp := PopLast(&stack)
 			switch {
-			case program.Operations[blockIp.VarName].Instruction == orthtypes.If:
+			case program.Operations[blockIp.Left].Instruction == orthtypes.If:
 				fallthrough
-			case program.Operations[blockIp.VarName].Instruction == orthtypes.Else:
-				program.Operations[blockIp.VarName].RefBlock = ip
+			case program.Operations[blockIp.Left].Instruction == orthtypes.Else:
+				program.Operations[blockIp.Left].RefBlock = ip
 				program.Operations[ip].RefBlock = ip + 1 // end block
-			case program.Operations[blockIp.VarName].Instruction == orthtypes.In:
+			case program.Operations[blockIp.Left].Instruction == orthtypes.In:
 				//context = globalScope
 				fallthrough
-			case program.Operations[blockIp.VarName].Instruction == orthtypes.Do:
-				if program.Operations[blockIp.VarName].RefBlock == -1 {
+			case program.Operations[blockIp.Left].Instruction == orthtypes.Do:
+				if program.Operations[blockIp.Left].RefBlock == -1 {
 					fmt.Fprintln(os.Stderr, "Not enought arguments for a cross-refernce block operation")
 					os.Exit(1)
 				}
-				program.Operations[ip].RefBlock = program.Operations[blockIp.VarName].RefBlock
-				program.Operations[blockIp.VarName].RefBlock = ip + 1
+				program.Operations[ip].RefBlock = program.Operations[blockIp.Left].RefBlock
+				program.Operations[blockIp.Left].RefBlock = ip + 1
 			default:
 				fmt.Fprintln(os.Stderr, "End block can only close [if | else | do | proc in] blocks")
 				os.Exit(1)
@@ -156,13 +155,13 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 			fallthrough
 		case orthtypes.Do:
 			blockIp := PopLast(&stack)
-			program.Operations[ip].RefBlock = blockIp.VarName
+			program.Operations[ip].RefBlock = blockIp.Left
 			stack = append(stack, pair)
 		}
 	}
 	crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-		VarName:  program,
-		VarValue: nil,
+		Left:  program,
+		Right: nil,
 	}
 	close(crossResult)
 }
@@ -310,8 +309,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				procNames[pName]++
 				if procNames[pName] != 1 {
 					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
-						VarName:  orthtypes.Program{},
-						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_02, "PROC", pName, file.Name, v.Index, v.Content.Index),
+						Left:  orthtypes.Program{},
+						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_02, "PROC", pName, file.Name, v.Index, v.Content.Index),
 					}
 					close(parseTokenResult)
 					return
@@ -381,8 +380,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 
 				if context.HasVariableDeclaredInOrAbove(vName) {
 					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
-						VarName:  orthtypes.Program{},
-						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "constant", vName, context.Name),
+						Left:  orthtypes.Program{},
+						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "constant", vName, context.Name),
 					}
 					close(parseTokenResult)
 					return
@@ -400,8 +399,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 
 				if context.HasVariableDeclaredInOrAbove(vName) {
 					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
-						VarName:  orthtypes.Program{},
-						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "variable", vName, context.Name),
+						Left:  orthtypes.Program{},
+						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "variable", vName, context.Name),
 					}
 					close(parseTokenResult)
 					return
@@ -500,8 +499,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 			default:
 				if !v.Content.ValidPos {
 					parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
-						VarName:  orthtypes.Program{},
-						VarValue: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Token, file.Name, v.Index, v.Content.Index),
+						Left:  orthtypes.Program{},
+						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Token, file.Name, v.Index, v.Content.Index),
 					}
 					close(parseTokenResult)
 					return
@@ -511,8 +510,8 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 	}
 
 	parseTokenResult <- orthtypes.Pair[orthtypes.Program, error]{
-		VarName:  program,
-		VarValue: nil,
+		Left:  program,
+		Right: nil,
 	}
 
 	close(parseTokenResult)

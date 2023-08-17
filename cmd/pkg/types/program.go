@@ -12,8 +12,8 @@ func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, O
 	for i, op := range p.Operations {
 		if predicate(op, i) {
 			ops = append(ops, Pair[int, Operation]{
-				VarName:  i,
-				VarValue: op,
+				Left:  i,
+				Right: op,
 			})
 		}
 	}

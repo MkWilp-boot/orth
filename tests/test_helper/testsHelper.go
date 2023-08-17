@@ -30,21 +30,21 @@ func PrepareComp(fileName string) []error {
 
 	result := <-parseTokenResult
 
-	if result.VarValue != nil {
-		errs = append(errs, result.VarValue)
+	if result.Right != nil {
+		errs = append(errs, result.Right)
 		return errs
 	}
 
 	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.CrossReferenceBlocks(result.VarName, crossRefererenceResult)
+	go embedded.CrossReferenceBlocks(result.Left, crossRefererenceResult)
 
 	result = <-crossRefererenceResult
 
-	if result.VarValue != nil {
-		errs = append(errs, result.VarValue)
+	if result.Right != nil {
+		errs = append(errs, result.Right)
 		return errs
 	}
-	program := result.VarName
+	program := result.Left
 	embedded.Compile(program, *orth_debug.Compile)
 
 	return errs
