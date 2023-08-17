@@ -160,3 +160,15 @@ func TestSetStringVariables(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestContextVariationForVariablesAndConstants(t *testing.T) {
+	testhelper.PrepareComp("./repo/context_variation_for_variables_and_constants.orth")
+	expected := testhelper.LoadExpected("TestContextVariationForVariablesAndConstants")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestContextVariationForVariablesAndConstants")
+		t.FailNow()
+	}
+}

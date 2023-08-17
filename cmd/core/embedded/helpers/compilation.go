@@ -49,7 +49,7 @@ func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation,
 		program.Operations[i-1].Instruction == orthtypes.Push {
 		retreive = append(retreive, orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
 			VarName:  operation,
-			VarValue: program.Operations[i-1].Operand,
+			VarValue: program.Operations[i-1].Operator,
 		})
 		program.Operations[i].Instruction = orthtypes.Skip
 		program.Operations[i-1].Instruction = orthtypes.Skip
@@ -126,15 +126,15 @@ func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string
 func MangleVarName(o orthtypes.Operation) string {
 	var memType string
 
-	if o.Instruction == orthtypes.Var || o.Operand.VarType == orthtypes.PrimitiveVar {
+	if o.Instruction == orthtypes.Var || o.Operator.VarType == orthtypes.PrimitiveVar {
 		memType = "Var"
-	} else if o.Instruction == orthtypes.Const || o.Operand.VarType == orthtypes.PrimitiveConst {
+	} else if o.Instruction == orthtypes.Const || o.Operator.VarType == orthtypes.PrimitiveConst {
 		memType = "Const"
 	} else {
 		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
 	}
 
-	return fmt.Sprintf("_@%s@%s@%s", o.Context, memType, o.Operand.Operand)
+	return fmt.Sprintf("_@%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
 }
 
 func BuildVarDataSeg(oVar orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {

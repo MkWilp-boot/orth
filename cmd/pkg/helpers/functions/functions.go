@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -47,7 +48,9 @@ func CheckAsmType(flagValue string) string {
 			return v
 		}
 	}
-	panic("unsupported assembly type")
+	fmt.Fprintln(os.Stderr, "unsupported assembly type")
+	os.Exit(1)
+	return ""
 }
 
 // TypesAreEqual checks if the compared types the same INNER-TYPE variant
