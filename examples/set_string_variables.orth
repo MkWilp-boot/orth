@@ -1,0 +1,6 @@
+proc main with 0 out 0 in
+    var some_str = s "some str\n"
+    s "some big string hahahahahahahahah look at this str\n"
+    hold some_str set_string
+    hold some_str puts
+end

@@ -60,6 +60,16 @@ func ExecOutput() (programOutput string) {
 	return
 }
 
+func ExecWithArgs(args ...string) (programOutput string) {
+	execOutputExe := exec.Command(`.\output.exe`, args...)
+	var out bytes.Buffer
+	execOutputExe.Stdout = &out
+
+	execOutputExe.Run()
+	programOutput = out.String()
+	return
+}
+
 func LoadExpected(fileName string) string {
 	rgx := regexp.MustCompile(`\r`)
 	expected, _ := os.ReadFile(fmt.Sprintf("./expected/%s.txt", fileName))
