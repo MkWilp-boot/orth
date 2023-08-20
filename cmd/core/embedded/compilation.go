@@ -80,6 +80,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	for pair := range outOfOrder.Vars {
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
+	writer.WriteString("	nArgc QWORD 0\n")
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
@@ -145,6 +146,8 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 	var immediateStringCount int
 	immediateStrings := make(map[orthtypes.Operand]int)
+
+	lastProcMain := false
 
 	for ip := 0; ip < len(program.Operations); ip++ {
 		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
@@ -254,16 +257,34 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		case orthtypes.Proc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
+
+			lastProcMain = op.Operator.Operand == "main"
 		case orthtypes.With:
 			writer.WriteString("; Proc\n")
 			procParamsCount, err := strconv.Atoi(op.Operator.Operand)
-			if err != nil {
+			if err != nil && op.Operator.Operand != "cli" {
 				panic(err)
 			}
-			for i := procParamsCount - 1; i >= 0; i-- {
-				writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
+
+			if lastProcMain && procParamsCount > 0 {
+				fmt.Println("[WARN] `with` instruction detected with more than 0 parameters for proc main, if you are trying to get command line arguments, proceed with `with cli` instead")
 			}
 
+			if lastProcMain && op.Operator.Operand == "cli" {
+				writer.WriteString("; ArgC & ArgV\n")
+				writer.WriteString("; =========================================================================\n")
+				writer.WriteString("	invoke GetCommandLineW\n")
+				writer.WriteString("	invoke CommandLineToArgvW, rax, addr nArgc\n")
+				writer.WriteString("; =========================================================================\n")
+				writer.WriteString("	push rax	; rax = pointer to argv\n")
+				writer.WriteString("	mov  rax, nArgc\n")
+				writer.WriteString("	push rax\n")
+				writer.WriteString("	xor rax, rax\n")
+			} else {
+				for i := procParamsCount - 1; i >= 0; i-- {
+					writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
+				}
+			}
 		case orthtypes.End:
 			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
 				writer.WriteString("; Endp\n")
