@@ -172,3 +172,15 @@ func TestContextVariationForVariablesAndConstants(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestCommandLineArguments(t *testing.T) {
+	testhelper.PrepareComp("./repo/commandline_arguments.orth")
+	expected := testhelper.LoadExpected("TestCommandLineArguments")
+
+	programOutput := testhelper.ExecWithArgs("a", "b", "c", "d", "e", "f")
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestCommandLineArguments")
+		t.FailNow()
+	}
+}

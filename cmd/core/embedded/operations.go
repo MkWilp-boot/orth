@@ -87,32 +87,6 @@ func CrossReferenceBlocks(program orthtypes.Program, crossResult chan<- orthtype
 				}
 				continue
 			}
-		case orthtypes.SetNumber:
-			if ip-2 < 0 {
-				err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_09, "set_number")
-				fmt.Fprint(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			holdingVariable := program.Operations[ip-1]
-			newValue := program.Operations[ip-2]
-
-			isString := helpers.IsInt(newValue.Operator.VarType)
-
-			if !isString {
-				err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_08,
-					"set_number",
-					"ptr",
-					"number",
-					holdingVariable.Operator.Operand,
-					newValue.Operator.VarType,
-				)
-				crossResult <- orthtypes.Pair[orthtypes.Program, error]{
-					Left:  orthtypes.Program{},
-					Right: err,
-				}
-				continue
-			}
 		case orthtypes.If:
 			fallthrough
 		case orthtypes.Proc:
@@ -469,26 +443,28 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				preProgram[i+1].Content.ValidPos = true
 				amountStr := preProgram[i+1].Content.Token
 
-				amount, err := strconv.Atoi(amountStr)
-				if err != nil {
-					errStr := orth_debug.BuildErrorMessage(
-						orth_debug.ORTH_ERR_05,
-						"with",
-						"i~",
-						amountStr,
-						file.Name, v.Index, v.Content.Index,
-					)
-					panic(errStr)
-				}
+				if amountStr != "cli" {
+					amount, err := strconv.Atoi(amountStr)
+					if err != nil {
+						errStr := orth_debug.BuildErrorMessage(
+							orth_debug.ORTH_ERR_05,
+							"with",
+							"i~ | cli",
+							amountStr,
+							file.Name, v.Index, v.Content.Index,
+						)
+						panic(errStr)
+					}
 
-				if amount > orthtypes.MAX_PROC_PARAM_COUNT {
-					errStr := orth_debug.BuildErrorMessage(
-						orth_debug.ORTH_ERR_06,
-						orthtypes.MAX_PROC_PARAM_COUNT,
-						amount,
-						file.Name, v.Index, v.Content.Index,
-					)
-					panic(errStr)
+					if amount > orthtypes.MAX_PROC_PARAM_COUNT {
+						errStr := orth_debug.BuildErrorMessage(
+							orth_debug.ORTH_ERR_06,
+							orthtypes.MAX_PROC_PARAM_COUNT,
+							amount,
+							file.Name, v.Index, v.Content.Index,
+						)
+						panic(errStr)
+					}
 				}
 
 				ins := parseToken(orthtypes.PrimitiveRNT, amountStr, context, orthtypes.With)

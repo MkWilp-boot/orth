@@ -1,0 +1,9 @@
+proc simple_proc with 0 out 2 in
+    i 69 i 420
+end
+
+proc main with 0 out 0 in
+    call simple_proc
+
+    s "I do some stuff at " puts putui s " and what is this? '" puts putui s "'?" puts
+end

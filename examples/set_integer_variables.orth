@@ -1,0 +1,7 @@
+proc main with 0 out 0 in
+    var a = i 10
+    hold a deref putui
+    i 20
+    hold a set_number
+    hold a deref putui
+end

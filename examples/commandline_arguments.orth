@@ -1,0 +1,16 @@
+proc main with cli out 0 in
+    # stack order:
+    #   argv - 2665822802432
+    #   argc - 4
+    #   code ....
+
+    var argv = i 0
+    mem swap .              # store argc
+
+    hold argv set_number    # store argv
+
+    i 1 while dup mem , > do
+        dup i64 8 * hold argv deref + deref puts
+        i 1 +
+    end
+end
