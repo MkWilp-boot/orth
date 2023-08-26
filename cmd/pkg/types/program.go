@@ -3,7 +3,6 @@ package orthtypes
 // Program is the main struct for a transpiled
 // orth code into machine code
 type Program struct {
-	Id         int
 	Operations []Operation
 }
 
