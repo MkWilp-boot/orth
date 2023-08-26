@@ -69,6 +69,35 @@ type Operation struct {
 	RefBlock    int
 }
 
+func (op *Operation) IsString() bool {
+	_, isString := GlobalTypes[STRING][op.Operator.VarType]
+	return isString
+}
+
+func (op *Operation) IsNumeric() bool {
+	_, isInt := GlobalTypes[INTS][op.Operator.VarType]
+	_, isFloat := GlobalTypes[FLOATS][op.Operator.VarType]
+	return isInt || isFloat
+}
+
+func (op *Operation) IsInt() bool {
+	_, ok := GlobalTypes[INTS][op.Operator.VarType]
+	return ok
+}
+
+func (op *Operation) IsFloat() bool {
+	_, ok := GlobalTypes[FLOATS][op.Operator.VarType]
+	return ok
+}
+
+func (op *Operation) IsFloat64() bool {
+	return op.Operator.VarType == PrimitiveF64
+}
+
+func (op *Operation) IsFloat32() bool {
+	return op.Operator.VarType == PrimitiveF32
+}
+
 type Operand struct {
 	VarType string
 	Operand string

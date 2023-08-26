@@ -38,23 +38,21 @@ func main() {
 	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parseTokenResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
+	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
+	optimizedOperation := make(chan orthtypes.Operation)
 
-	result := <-parseTokenResult
-	if result.Right != nil {
-		fmt.Printf("%v\n", result.Right)
-		os.Exit(1)
-	}
-	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.CrossReferenceBlocks(result.Left, crossRefererenceResult)
+	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
+	go embedded.AnalyzeAndOptimizeOperation(parsedOperations, optimizedOperation)
 
-	result = <-crossRefererenceResult
-	if result.Right != nil {
-		fmt.Printf("%v\n", result.Right)
-		os.Exit(1)
+	program := orthtypes.Program{
+		Operations: make([]orthtypes.Operation, 0),
 	}
-	program := result.Left
+
+	for operation := range optimizedOperation {
+		program.Operations = append(program.Operations, operation)
+	}
+
+	program = embedded.CrossReferenceBlocks(program)
 
 	switch {
 	case *orth_debug.Compile != "":
