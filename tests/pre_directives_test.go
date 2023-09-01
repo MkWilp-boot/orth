@@ -6,13 +6,13 @@ import (
 )
 
 func TestDefineDirective(t *testing.T) {
-	testhelper.PrepareComp("./repo/rule110.orth")
-	expected := testhelper.LoadExpected("TestRule110")
+	testhelper.PrepareComp("./repo/TestDefineDirective.orth")
+	expected := testhelper.LoadExpected("TestDefineDirective")
 
 	programOutput := testhelper.ExecOutput()
 
 	if programOutput != expected {
-		testhelper.DumpOutput(programOutput, "TestRule110")
+		testhelper.DumpOutput(programOutput, "TestDefineDirective")
 		t.FailNow()
 	}
 }

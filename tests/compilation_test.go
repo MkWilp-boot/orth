@@ -7,7 +7,7 @@ import (
 )
 
 func TestRule110(t *testing.T) {
-	testhelper.PrepareComp("./repo/rule110.orth")
+	testhelper.PrepareComp("./repo/TestRule110.orth")
 	expected := testhelper.LoadExpected("TestRule110")
 
 	programOutput := testhelper.ExecOutput()
@@ -19,7 +19,7 @@ func TestRule110(t *testing.T) {
 }
 
 func TestBigStrings(t *testing.T) {
-	testhelper.PrepareComp("./repo/big_strings.orth")
+	testhelper.PrepareComp("./repo/TestBigStrings.orth")
 	expected := testhelper.LoadExpected("TestBigStrings")
 
 	programOutput := testhelper.ExecOutput()
@@ -31,7 +31,7 @@ func TestBigStrings(t *testing.T) {
 }
 
 func TestBitWise(t *testing.T) {
-	testhelper.PrepareComp("./repo/bitwise.orth")
+	testhelper.PrepareComp("./repo/TestBitWise.orth")
 	expected := testhelper.LoadExpected("TestBitWise")
 
 	programOutput := testhelper.ExecOutput()
@@ -43,7 +43,7 @@ func TestBitWise(t *testing.T) {
 }
 
 func TestCompilationErrorMessages(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/compilation_error.orth")
+	errors := testhelper.PrepareComp("./repo/TestCompilationErrorMessages.orth")
 	expected := testhelper.LoadExpected("TestCompilationErrorMessages")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
@@ -54,7 +54,7 @@ func TestCompilationErrorMessages(t *testing.T) {
 }
 
 func TestVarMangle(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/var_mangle.orth")
+	errors := testhelper.PrepareComp("./repo/TestVarMangle.orth")
 	expected := testhelper.LoadExpected("TestVarMangle")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
@@ -66,7 +66,7 @@ func TestVarMangle(t *testing.T) {
 }
 
 func TestIntegerArithmetics(t *testing.T) {
-	testhelper.PrepareComp("./repo/integer_arithmetics.orth")
+	testhelper.PrepareComp("./repo/TestIntegerArithmetics.orth")
 	expected := testhelper.LoadExpected("TestIntegerArithmetics")
 
 	programOutput := testhelper.ExecOutput()
@@ -78,7 +78,7 @@ func TestIntegerArithmetics(t *testing.T) {
 }
 
 func TestLoops(t *testing.T) {
-	testhelper.PrepareComp("./repo/loops.orth")
+	testhelper.PrepareComp("./repo/TestLoops.orth")
 	expected := testhelper.LoadExpected("TestLoops")
 
 	programOutput := testhelper.ExecOutput()
@@ -90,7 +90,7 @@ func TestLoops(t *testing.T) {
 }
 
 func TestMem(t *testing.T) {
-	testhelper.PrepareComp("./repo/simple_mem.orth")
+	testhelper.PrepareComp("./repo/TestMem.orth")
 	expected := testhelper.LoadExpected("TestMem")
 
 	programOutput := testhelper.ExecOutput()
@@ -102,19 +102,19 @@ func TestMem(t *testing.T) {
 }
 
 func TestProc(t *testing.T) {
-	testhelper.PrepareComp("./repo/procs.orth")
-	expected := testhelper.LoadExpected("Procs")
+	testhelper.PrepareComp("./repo/TestProc.orth")
+	expected := testhelper.LoadExpected("TestProc")
 
 	programOutput := testhelper.ExecOutput()
 
 	if programOutput != expected {
-		testhelper.DumpOutput(programOutput, "Procs")
+		testhelper.DumpOutput(programOutput, "TestProc")
 		t.FailNow()
 	}
 }
 
 func TestProcReturns(t *testing.T) {
-	testhelper.PrepareComp("./repo/proc_retuns.orth")
+	testhelper.PrepareComp("./repo/TestProcReturns.orth")
 	expected := testhelper.LoadExpected("TestProcReturns")
 
 	programOutput := testhelper.ExecOutput()
@@ -126,7 +126,7 @@ func TestProcReturns(t *testing.T) {
 }
 
 func TestInvalidMemUsage(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/mem_invalid_usage.orth")
+	errors := testhelper.PrepareComp("./repo/TestInvalidMemUsage.orth")
 	expected := testhelper.LoadExpected("TestInvalidMemUsage")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
@@ -138,7 +138,7 @@ func TestInvalidMemUsage(t *testing.T) {
 }
 
 func TestSetIntegerVariables(t *testing.T) {
-	testhelper.PrepareComp("./repo/set_integer_variables.orth")
+	testhelper.PrepareComp("./repo/TestSetIntegerVariables.orth")
 	expected := testhelper.LoadExpected("TestSetIntegerVariables")
 
 	programOutput := testhelper.ExecOutput()
@@ -150,7 +150,7 @@ func TestSetIntegerVariables(t *testing.T) {
 }
 
 func TestSetStringVariables(t *testing.T) {
-	testhelper.PrepareComp("./repo/set_string_variables.orth")
+	testhelper.PrepareComp("./repo/TestSetStringVariables.orth")
 	expected := testhelper.LoadExpected("TestSetStringVariables")
 
 	programOutput := testhelper.ExecOutput()
@@ -162,7 +162,7 @@ func TestSetStringVariables(t *testing.T) {
 }
 
 func TestContextVariationForVariablesAndConstants(t *testing.T) {
-	testhelper.PrepareComp("./repo/context_variation_for_variables_and_constants.orth")
+	testhelper.PrepareComp("./repo/TestContextVariationForVariablesAndConstants.orth")
 	expected := testhelper.LoadExpected("TestContextVariationForVariablesAndConstants")
 
 	programOutput := testhelper.ExecOutput()
@@ -174,7 +174,7 @@ func TestContextVariationForVariablesAndConstants(t *testing.T) {
 }
 
 func TestCommandLineArguments(t *testing.T) {
-	testhelper.PrepareComp("./repo/commandline_arguments.orth")
+	testhelper.PrepareComp("./repo/TestCommandLineArguments.orth")
 	expected := testhelper.LoadExpected("TestCommandLineArguments")
 
 	programOutput := testhelper.ExecWithArgs("a", "b", "c", "d", "e", "f")
