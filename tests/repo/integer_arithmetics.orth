@@ -1,5 +1,3 @@
-const new_line = s "\n"
-
 proc main with 0 out 0 in
     i 80 i 20 + putui s "\n" puts
     i 10 i 10 * putui s "\n" puts
@@ -7,5 +5,5 @@ proc main with 0 out 0 in
     i 50 i 10 / putui s "\n" puts
     i 50 i 10 % putui s "\n" puts
 
-    i 34 i 35 + i 30 / i 10 * i 40 - i 25 + putui
+    i 30 i 34 i 35 + / i 10 * i 40 - i 25 + putui
 end

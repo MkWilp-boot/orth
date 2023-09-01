@@ -25,27 +25,31 @@ func PrepareComp(fileName string) []error {
 	strProgram := lexer.LoadProgramFromFile(fileName)
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parseTokenResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.ParseTokenAsOperation(lexedFiles, parseTokenResult)
+	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
+	optimizedOperation := make(chan orthtypes.Pair[orthtypes.Operation, error])
 
-	result := <-parseTokenResult
+	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
+	go embedded.AnalyzeAndOptimizeOperation(parsedOperations, optimizedOperation)
 
-	if result.Right != nil {
-		errs = append(errs, result.Right)
-		return errs
+	program := orthtypes.Program{
+		Operations: make([]orthtypes.Operation, 0),
 	}
 
-	crossRefererenceResult := make(chan orthtypes.Pair[orthtypes.Program, error])
-	go embedded.CrossReferenceBlocks(result.Left, crossRefererenceResult)
-
-	result = <-crossRefererenceResult
-
-	if result.Right != nil {
-		errs = append(errs, result.Right)
-		return errs
+	for operation := range optimizedOperation {
+		if operation.Right != nil {
+			errs = append(errs, operation.Right)
+		}
+		program.Operations = append(program.Operations, operation.Left)
 	}
-	program := result.Left
-	embedded.Compile(program, *orth_debug.Compile)
+
+	if len(errs) == 0 {
+		program, err := embedded.CrossReferenceBlocks(program)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			embedded.Compile(program, *orth_debug.Compile)
+		}
+	}
 
 	return errs
 }
