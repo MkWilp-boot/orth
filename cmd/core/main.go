@@ -39,7 +39,7 @@ func main() {
 	lexedFiles := lexer.LexFile(strProgram)
 
 	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
-	optimizedOperation := make(chan orthtypes.Operation)
+	optimizedOperation := make(chan orthtypes.Pair[orthtypes.Operation, error])
 
 	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
 	go embedded.AnalyzeAndOptimizeOperation(parsedOperations, optimizedOperation)
@@ -49,10 +49,18 @@ func main() {
 	}
 
 	for operation := range optimizedOperation {
-		program.Operations = append(program.Operations, operation)
+		if operation.Right != nil {
+			fmt.Fprintln(os.Stderr, operation.Right)
+			os.Exit(1)
+		}
+		program.Operations = append(program.Operations, operation.Left)
 	}
 
-	program = embedded.CrossReferenceBlocks(program)
+	program, err := embedded.CrossReferenceBlocks(program)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
 	switch {
 	case *orth_debug.Compile != "":
