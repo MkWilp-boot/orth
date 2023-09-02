@@ -1,9 +1,7 @@
-proc simple_proc with 0 out 2 in
-    i 69 i 420
-end
+const space = s " "
 
 proc main with 0 out 0 in
-    call simple_proc
-
-    s "I do some stuff at " puts putui s " and what is this? '" puts putui s "'?" puts
+    i 80 putui
+    const space = s "non space char"
+    hold teste puts
 end

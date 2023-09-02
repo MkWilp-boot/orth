@@ -1,24 +1,5 @@
 package orthtypes
 
-// Program is the main struct for a transpiled
-// orth code into machine code
-type Program struct {
-	Operations []Operation
-}
-
-func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {
-	ops := make([]Pair[int, Operation], 0)
-	for i, op := range p.Operations {
-		if predicate(op, i) {
-			ops = append(ops, Pair[int, Operation]{
-				Left:  i,
-				Right: op,
-			})
-		}
-	}
-	return ops
-}
-
 const (
 	MAX_PROC_PARAM_COUNT  = 32
 	MAX_PROC_OUTPUT_COUNT = 32
@@ -77,3 +58,105 @@ const (
 	SetString
 	TotalOps
 )
+
+var instructionNames map[int]string
+
+func init() {
+	instructionNames = map[int]string{
+		Push:      "Push",
+		PushStr:   "PushStr",
+		Sum:       "Sum",
+		Minus:     "Minus",
+		Mult:      "Mult",
+		Div:       "Div",
+		If:        "If",
+		Else:      "Else",
+		End:       "End",
+		Equal:     "Equal",
+		Lt:        "Lt",
+		Gt:        "Gt",
+		NotEqual:  "NotEqual",
+		Dup:       "Dup",
+		TwoDup:    "TwoDup",
+		PutU64:    "PutU64",
+		PutString: "PutString",
+		Do:        "Do",
+		Drop:      "Drop",
+		While:     "While",
+		Swap:      "Swap",
+		Mod:       "Mod",
+		Mem:       "Mem",
+		Store:     "Store",
+		Load:      "Load",
+		LoadStay:  "LoadStay",
+		Func:      "Func",
+		Call:      "Call",
+		OType:     "OType",
+		Const:     "Const",
+		Var:       "Var",
+		Gvar:      "Gvar",
+		Hold:      "Hold",
+		Skip:      "Skip",
+		Nop:       "Nop",
+		Proc:      "Proc",
+		In:        "In",
+		Invoke:    "Invoke",
+		DumpMem:   "DumpMem",
+		LShift:    "LShift",
+		RShift:    "RShift",
+		LAnd:      "LAnd",
+		LOr:       "LOr",
+		Over:      "Over",
+		Exit:      "Exit",
+		With:      "With",
+		Out:       "Out",
+		Deref:     "Deref",
+		SetNumber: "SetNumber",
+		SetString: "SetString",
+	}
+
+	if len(instructionNames) != TotalOps {
+		panic("[DEV] Missing instruction on name map")
+	}
+}
+
+func InstructionToStr(inst int) string {
+	if inst < 0 || inst >= TotalOps {
+		return ""
+	}
+	return instructionNames[inst]
+}
+
+// Program is the main struct for a transpiled
+// orth code into machine code
+type Program struct {
+	Warnings   []CompilerMessage
+	Error      []error
+	Operations []Operation
+}
+
+func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {
+	ops := make([]Pair[int, Operation], 0)
+	for i, op := range p.Operations {
+		if predicate(op, i) {
+			ops = append(ops, Pair[int, Operation]{
+				Left:  i,
+				Right: op,
+			})
+		}
+	}
+	return ops
+}
+
+type WarnDegree uint8
+
+const (
+	Minor WarnDegree = iota
+	Commom
+	High
+)
+
+type CompilerMessage struct {
+	Type    WarnDegree
+	Message string
+}

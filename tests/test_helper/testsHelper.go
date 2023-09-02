@@ -20,38 +20,57 @@ func ErrSliceToStringSlice(errs []error) []string {
 	return sErrors
 }
 
-func PrepareComp(fileName string) []error {
-	errs := make([]error, 0)
+func WarningSliceToStringSlice(warns []orthtypes.CompilerMessage) []string {
+	sWarns := make([]string, len(warns))
+	for i, warn := range warns {
+		sWarns[i] = warn.Message
+	}
+	return sWarns
+}
+
+func PrepareComp(fileName string) ([]error, []orthtypes.CompilerMessage) {
 	strProgram := lexer.LoadProgramFromFile(fileName)
 	lexedFiles := lexer.LexFile(strProgram)
 
 	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
-	optimizedOperation := make(chan orthtypes.Pair[orthtypes.Operation, error])
-
-	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
-	go embedded.AnalyzeAndOptimizeOperation(parsedOperations, optimizedOperation)
 
 	program := orthtypes.Program{
 		Operations: make([]orthtypes.Operation, 0),
+		Warnings:   make([]orthtypes.CompilerMessage, 0),
+		Error:      make([]error, 0),
 	}
 
-	for operation := range optimizedOperation {
-		if operation.Right != nil {
-			errs = append(errs, operation.Right)
+	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
+
+	analyzerOperations := make([]orthtypes.Operation, 0)
+	for parsedOperation := range parsedOperations {
+		if parsedOperation.Right != nil {
+			program.Error = append(program.Error, parsedOperation.Right)
+			break
 		}
-		program.Operations = append(program.Operations, operation.Left)
+		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
 	}
 
-	if len(errs) == 0 {
-		program, err := embedded.CrossReferenceBlocks(program)
-		if err != nil {
-			errs = append(errs, err)
-		} else {
-			embedded.Compile(program, *orth_debug.Compile)
-		}
+	if len(program.Error) != 0 {
+		return program.Error, program.Warnings
 	}
 
-	return errs
+	optimizedOperation, warnings := embedded.AnalyzeAndOptimizeOperations(analyzerOperations)
+	program.Warnings = append(program.Warnings, warnings...)
+	program.Operations = append(program.Operations, optimizedOperation...)
+
+	program, err := embedded.CrossReferenceBlocks(program)
+	if err != nil {
+		program.Error = append(program.Error, err)
+	}
+
+	if len(program.Error) != 0 {
+		return program.Error, program.Warnings
+	}
+
+	embedded.Compile(program, *orth_debug.Compile)
+
+	return program.Error, program.Warnings
 }
 
 func ExecOutput() (programOutput string) {

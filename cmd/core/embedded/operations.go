@@ -45,6 +45,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 			variableDeclared := currentOperation.Context.HasVariableDeclaredInOrAbove(currentOperation.Operator.Operand)
 			if !variableDeclared {
 				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_11, currentOperation.Operator.Operand, "hold")
+				continue
 			}
 
 			for i := ip; i >= 0; i-- {
@@ -76,6 +77,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 					holdingVariable.Operator.Operand,
 					newValue.Operator.VarType,
 				)
+				continue
 			}
 		case orthtypes.If:
 			fallthrough
@@ -157,18 +159,12 @@ func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, p
 	return operand, operand != ""
 }
 
-func AnalyzeAndOptimizeOperation(operations <-chan orthtypes.Pair[orthtypes.Operation, error], optimizedOperation chan<- orthtypes.Pair[orthtypes.Operation, error]) {
-	stack := make([]orthtypes.Pair[orthtypes.Operation, error], 0)
-	for pair := range operations {
-		if pair.Right != nil {
-			optimizedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
-				Left:  orthtypes.Operation{},
-				Right: pair.Right,
-			}
-			break
-		}
+func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes.Operation, []orthtypes.CompilerMessage) {
+	stack := make([]orthtypes.Operation, 0)
+	warnings := make([]orthtypes.CompilerMessage, 0)
 
-		switch pair.Left.Instruction {
+	for _, operation := range operations {
+		switch operation.Instruction {
 		case orthtypes.Mult:
 			fallthrough
 		case orthtypes.Mod:
@@ -178,78 +174,81 @@ func AnalyzeAndOptimizeOperation(operations <-chan orthtypes.Pair[orthtypes.Oper
 		case orthtypes.Minus:
 			fallthrough
 		case orthtypes.Sum:
-			if stack[len(stack)-1].Left.Instruction == orthtypes.Push && stack[len(stack)-2].Left.Instruction == orthtypes.Push {
+			if stack[len(stack)-1].Instruction == orthtypes.Push && stack[len(stack)-2].Instruction == orthtypes.Push {
 				p1 := PopLast(&stack)
 				p2 := PopLast(&stack)
 
-				if p1.Left.IsNumeric() && p2.Left.IsNumeric() {
-					operand := pair.Left.Operator.Operand
-					if p1.Left.IsInt() && p2.Left.IsInt() {
-						param1, _ := strconv.Atoi(p1.Left.Operator.Operand)
-						param2, _ := strconv.Atoi(p2.Left.Operator.Operand)
+				if p1.Operator.VarType != p2.Operator.VarType {
+					msg := orth_debug.BuildMessage(
+						orth_debug.ORTH_WARN_01,
+						orthtypes.InstructionToStr(operation.Instruction),
+						p1.Operator.VarType,
+						p2.Operator.VarType,
+					)
+					warnings = append(warnings, orthtypes.CompilerMessage{
+						Type:    orthtypes.Commom,
+						Message: msg,
+					})
+				}
 
-						if op, ok := ProduceOperator(param1, param2, pair.Left.Instruction); ok {
+				if p1.IsNumeric() && p2.IsNumeric() {
+					operand := operation.Operator.Operand
+					if p1.IsInt() && p2.IsInt() {
+						param1, _ := strconv.Atoi(p1.Operator.Operand)
+						param2, _ := strconv.Atoi(p2.Operator.Operand)
+
+						if op, ok := ProduceOperator(param1, param2, operation.Instruction); ok {
 							operand = op
 						}
 
-					} else if p1.Left.IsFloat() && p2.Left.IsFloat() {
+					} else if p1.IsFloat() && p2.IsFloat() {
 						p1BitSize := 64
 						p2BitSize := 64
-						if p1.Left.IsFloat32() {
+						if p1.IsFloat32() {
 							p1BitSize = 32
 						}
-						if p2.Left.IsFloat32() {
+						if p2.IsFloat32() {
 							p2BitSize = 32
 						}
-						param1, _ := strconv.ParseFloat(p1.Left.Operator.Operand, p1BitSize)
-						param2, _ := strconv.ParseFloat(p2.Left.Operator.Operand, p2BitSize)
+						param1, _ := strconv.ParseFloat(p1.Operator.Operand, p1BitSize)
+						param2, _ := strconv.ParseFloat(p2.Operator.Operand, p2BitSize)
 
-						if op, ok := ProduceOperator(param1, param2, pair.Left.Instruction); ok {
+						if op, ok := ProduceOperator(param1, param2, operation.Instruction); ok {
 							operand = op
 						}
 					}
 
-					stack = append(stack, orthtypes.Pair[orthtypes.Operation, error]{
-						Right: nil,
-						Left: orthtypes.Operation{
-							Instruction: orthtypes.Push,
-							Operator: orthtypes.Operand{
-								VarType: orthtypes.PrimitiveInt,
-								Operand: operand,
-							},
-							Context:  pair.Left.Context,
-							RefBlock: pair.Left.RefBlock,
+					stack = append(stack, orthtypes.Operation{
+						Instruction: orthtypes.Push,
+						Operator: orthtypes.Operand{
+							VarType: orthtypes.PrimitiveInt,
+							Operand: operand,
 						},
+						Context:  operation.Context,
+						RefBlock: operation.RefBlock,
 					})
 					continue
 				}
-			} else if stack[len(stack)-1].Left.Instruction == orthtypes.PushStr && stack[len(stack)-2].Left.Instruction == orthtypes.PushStr {
+			} else if stack[len(stack)-1].Instruction == orthtypes.PushStr && stack[len(stack)-2].Instruction == orthtypes.PushStr {
 				p1 := PopLast(&stack)
 				p2 := PopLast(&stack)
-				stack = append(stack, orthtypes.Pair[orthtypes.Operation, error]{
-					Right: nil,
-					Left: orthtypes.Operation{
-						Instruction: orthtypes.PushStr,
-						Operator: orthtypes.Operand{
-							VarType: orthtypes.PrimitiveSTR,
-							Operand: p2.Left.Operator.Operand + p1.Left.Operator.Operand, // concat
-						},
-						Context:  pair.Left.Context,
-						RefBlock: pair.Left.RefBlock,
+				stack = append(stack, orthtypes.Operation{
+					Instruction: orthtypes.PushStr,
+					Operator: orthtypes.Operand{
+						VarType: orthtypes.PrimitiveSTR,
+						Operand: p2.Operator.Operand + p1.Operator.Operand, // concat
 					},
+					Context:  operation.Context,
+					RefBlock: operation.RefBlock,
 				})
 				continue
 			}
 
 		}
-		stack = append(stack, pair)
+		stack = append(stack, operation)
 	}
 
-	for _, v := range stack {
-		optimizedOperation <- v
-	}
-
-	close(optimizedOperation)
+	return stack, warnings
 }
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
