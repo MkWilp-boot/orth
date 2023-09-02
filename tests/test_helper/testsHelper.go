@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"orth/cmd/core/embedded"
+	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	orthtypes "orth/cmd/pkg/types"
@@ -55,7 +56,7 @@ func PrepareComp(fileName string) ([]error, []orthtypes.CompilerMessage) {
 		return program.Error, program.Warnings
 	}
 
-	optimizedOperation, warnings := embedded.AnalyzeAndOptimizeOperations(analyzerOperations)
+	optimizedOperation, warnings := optimizer.AnalyzeAndOptimizeOperations(analyzerOperations)
 	program.Warnings = append(program.Warnings, warnings...)
 	program.Operations = append(program.Operations, optimizedOperation...)
 
