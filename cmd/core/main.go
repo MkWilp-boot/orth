@@ -39,26 +39,41 @@ func main() {
 	lexedFiles := lexer.LexFile(strProgram)
 
 	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
-	optimizedOperation := make(chan orthtypes.Pair[orthtypes.Operation, error])
-
-	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
-	go embedded.AnalyzeAndOptimizeOperation(parsedOperations, optimizedOperation)
 
 	program := orthtypes.Program{
 		Operations: make([]orthtypes.Operation, 0),
 	}
 
-	for operation := range optimizedOperation {
-		if operation.Right != nil {
-			fmt.Fprintln(os.Stderr, operation.Right)
-			os.Exit(1)
+	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
+
+	analyzerOperations := make([]orthtypes.Operation, 0)
+	for parsedOperation := range parsedOperations {
+		if parsedOperation.Right != nil {
+			program.Error = append(program.Error, parsedOperation.Right)
+			break
 		}
-		program.Operations = append(program.Operations, operation.Left)
+		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
+	}
+
+	if len(program.Error) != 0 {
+		for _, err := range program.Error {
+			fmt.Fprint(os.Stderr, err)
+		}
+		os.Exit(1)
+	}
+
+	optimizedOperation, warnings := embedded.AnalyzeAndOptimizeOperations(analyzerOperations)
+	program.Warnings = append(program.Warnings, warnings...)
+	program.Operations = append(program.Operations, optimizedOperation...)
+
+	for _, warning := range program.Warnings {
+		fmt.Printf("%v", warning)
 	}
 
 	program, err := embedded.CrossReferenceBlocks(program)
+
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 

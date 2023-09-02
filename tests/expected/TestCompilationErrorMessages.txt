@@ -1,1 +1,1 @@
-Undefined token/unknow token "o" in "repo/TestCompilationErrorMessages.orth" at line: 2 colum: 4
+[ERROR] Undefined token/unknow token "o" in "repo/TestCompilationErrorMessages.orth" at line: 2 colum: 4

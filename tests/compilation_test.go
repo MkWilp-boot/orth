@@ -6,6 +6,17 @@ import (
 	"testing"
 )
 
+func TestWarnMessageWhenPerformingInstructionOnMismatchTypes(t *testing.T) {
+	_, warnings := testhelper.PrepareComp("./repo/TestWarnMessageWhenPerformingInstructionOnMismatchTypes.orth")
+	expected := testhelper.LoadExpected("TestWarnMessageWhenPerformingInstructionOnMismatchTypes")
+
+	programWarnings := strings.Join(testhelper.WarningSliceToStringSlice(warnings), "\n")
+	if programWarnings != expected {
+		testhelper.DumpOutput(programWarnings, "TestWarnMessageWhenPerformingInstructionOnMismatchTypes")
+		t.FailNow()
+	}
+}
+
 func TestRule110(t *testing.T) {
 	testhelper.PrepareComp("./repo/TestRule110.orth")
 	expected := testhelper.LoadExpected("TestRule110")
@@ -43,7 +54,7 @@ func TestBitWise(t *testing.T) {
 }
 
 func TestCompilationErrorMessages(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/TestCompilationErrorMessages.orth")
+	errors, _ := testhelper.PrepareComp("./repo/TestCompilationErrorMessages.orth")
 	expected := testhelper.LoadExpected("TestCompilationErrorMessages")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
@@ -54,7 +65,7 @@ func TestCompilationErrorMessages(t *testing.T) {
 }
 
 func TestVarMangle(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/TestVarMangle.orth")
+	errors, _ := testhelper.PrepareComp("./repo/TestVarMangle.orth")
 	expected := testhelper.LoadExpected("TestVarMangle")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")
@@ -126,7 +137,7 @@ func TestProcReturns(t *testing.T) {
 }
 
 func TestInvalidMemUsage(t *testing.T) {
-	errors := testhelper.PrepareComp("./repo/TestInvalidMemUsage.orth")
+	errors, _ := testhelper.PrepareComp("./repo/TestInvalidMemUsage.orth")
 	expected := testhelper.LoadExpected("TestInvalidMemUsage")
 
 	programErros := strings.Join(testhelper.ErrSliceToStringSlice(errors), "\n")

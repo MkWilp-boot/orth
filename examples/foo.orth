@@ -1,3 +1,7 @@
+const space = s " "
+
 proc main with 0 out 0 in
-    i64 10 i8 20 *
+    i 80 putui
+    const space = s "non space char"
+    hold teste puts
 end

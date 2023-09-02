@@ -130,6 +130,8 @@ func InstructionToStr(inst int) string {
 // Program is the main struct for a transpiled
 // orth code into machine code
 type Program struct {
+	Warnings   []CompilerMessage
+	Error      []error
 	Operations []Operation
 }
 
@@ -146,15 +148,15 @@ func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, O
 	return ops
 }
 
-type SeverityDegree uint8
+type WarnDegree uint8
 
 const (
-	DEV SeverityDegree = iota
-	WARN
-	ERROR
+	Minor WarnDegree = iota
+	Commom
+	High
 )
 
 type CompilerMessage struct {
-	Type    SeverityDegree
+	Type    WarnDegree
 	Message string
 }
