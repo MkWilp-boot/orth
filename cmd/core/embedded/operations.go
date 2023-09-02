@@ -182,6 +182,16 @@ func AnalyzeAndOptimizeOperation(operations <-chan orthtypes.Pair[orthtypes.Oper
 				p1 := PopLast(&stack)
 				p2 := PopLast(&stack)
 
+				if p1.Left.Operator.VarType != p2.Left.Operator.VarType {
+					msg := orth_debug.BuildMessage(
+						orth_debug.ORTH_WARN_01,
+						orthtypes.InstructionToStr(pair.Left.Instruction),
+						p1.Left.Operator.VarType,
+						p2.Left.Operator.VarType,
+					)
+					fmt.Print(msg)
+				}
+
 				if p1.Left.IsNumeric() && p2.Left.IsNumeric() {
 					operand := pair.Left.Operator.Operand
 					if p1.Left.IsInt() && p2.Left.IsInt() {
