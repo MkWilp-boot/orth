@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"orth/cmd/core/embedded"
+	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
@@ -62,7 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	optimizedOperation, warnings := embedded.AnalyzeAndOptimizeOperations(analyzerOperations)
+	optimizedOperation, warnings := optimizer.AnalyzeAndOptimizeOperations(analyzerOperations)
 	program.Warnings = append(program.Warnings, warnings...)
 	program.Operations = append(program.Operations, optimizedOperation...)
 
