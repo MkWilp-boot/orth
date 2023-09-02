@@ -23,20 +23,27 @@ const (
 const commomFileSpecificationStruct = "in %q at line: %d colum: %d"
 
 const (
-	ORTH_ERR_01 = "Undefined token/unknow token %q " + commomFileSpecificationStruct
-	ORTH_ERR_02 = "Redeclaration of %q -> %q " + commomFileSpecificationStruct
-	ORTH_ERR_03 = "Redeclaration of %q -> %q in block %q"
-	ORTH_ERR_04 = "Invalid operation of type %q\nDetails:\n%s"
-	ORTH_ERR_05 = "The instruction of type %q requires a parameter of type %q, but found token %q\n\t" + commomFileSpecificationStruct
-	ORTH_ERR_06 = "A procedure can only have a maximum of %d but found %d\n\t" + commomFileSpecificationStruct
-	ORTH_ERR_07 = "Syntax error. %s"
-	ORTH_ERR_08 = "Instruction %q requires: (%q, %q). But found: (%q, %q)\n"
-	ORTH_ERR_09 = "Stack underflow!. Instruction %q requires values that are not part of the stack!\n"
-	ORTH_ERR_10 = "The instruction of type %q requires a parameter of type %q, but found %q\n"
-	ORTH_ERR_11 = "Variable %q is undefined for instruction %q\n"
+	ORTH_ERR_01 = "[ERROR] Undefined token/unknow token %q " + commomFileSpecificationStruct
+	ORTH_ERR_02 = "[ERROR] Redeclaration of %q -> %q " + commomFileSpecificationStruct
+	ORTH_ERR_03 = "[ERROR] Redeclaration of %q -> %q in block %q"
+	ORTH_ERR_04 = "[ERROR] Invalid operation of type %q\nDetails:\n%s"
+	ORTH_ERR_05 = "[ERROR] The instruction of type %q requires a parameter of type %q, but found token %q\n\t" + commomFileSpecificationStruct
+	ORTH_ERR_06 = "[ERROR] A procedure can only have a maximum of %d but found %d\n\t" + commomFileSpecificationStruct
+	ORTH_ERR_07 = "[ERROR] Syntax error. %s"
+	ORTH_ERR_08 = "[ERROR] Instruction %q requires: (%q, %q). But found: (%q, %q)\n"
+	ORTH_ERR_09 = "[ERROR] Stack underflow!. Instruction %q requires values that are not part of the stack!\n"
+	ORTH_ERR_10 = "[ERROR] The instruction of type %q requires a parameter of type %q, but found %q\n"
+	ORTH_ERR_11 = "[ERROR] Variable %q is undefined for instruction %q\n"
 )
 
+const (
+	ORTH_WARN_01 = "[WARN] Performin operation %q on values with distinct types (%q, %q)\n"
+)
+
+func BuildMessage(message string, params ...interface{}) string {
+	return fmt.Sprintf(message, params...)
+}
+
 func BuildErrorMessage(message string, params ...interface{}) error {
-	formated := fmt.Sprintf(message, params...)
-	return errors.New(formated)
+	return errors.New(BuildMessage(message, params...))
 }
