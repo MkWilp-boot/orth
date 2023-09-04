@@ -592,6 +592,24 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					Left:  ins,
 					Right: nil,
 				}
+			case "alloc":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.Alloc)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
+			case "free":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.Free)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
+			case "put_char":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.PutChar)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
 			default:
 				if !v.Content.ValidPos {
 					parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{

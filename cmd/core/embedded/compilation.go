@@ -81,6 +81,7 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
 	}
 	writer.WriteString("	nArgc QWORD 0\n")
+	writer.WriteString("	lError QWORD 0\n")
 
 	// data segment (undefined)
 	writer.WriteString(".DATA?\n")
@@ -89,6 +90,13 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 
 	// code segment
 	writer.WriteString(".CODE\n")
+
+	writer.WriteString("; no return label\n")
+	writer.WriteString("last_error_propagation:\n")
+	writer.WriteString("	mrm lError, LastError$()\n")
+	writer.WriteString("	invoke StdOut, lError\n")
+	writer.WriteString("	invoke ExitProcess, 1\n")
+
 	writer.WriteString("clear_proc_params PROC\n")
 	for i := 0; i < 32; i++ {
 		writer.WriteString(fmt.Sprintf("	mov proc_arg_%d, 0\n", i))
@@ -143,6 +151,29 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("	pop rbx\n")
 	writer.WriteString("	ret\n")
 	writer.WriteString("p_dump_mem endp\n")
+	writer.WriteString("put_char proc\n")
+	writer.WriteString("	LOCAL hHandle   :QWORD\n")
+	writer.WriteString("	LOCAL pChar     :QWORD\n")
+	writer.WriteString("	LOCAL pBuff     :QWORD\n\n")
+	writer.WriteString("	mov     pChar, rcx\n")
+	writer.WriteString("	invoke  GetStdHandle, STD_OUTPUT_HANDLE\n")
+	writer.WriteString("	cmp     rax, INVALID_HANDLE_VALUE\n")
+	writer.WriteString("	je      last_error_propagation	; error handler defined on another file\n")
+	writer.WriteString("	mov     hHandle, rax\n")
+	writer.WriteString("	mov     pBuff, alloc(2)			; Allocate two bytes, one for the char and the null terminator.\n")
+	writer.WriteString("	push	rsi\n")
+	writer.WriteString("	mov     rdx, pBuff				; Load the address of pBuff into rdx.\n")
+	writer.WriteString("	mov     rsi, pChar\n")
+	writer.WriteString("	push	rax\n")
+	writer.WriteString("	mov		al, [rsi]\n")
+	writer.WriteString("	mov		[rdx], al\n")
+	writer.WriteString("	pop		rax\n")
+	writer.WriteString("	pop		rsi\n")
+	writer.WriteString("	mov     BYTE PTR [rdx+1], 0  ; Null-terminate the buffer.\n")
+	writer.WriteString("	invoke  WriteFile, hHandle, rdx, 1, 0, 0\n")
+	writer.WriteString("	mfree   pBuff  ; Free the allocated memory.\n")
+	writer.WriteString("	ret\n")
+	writer.WriteString("put_char endp\n")
 
 	var immediateStringCount int
 	immediateStrings := make(map[orthtypes.Operand]int)
@@ -175,6 +206,22 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("; push offset mem\n")
 			writer.WriteString("	mov rax, offset mem\n")
 			writer.WriteString("	push rax\n")
+		case orthtypes.PutChar:
+			writer.WriteString("; put_char\n")
+			writer.WriteString("	pop rcx\n")
+			writer.WriteString("	invoke put_char\n")
+		case orthtypes.Alloc:
+			writer.WriteString("; alloc\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	push rbx\n")
+			writer.WriteString("	mov rbx, alloc(rax)\n")
+			writer.WriteString("	mov rax, rbx\n")
+			writer.WriteString("	pop rbx\n")
+			writer.WriteString("	push rax\n")
+		case orthtypes.Free:
+			writer.WriteString("; free\n")
+			writer.WriteString("	pop rax\n")
+			writer.WriteString("	mfree rax\n")
 		case orthtypes.SetNumber:
 			writer.WriteString("; set_number\n")
 			writer.WriteString("	pop rax ; address\n")

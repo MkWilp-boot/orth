@@ -64,6 +64,18 @@ func TestCompilationErrorMessages(t *testing.T) {
 	}
 }
 
+func TestAllocFree(t *testing.T) {
+	testhelper.PrepareComp("./repo/TestAllocFree.orth")
+	expected := testhelper.LoadExpected("TestAllocFree")
+
+	programOutput := testhelper.ExecOutput()
+
+	if programOutput != expected {
+		testhelper.DumpOutput(programOutput, "TestAllocFree")
+		t.FailNow()
+	}
+}
+
 func TestVarMangle(t *testing.T) {
 	errors, _ := testhelper.PrepareComp("./repo/TestVarMangle.orth")
 	expected := testhelper.LoadExpected("TestVarMangle")
