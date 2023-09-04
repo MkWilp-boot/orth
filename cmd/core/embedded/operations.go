@@ -2,24 +2,14 @@ package embedded
 
 import (
 	"fmt"
+	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"regexp"
 	"strconv"
-
-	"golang.org/x/exp/constraints"
 )
-
-func PopLast[T comparable](root *[]T) T {
-	stack := *root
-	ret := stack[len(stack)-1]
-	*root = stack[:len(stack)-1]
-	return ret
-}
-
-const MainScope = "_global"
 
 // CrossReferenceBlocks loops over a program and define all inter references
 // needed for execution. Ex: if-else-do blocks
@@ -37,8 +27,8 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 		}
 		switch currentOperation.Instruction {
 		case orthtypes.Mem:
-			if currentOperation.Context.Name == MainScope {
-				msg := fmt.Sprintf(orth_debug.InvalidUsageOfTokenOutside, orthtypes.PrimitiveMem, orthtypes.PrimitiveProc, MainScope)
+			if currentOperation.Context.Name == embedded_helpers.MainScope {
+				msg := fmt.Sprintf(orth_debug.InvalidUsageOfTokenOutside, orthtypes.PrimitiveMem, orthtypes.PrimitiveProc, embedded_helpers.MainScope)
 				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_04, "Mem", msg)
 			}
 		case orthtypes.Hold:
@@ -86,7 +76,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 		case orthtypes.While:
 			stack = append(stack, pair)
 		case orthtypes.Else:
-			blockIp := PopLast(&stack)
+			blockIp := embedded_helpers.PopLast(&stack)
 
 			if program.Operations[blockIp.Left].Instruction != orthtypes.If {
 				fmt.Fprintln(os.Stderr, "Invalid Else clause")
@@ -96,7 +86,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 			program.Operations[blockIp.Left].RefBlock = ip + 1
 			stack = append(stack, pair)
 		case orthtypes.End:
-			blockIp := PopLast(&stack)
+			blockIp := embedded_helpers.PopLast(&stack)
 			switch {
 			case program.Operations[blockIp.Left].Instruction == orthtypes.If:
 				fallthrough
@@ -120,7 +110,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 		case orthtypes.In:
 			fallthrough
 		case orthtypes.Do:
-			blockIp := PopLast(&stack)
+			blockIp := embedded_helpers.PopLast(&stack)
 			program.Operations[ip].RefBlock = blockIp.Left
 			stack = append(stack, pair)
 		}
@@ -129,134 +119,12 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 	return program, err
 }
 
-func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, param2 TOperand, instruction int) (string, bool) {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	}()
-
-	operand := ""
-	if instruction == orthtypes.Mult {
-		operand = fmt.Sprint(param1 * param2)
-	} else if instruction == orthtypes.Sum {
-		operand = fmt.Sprint(param1 + param2)
-	} else if instruction == orthtypes.Mod {
-		var param1Inter interface{} = param1
-		switch param1Inter.(type) {
-		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-			operand = fmt.Sprint(int64(param1) % int64(param2))
-		default:
-			panic("modulo operation is only supported for integer types.")
-		}
-	} else if instruction == orthtypes.Div {
-		operand = fmt.Sprint(param1 / param2)
-	} else if instruction == orthtypes.Minus {
-		operand = fmt.Sprint(param1 - param2)
-	}
-
-	return operand, operand != ""
-}
-
-func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes.Operation, []orthtypes.CompilerMessage) {
-	stack := make([]orthtypes.Operation, 0)
-	warnings := make([]orthtypes.CompilerMessage, 0)
-
-	for _, operation := range operations {
-		switch operation.Instruction {
-		case orthtypes.Mult:
-			fallthrough
-		case orthtypes.Mod:
-			fallthrough
-		case orthtypes.Div:
-			fallthrough
-		case orthtypes.Minus:
-			fallthrough
-		case orthtypes.Sum:
-			if stack[len(stack)-1].Instruction == orthtypes.Push && stack[len(stack)-2].Instruction == orthtypes.Push {
-				p1 := PopLast(&stack)
-				p2 := PopLast(&stack)
-
-				if p1.Operator.VarType != p2.Operator.VarType {
-					msg := orth_debug.BuildMessage(
-						orth_debug.ORTH_WARN_01,
-						orthtypes.InstructionToStr(operation.Instruction),
-						p1.Operator.VarType,
-						p2.Operator.VarType,
-					)
-					warnings = append(warnings, orthtypes.CompilerMessage{
-						Type:    orthtypes.Commom,
-						Message: msg,
-					})
-				}
-
-				if p1.IsNumeric() && p2.IsNumeric() {
-					operand := operation.Operator.Operand
-					if p1.IsInt() && p2.IsInt() {
-						param1, _ := strconv.Atoi(p1.Operator.Operand)
-						param2, _ := strconv.Atoi(p2.Operator.Operand)
-
-						if op, ok := ProduceOperator(param1, param2, operation.Instruction); ok {
-							operand = op
-						}
-
-					} else if p1.IsFloat() && p2.IsFloat() {
-						p1BitSize := 64
-						p2BitSize := 64
-						if p1.IsFloat32() {
-							p1BitSize = 32
-						}
-						if p2.IsFloat32() {
-							p2BitSize = 32
-						}
-						param1, _ := strconv.ParseFloat(p1.Operator.Operand, p1BitSize)
-						param2, _ := strconv.ParseFloat(p2.Operator.Operand, p2BitSize)
-
-						if op, ok := ProduceOperator(param1, param2, operation.Instruction); ok {
-							operand = op
-						}
-					}
-
-					stack = append(stack, orthtypes.Operation{
-						Instruction: orthtypes.Push,
-						Operator: orthtypes.Operand{
-							VarType: orthtypes.PrimitiveInt,
-							Operand: operand,
-						},
-						Context:  operation.Context,
-						RefBlock: operation.RefBlock,
-					})
-					continue
-				}
-			} else if stack[len(stack)-1].Instruction == orthtypes.PushStr && stack[len(stack)-2].Instruction == orthtypes.PushStr {
-				p1 := PopLast(&stack)
-				p2 := PopLast(&stack)
-				stack = append(stack, orthtypes.Operation{
-					Instruction: orthtypes.PushStr,
-					Operator: orthtypes.Operand{
-						VarType: orthtypes.PrimitiveSTR,
-						Operand: p2.Operator.Operand + p1.Operator.Operand, // concat
-					},
-					Context:  operation.Context,
-					RefBlock: operation.RefBlock,
-				})
-				continue
-			}
-
-		}
-		stack = append(stack, operation)
-	}
-
-	return stack, warnings
-}
-
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
 func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]], parsedOperation chan<- orthtypes.Pair[orthtypes.Operation, error]) {
 	procNames := make(map[string]int)
 
 	context := &orthtypes.Context{
-		Name:         MainScope,
+		Name:         embedded_helpers.MainScope,
 		Order:        0,
 		Parent:       nil,
 		Declarations: make([]string, 0),
@@ -720,6 +588,24 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				}
 			case "dump_mem":
 				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.DumpMem)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
+			case "alloc":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.Alloc)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
+			case "free":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.Free)
+				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
+					Left:  ins,
+					Right: nil,
+				}
+			case "put_char":
+				ins := parseToken(orthtypes.PrimitiveRNT, "", context, orthtypes.PutChar)
 				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
 					Left:  ins,
 					Right: nil,
