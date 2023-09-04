@@ -56,6 +56,9 @@ const (
 	Deref
 	SetNumber
 	SetString
+	Alloc
+	Free
+	PutChar
 	TotalOps
 )
 
@@ -113,6 +116,9 @@ func init() {
 		Deref:     "Deref",
 		SetNumber: "SetNumber",
 		SetString: "SetString",
+		Alloc:     "Alloc",
+		Free:      "Free",
+		PutChar:   "PutChar",
 	}
 
 	if len(instructionNames) != TotalOps {

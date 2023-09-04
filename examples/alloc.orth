@@ -1,0 +1,32 @@
+proc main with 0 out 0 in
+    const block_size = i64 3
+    const memory_ptr = i64 0
+
+    # alloc allocated memory on the heap
+    # syntax: "bsize" alloc
+    # returns: pointer to the memory on the heap
+    hold block_size deref alloc 
+    hold memory_ptr set_number
+
+    # Manually inserts 'a','b','c' to memorry
+    i8 97 hold memory_ptr deref i64 0 + set_number # store byte 97/'a'
+    i8 98 hold memory_ptr deref i64 1 + set_number # store byte 98/'b'
+    i8 99 hold memory_ptr deref i64 2 + set_number # store byte 99/'c'
+
+    hold memory_ptr deref i 0 + put_char # outputs 'a'
+    hold memory_ptr deref i 1 + put_char # outputs 'b'
+    hold memory_ptr deref i 2 + put_char # outputs 'c'
+
+    # automatic inserts more chars to match the size of "block_size"
+    i32 0 while dup hold block_size deref > do
+        dup dup i8 100 + swap hold memory_ptr deref over + swap drop set_number
+        i32 1 +
+    end drop    
+
+    i32 0 while dup hold block_size deref > do
+        dup hold memory_ptr deref + put_char
+        i32 1 +
+    end drop
+
+    hold memory_ptr deref free # free the allocated memory
+end
