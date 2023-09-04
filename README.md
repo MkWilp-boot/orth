@@ -27,7 +27,7 @@ The installer can be found [here](https://go.dev/dl/).
 As mentioned, Orth is a stack-based language and the way of reading/writing a program is a bit different than usual. First create a file called **hello.orth** then write this code:
 
 ```orth
-proc main in
+proc main with 0 out 0 in
     s "Hello world in orth!" puts
 end
 ```
@@ -86,7 +86,7 @@ Yes, I am joking, but this program is in fact the Rule 110 implementation, you j
 
 ## Compiled Orth
 
-Yes **Compilation**. You can compile your program to native code by using the "-com=" flag followed by the one of the supported assemblers.<br/>
+Yes **Compilation**. You can compile your program to native code by using the "-com=" flag followed by the one of the supported assemblers.</br>
 I have plans to support both NASM and MASM but only MASM is working.
 
 ## Types
@@ -145,6 +145,7 @@ They are used mainly by these operations **"putui","puts","invoke","end"**, func
 ## Constants
 
 As you may guess, orth has constants that store values. To create a variable, use the keyword `const` following by it's name, type and value:
+
 ```orth
 const name = s "John"
 const age = i 20
@@ -153,6 +154,7 @@ const age = i 20
 ## changing a variable
 
 Variables are just like _constants_ but they can be modified at runtime.
+
 ```orth
 var some_number = i64 57
 
@@ -161,7 +163,7 @@ hold some_number set_number
 hold some_number deref putui
 ```
 
-As you can see, some_number can be changed by using the bultin instruction `set_number` that works for every non decimal number<br/>
+As you can see, some_number can be changed by using the bultin instruction `set_number` that works for every non decimal number</br>
 It takes two parameters: a pointer to a variable and the new value (they should be on the stack)
 
 ## Conditions
@@ -208,8 +210,10 @@ So, as you can see we:
 and until 10 is > 0 we add 1 to the last item on the stack, as simple as this
 
 ## Mem
+
 Orth has a special way of using memory, by default you have a array of 640000 bytes (A LOT) and you can operate in this array by storing or reading values from this arrray.</br>
 The _mem_ keyword essentially pushes a pointer pointing to the beginning of the array and can be offseted by adding a number to it:
+
 ```orth
 mem i32 0 + i8 97 .
 mem i32 1 + i8 98 .
@@ -217,6 +221,7 @@ mem i32 2 + i8 99 .
 
 i 3 mem i 0 + dump_mem
 ```
+
 Here we are storing the BYTES</br>
 97 at offset 0</br>
 98 at offset 1</br>
@@ -224,6 +229,99 @@ Here we are storing the BYTES</br>
 In other words we are storing the string "abc" into the array.</br>
 The dump_mem instruction takes 2 values, the amount of elements to print and the start point (which is mem offseted by 0 in this case) </br>
 The result is:
-```
+
+```txt
 abc
 ```
+
+## Heap Allocation
+
+Using Orth, you can use the previous instruction `mem` to store and read bytes. "But what if I want to allocate some more space?"</br>
+That's where the `alloc` and `free` instructions come in
+
+```orth
+const block_size = i64 3
+const memory_ptr = i64 0
+
+# alloc will allocate memory on the heap
+# syntax: "bsize" alloc
+# returns: pointer to the memory on the heap
+hold block_size deref alloc 
+hold memory_ptr set_number
+```
+
+In this example, we allocated 3 bytes of memory on the heap, let's make use of that memory!</br>
+
+```orth
+proc main with 0 out 0 in
+    const block_size = i64 3
+    const memory_ptr = i64 0
+
+    hold block_size deref alloc 
+    hold memory_ptr set_number
+
+    i8 97 hold memory_ptr deref i64 0 + set_number # store byte 97/'a'
+    i8 98 hold memory_ptr deref i64 1 + set_number # store byte 98/'b'
+    i8 99 hold memory_ptr deref i64 2 + set_number # store byte 99/'c'
+
+    hold memory_ptr deref i 0 + put_char # outputs 'a'
+    hold memory_ptr deref i 1 + put_char # outputs 'b'
+    hold memory_ptr deref i 2 + put_char # outputs 'c'
+
+    hold memory_ptr deref free # free the allocated memory
+end
+```
+
+This program will output `abc`, character by character and freeing the memory allocated using the `free` instruction</br>
+Here goes the same example but using loops instead of manually insert bytes
+
+```orth
+proc main with 0 out 0 in
+    const block_size = i64 3
+    const memory_ptr = i64 0
+
+    hold block_size deref alloc 
+    hold memory_ptr set_number
+
+    # goes from byte 97 to byte "97 + block_size"
+    i32 0 while dup hold block_size deref > do
+        dup dup i8 97 + swap hold memory_ptr deref over + swap drop set_number
+        i32 1 +
+    end drop    
+
+    # print chars from start of "memory_ptr" to "block_size" length
+    i32 0 while dup hold block_size deref > do
+        dup hold memory_ptr deref + put_char
+        i32 1 +
+    end drop
+
+    hold memory_ptr deref free
+end
+```
+
+## Command line arguments
+
+Have you ever wanted to make use of user provided information via arguments? Well you can do it using Orth's cli keyword
+
+```orth
+proc main with cli out 0 in
+    # stack order:
+    #   argv - 2665822802432    top
+    #   argc - 4                middle
+    #   code ....               bottom
+
+    var argv = i 0
+    mem swap .              # store argc
+
+    hold argv set_number    # store argv
+
+    i 1 while dup mem , > do
+        dup i64 8 * hold argv deref + deref puts
+        i 1 +
+    end
+end
+```
+
+Notice how we changed the procedure signature from `with 0` to `with cli`. </br>
+By doing so, you can access the command line arguments. The program alson changes, the default stack goes from 0 elements to 2 elements</br>
+The first element is a pointer to the command line arguments and the last one is the number of arguments provided
