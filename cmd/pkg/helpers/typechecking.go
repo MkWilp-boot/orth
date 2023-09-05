@@ -28,7 +28,7 @@ func IsString(t string) bool {
 // Ex: INT-INT, FLOAT-FLOAT, STRING-INT
 func SameBaseType(operands ...orthtypes.Operand) {
 	if operands[0].GrabRootType() != operands[1].GrabRootType() {
-		panic(fmt.Errorf("mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].VarType, operands[1].Operand, operands[1].VarType))
+		panic(fmt.Errorf("mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].SymbolName, operands[1].Operand, operands[1].SymbolName))
 	}
 }
 
@@ -38,7 +38,7 @@ func SameBaseType(operands ...orthtypes.Operand) {
 //
 // ===================================
 func ToInt(o orthtypes.Operand) int {
-	if IsInt(o.VarType) {
+	if IsInt(o.SymbolName) {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic("Unknow error " + err.Error())
@@ -46,7 +46,7 @@ func ToInt(o orthtypes.Operand) int {
 		return n
 	}
 
-	if IsFloat(o.VarType) {
+	if IsFloat(o.SymbolName) {
 		f, err := strconv.ParseFloat(o.Operand, 64)
 		if err != nil {
 			panic("Unknow error " + err.Error())
@@ -54,7 +54,7 @@ func ToInt(o orthtypes.Operand) int {
 		return int(f)
 	}
 
-	if o.VarType == orthtypes.ADDR {
+	if o.SymbolName == orthtypes.ADDR {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic(orth_debug.DefaultRuntimeException)

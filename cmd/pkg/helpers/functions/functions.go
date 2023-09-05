@@ -25,19 +25,19 @@ func DissectRangeAsInt(o1 orthtypes.Operand) (int, int) {
 }
 
 func DissectRange(o1 orthtypes.Operand) (orthtypes.Operand, orthtypes.Operand) {
-	if o1.VarType != orthtypes.RNGABL {
-		panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "DissectRange"))
+	if o1.SymbolName != orthtypes.RNGABL {
+		panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.SymbolName, "DissectRange"))
 	}
 	nums := strings.Split(o1.Operand, "|")
 	start, _ := strconv.Atoi(nums[0])
 	end, _ := strconv.Atoi(nums[1])
 
 	return orthtypes.Operand{
-			VarType: orthtypes.PrimitiveI32,
-			Operand: fmt.Sprint(start),
+			SymbolName: orthtypes.PrimitiveI32,
+			Operand:    fmt.Sprint(start),
 		}, orthtypes.Operand{
-			VarType: orthtypes.PrimitiveI32,
-			Operand: fmt.Sprint(end),
+			SymbolName: orthtypes.PrimitiveI32,
+			Operand:    fmt.Sprint(end),
 		}
 }
 
@@ -55,11 +55,11 @@ func CheckAsmType(flagValue string) string {
 
 // TypesAreEqual checks if the compared types the same INNER-TYPE variant
 func TypesAreEqual(opreands ...orthtypes.Operand) bool {
-	t := opreands[0].VarType
+	t := opreands[0].SymbolName
 	equal := true
 
 	for _, n := range opreands {
-		equal = n.VarType == t
+		equal = n.SymbolName == t
 	}
 
 	return equal
@@ -77,18 +77,18 @@ func TypesAreEqual(opreands ...orthtypes.Operand) bool {
 // | [s, i] -> panic()
 func GetSupersetType(opreands ...orthtypes.Operand) string {
 	switch {
-	case strings.Contains(opreands[0].VarType, "i") ||
-		strings.Contains(opreands[0].VarType, "i8") ||
-		strings.Contains(opreands[0].VarType, "i16") ||
-		strings.Contains(opreands[0].VarType, "i32") ||
-		strings.Contains(opreands[0].VarType, "i64"):
+	case strings.Contains(opreands[0].SymbolName, "i") ||
+		strings.Contains(opreands[0].SymbolName, "i8") ||
+		strings.Contains(opreands[0].SymbolName, "i16") ||
+		strings.Contains(opreands[0].SymbolName, "i32") ||
+		strings.Contains(opreands[0].SymbolName, "i64"):
 		return IntSupersetOfSlice(opreands...)
-	case strings.Contains(opreands[0].VarType, "f32") ||
-		strings.Contains(opreands[0].VarType, "f64"):
+	case strings.Contains(opreands[0].SymbolName, "f32") ||
+		strings.Contains(opreands[0].SymbolName, "f64"):
 		return FloatSupersetOfSlice(opreands...)
-	case strings.Contains(opreands[0].VarType, orthtypes.ADDR):
+	case strings.Contains(opreands[0].SymbolName, orthtypes.ADDR):
 		return orthtypes.ADDR
-	case opreands[0].VarType == orthtypes.PrimitiveSTR:
+	case opreands[0].SymbolName == orthtypes.PrimitiveSTR:
 		return orthtypes.PrimitiveSTR
 
 	default:
@@ -253,8 +253,8 @@ func EqualInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: res,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    res,
 	}
 }
 
@@ -271,8 +271,8 @@ func DiffInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 != o2),
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    fmt.Sprintf("%v", o1 != o2),
 	}
 }
 
@@ -295,8 +295,8 @@ func LowerThanInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		op = "0"
 	}
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: op,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    op,
 	}
 }
 
@@ -319,8 +319,8 @@ func GreaterThanInts(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		op = "0"
 	}
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: op,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    op,
 	}
 }
 
@@ -343,8 +343,8 @@ func MultplyIntegers(superType string, n1, n2 orthtypes.Operand) orthtypes.Opera
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: mult,
+		SymbolName: superType,
+		Operand:    mult,
 	}
 }
 
@@ -367,8 +367,8 @@ func DivideIntegers(superType string, n1, n2 orthtypes.Operand) orthtypes.Operan
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: div,
+		SymbolName: superType,
+		Operand:    div,
 	}
 }
 
@@ -391,8 +391,8 @@ func SumIntegers(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sum,
+		SymbolName: superType,
+		Operand:    sum,
 	}
 }
 
@@ -415,8 +415,8 @@ func ModIntegers(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sum,
+		SymbolName: superType,
+		Operand:    sum,
 	}
 }
 
@@ -439,34 +439,34 @@ func SubIntegers(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sub,
+		SymbolName: superType,
+		Operand:    sub,
 	}
 }
 
 // IntSupersetOfSlice gets the super type of a slice of integers
 func IntSupersetOfSlice(opreands ...orthtypes.Operand) string {
 	for _, v := range opreands {
-		if v.VarType == "i64" {
-			return v.VarType
+		if v.SymbolName == "i64" {
+			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.VarType == "i32" {
-			return v.VarType
+		if v.SymbolName == "i32" {
+			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.VarType == "i16" {
-			return v.VarType
+		if v.SymbolName == "i16" {
+			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.VarType == "i8" {
-			return v.VarType
+		if v.SymbolName == "i8" {
+			return v.SymbolName
 		}
 	}
 
@@ -486,8 +486,8 @@ func ModFloats(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sum,
+		SymbolName: superType,
+		Operand:    sum,
 	}
 }
 
@@ -510,8 +510,8 @@ func EqualFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: res,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    res,
 	}
 }
 
@@ -527,8 +527,8 @@ func DiffFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 != o2),
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    fmt.Sprintf("%v", o1 != o2),
 	}
 }
 
@@ -544,8 +544,8 @@ func LowerThanFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", o1 < o2),
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    fmt.Sprintf("%v", o1 < o2),
 	}
 }
 
@@ -567,8 +567,8 @@ func GreaterThanFloats(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 		op = "0"
 	}
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: op,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    op,
 	}
 }
 
@@ -585,8 +585,8 @@ func MultplyFloats(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: mult,
+		SymbolName: superType,
+		Operand:    mult,
 	}
 }
 
@@ -603,8 +603,8 @@ func DivideFloats(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand 
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: div,
+		SymbolName: superType,
+		Operand:    div,
 	}
 }
 
@@ -621,8 +621,8 @@ func SumFloats(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sum,
+		SymbolName: superType,
+		Operand:    sum,
 	}
 }
 
@@ -639,22 +639,22 @@ func SubFloats(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: sub,
+		SymbolName: superType,
+		Operand:    sub,
 	}
 }
 
 // FloatSupersetOfSlice gets the super type of a slice of floats
 func FloatSupersetOfSlice(opreands ...orthtypes.Operand) string {
 	for _, v := range opreands {
-		if v.VarType == "f64" {
-			return v.VarType
+		if v.SymbolName == "f64" {
+			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.VarType == "f32" {
-			return v.VarType
+		if v.SymbolName == "f32" {
+			return v.SymbolName
 		}
 	}
 	panic("Invalid type")
@@ -663,8 +663,8 @@ func FloatSupersetOfSlice(opreands ...orthtypes.Operand) string {
 // DiffString check if two string are different
 func DiffString(_ string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: fmt.Sprintf("%v", n1.Operand != n2.Operand),
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    fmt.Sprintf("%v", n1.Operand != n2.Operand),
 	}
 }
 
@@ -679,23 +679,23 @@ func EqualString(_ string, o1, o2 orthtypes.Operand) orthtypes.Operand {
 	}
 
 	return orthtypes.Operand{
-		VarType: orthtypes.PrimitiveBOOL,
-		Operand: res,
+		SymbolName: orthtypes.PrimitiveBOOL,
+		Operand:    res,
 	}
 }
 
 // ConcatPrimitiveSTR concats two string into 1
 func ConcatPrimitiveSTR(superType string, n1, n2 orthtypes.Operand) orthtypes.Operand {
 	return orthtypes.Operand{
-		VarType: superType,
-		Operand: n2.Operand + n1.Operand,
+		SymbolName: superType,
+		Operand:    n2.Operand + n1.Operand,
 	}
 }
 
 // ToString converts any Operand's operand to it's string literal
 func ToString(n1 orthtypes.Operand) orthtypes.Operand {
 	return orthtypes.Operand{
-		VarType: "s",
-		Operand: n1.Operand,
+		SymbolName: "s",
+		Operand:    n1.Operand,
 	}
 }
