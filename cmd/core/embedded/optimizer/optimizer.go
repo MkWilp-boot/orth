@@ -26,12 +26,12 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 				p1 := embedded_helpers.PopLast(&stack)
 				p2 := embedded_helpers.PopLast(&stack)
 
-				if p1.Operator.VarType != p2.Operator.VarType {
+				if p1.Operator.SymbolName != p2.Operator.SymbolName {
 					msg := orth_debug.BuildMessage(
 						orth_debug.ORTH_WARN_01,
 						orthtypes.InstructionToStr(operation.Instruction),
-						p1.Operator.VarType,
-						p2.Operator.VarType,
+						p1.Operator.SymbolName,
+						p2.Operator.SymbolName,
 					)
 					warnings = append(warnings, orthtypes.CompilerMessage{
 						Type:    orthtypes.Commom,
@@ -69,8 +69,8 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 					stack = append(stack, orthtypes.Operation{
 						Instruction: orthtypes.Push,
 						Operator: orthtypes.Operand{
-							VarType: orthtypes.PrimitiveInt,
-							Operand: operand,
+							SymbolName: orthtypes.PrimitiveInt,
+							Operand:    operand,
 						},
 						Context:  operation.Context,
 						RefBlock: operation.RefBlock,
@@ -83,8 +83,8 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 				stack = append(stack, orthtypes.Operation{
 					Instruction: orthtypes.PushStr,
 					Operator: orthtypes.Operand{
-						VarType: orthtypes.PrimitiveSTR,
-						Operand: p2.Operator.Operand + p1.Operator.Operand, // concat
+						SymbolName: orthtypes.PrimitiveSTR,
+						Operand:    p2.Operator.Operand + p1.Operator.Operand, // concat
 					},
 					Context:  operation.Context,
 					RefBlock: operation.RefBlock,

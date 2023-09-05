@@ -59,7 +59,7 @@ func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation,
 
 func VarTypeToAsmType(operand orthtypes.Operand) string {
 	var asmTypeInstruction string
-	switch operand.VarType {
+	switch operand.SymbolName {
 	case orthtypes.PrimitiveSTR:
 		asmTypeInstruction = "db"
 	case orthtypes.PrimitiveI8:
@@ -114,7 +114,7 @@ func StringToByteRep(s string, endWithNullByte bool) (lietralValue string) {
 
 func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string {
 	var lietralValue string
-	switch operand.VarType {
+	switch operand.SymbolName {
 	case orthtypes.PrimitiveSTR:
 		lietralValue = StringToByteRep(operand.Operand, endWithNullByte)
 	default:
@@ -126,9 +126,9 @@ func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string
 func MangleVarName(o orthtypes.Operation) string {
 	var memType string
 
-	if o.Instruction == orthtypes.Var || o.Operator.VarType == orthtypes.PrimitiveVar {
+	if o.Instruction == orthtypes.Var || o.Operator.SymbolName == orthtypes.PrimitiveVar {
 		memType = "Var"
-	} else if o.Instruction == orthtypes.Const || o.Operator.VarType == orthtypes.PrimitiveConst {
+	} else if o.Instruction == orthtypes.Const || o.Operator.SymbolName == orthtypes.PrimitiveConst {
 		memType = "Const"
 	} else {
 		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))

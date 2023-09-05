@@ -25,7 +25,7 @@ func Simulate(program orthtypes.Program) {
 		if !stackItem.IsValidType() {
 			fmt.Println("====================================")
 			fmt.Printf("Error At instruction number %d ->'%#v'", ip, stackItem)
-			fmt.Printf("The argument %s has a invalid type of %q\n", stackItem.Operator, stackItem.Operator.VarType)
+			fmt.Printf("The argument %s has a invalid type of %q\n", stackItem.Operator, stackItem.Operator.SymbolName)
 			fmt.Println("====================================")
 			panic(orth_debug.DefaultRuntimeException)
 		}
@@ -40,16 +40,16 @@ func Simulate(program orthtypes.Program) {
 			o1 := helpers.StackPop(&stack)
 			o2 := helpers.StackPop(&stack)
 
-			if o2.VarType == orthtypes.RNGABL {
+			if o2.SymbolName == orthtypes.RNGABL {
 				start, end := functions.DissectRangeAsInt(o2)
-				if !helpers.IsInt(o1.VarType) {
-					panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.VarType, "sum rangeable"))
+				if !helpers.IsInt(o1.SymbolName) {
+					panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o1.SymbolName, "sum rangeable"))
 				}
 				sum := start + helpers.ToInt(o1)
 
 				teste := orthtypes.Operand{
-					VarType: orthtypes.RNGABL,
-					Operand: fmt.Sprintf("%d|%d", sum, end),
+					SymbolName: orthtypes.RNGABL,
+					Operand:    fmt.Sprintf("%d|%d", sum, end),
 				}
 
 				stack = append(stack, teste)
@@ -129,7 +129,7 @@ func Simulate(program orthtypes.Program) {
 
 			o1 = helpers.StackPop(&stack)
 
-			if o1.VarType == orthtypes.RNGABL {
+			if o1.SymbolName == orthtypes.RNGABL {
 				o1, o2 = functions.DissectRange(o1)
 			} else {
 				o2 = helpers.StackPop(&stack)
@@ -146,7 +146,7 @@ func Simulate(program orthtypes.Program) {
 
 			o1 = helpers.StackPop(&stack)
 
-			if o1.VarType == orthtypes.RNGABL {
+			if o1.SymbolName == orthtypes.RNGABL {
 				o1, o2 = functions.DissectRange(o1)
 			} else {
 				o2 = helpers.StackPop(&stack)
@@ -162,7 +162,7 @@ func Simulate(program orthtypes.Program) {
 		case orthtypes.If:
 			o1 := helpers.StackPop(&stack)
 
-			if o1.VarType != "b" {
+			if o1.SymbolName != "b" {
 				panic(orth_debug.InvalidBoolType)
 			}
 
@@ -177,8 +177,8 @@ func Simulate(program orthtypes.Program) {
 			ip = stackItem.RefBlock
 		case orthtypes.PutU64:
 			o1 := helpers.StackPop(&stack)
-			if !helpers.IsInt(o1.VarType) {
-				panic(fmt.Sprintf(orth_debug.InvalidTypeForInstruction, o1.VarType, "DumpUI64"))
+			if !helpers.IsInt(o1.SymbolName) {
+				panic(fmt.Sprintf(orth_debug.InvalidTypeForInstruction, o1.SymbolName, "DumpUI64"))
 			}
 
 			fmt.Printf("%d\n", helpers.ToInt(o1))
@@ -198,7 +198,7 @@ func Simulate(program orthtypes.Program) {
 			ip++
 		case orthtypes.Do:
 			o1 := helpers.StackPop(&stack)
-			if o1.VarType != orthtypes.PrimitiveBOOL {
+			if o1.SymbolName != orthtypes.PrimitiveBOOL {
 				panic(orth_debug.InvalidBoolType)
 			}
 
@@ -237,7 +237,7 @@ func Simulate(program orthtypes.Program) {
 			value := helpers.StackPop(&stack)
 			address := helpers.StackPop(&stack)
 
-			if address.VarType != orthtypes.ADDR {
+			if address.SymbolName != orthtypes.ADDR {
 				panic(fmt.Errorf(orth_debug.InvalidTypeForIndex, orthtypes.ADDR))
 			}
 
@@ -263,8 +263,8 @@ func Simulate(program orthtypes.Program) {
 			//			vName					Value
 			vars[stackItem.Operator.Operand] = helpers.StackPop(&stack)
 			stack = append(stack, orthtypes.Operand{
-				VarType: orthtypes.PrimitiveConst,
-				Operand: stackItem.Operator.Operand,
+				SymbolName: orthtypes.PrimitiveConst,
+				Operand:    stackItem.Operator.Operand,
 			})
 			ip++
 		case orthtypes.Hold:

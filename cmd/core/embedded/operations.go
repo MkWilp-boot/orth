@@ -39,8 +39,8 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 			}
 
 			for i := ip; i >= 0; i-- {
-				isVar := program.Operations[i].Operator.VarType == orthtypes.PrimitiveConst ||
-					program.Operations[i].Operator.VarType == orthtypes.PrimitiveVar
+				isVar := program.Operations[i].Operator.SymbolName == orthtypes.PrimitiveConst ||
+					program.Operations[i].Operator.SymbolName == orthtypes.PrimitiveVar
 
 				if isVar && program.Operations[i].Operator.Operand == currentOperation.Operator.Operand && currentOperation.RefBlock == -1 {
 					program.Operations[ip].RefBlock = i
@@ -57,7 +57,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 			holdingVariable := program.Operations[ip-1]
 			newValue := program.Operations[ip-2]
 
-			isString := helpers.IsString(newValue.Operator.VarType)
+			isString := helpers.IsString(newValue.Operator.SymbolName)
 
 			if !isString {
 				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_08,
@@ -65,7 +65,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 					"ptr",
 					"string",
 					holdingVariable.Operator.Operand,
-					newValue.Operator.VarType,
+					newValue.Operator.SymbolName,
 				)
 				continue
 			}
@@ -675,8 +675,8 @@ func parseToken(varType, operand string, context *orthtypes.Context, op int) ort
 	return orthtypes.Operation{
 		Instruction: op,
 		Operator: orthtypes.Operand{
-			VarType: varType,
-			Operand: operand,
+			SymbolName: varType,
+			Operand:    operand,
 		},
 		Context:  context,
 		RefBlock: -1,
