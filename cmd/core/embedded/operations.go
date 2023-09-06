@@ -38,11 +38,25 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 				continue
 			}
 
-			for i := ip; i >= 0; i-- {
-				isVar := program.Operations[i].Operator.VarType == orthtypes.PrimitiveConst ||
-					program.Operations[i].Operator.VarType == orthtypes.PrimitiveVar
+			declarationContext, err := embedded_helpers.GetVariableContext(currentOperation.Operator.Operand, currentOperation.Context)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 
-				if isVar && program.Operations[i].Operator.Operand == currentOperation.Operator.Operand && currentOperation.RefBlock == -1 {
+			var lookTable *[]orthtypes.Operation
+			if currentOperation.Operator.SymbolName == orthtypes.PrimitiveVar {
+				lookTable = &program.Variables
+			} else {
+				lookTable = &program.Constants
+			}
+
+			for i := len(*lookTable) - 1; i >= 0; i-- {
+				isVar := (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveConst || (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveVar
+				nameMatch := (*lookTable)[i].Operator.Operand == currentOperation.Operator.Operand
+				contextMatch := (*lookTable)[i].Context.Name == declarationContext
+
+				if isVar && nameMatch && contextMatch && currentOperation.RefBlock == -1 {
 					program.Operations[ip].RefBlock = i
 					break
 				}
@@ -57,7 +71,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 			holdingVariable := program.Operations[ip-1]
 			newValue := program.Operations[ip-2]
 
-			isString := helpers.IsString(newValue.Operator.VarType)
+			isString := helpers.IsString(newValue.Operator.SymbolName)
 
 			if !isString {
 				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_08,
@@ -65,7 +79,7 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 					"ptr",
 					"string",
 					holdingVariable.Operator.Operand,
-					newValue.Operator.VarType,
+					newValue.Operator.SymbolName,
 				)
 				continue
 			}
@@ -675,8 +689,8 @@ func parseToken(varType, operand string, context *orthtypes.Context, op int) ort
 	return orthtypes.Operation{
 		Instruction: op,
 		Operator: orthtypes.Operand{
-			VarType: varType,
-			Operand: operand,
+			SymbolName: varType,
+			Operand:    operand,
 		},
 		Context:  context,
 		RefBlock: -1,

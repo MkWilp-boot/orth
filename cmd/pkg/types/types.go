@@ -70,41 +70,37 @@ type Operation struct {
 }
 
 func (op *Operation) IsString() bool {
-	_, isString := GlobalTypes[STRING][op.Operator.VarType]
+	_, isString := GlobalTypes[STRING][op.Operator.SymbolName]
 	return isString
 }
 
 func (op *Operation) IsNumeric() bool {
-	_, isInt := GlobalTypes[INTS][op.Operator.VarType]
-	_, isFloat := GlobalTypes[FLOATS][op.Operator.VarType]
+	_, isInt := GlobalTypes[INTS][op.Operator.SymbolName]
+	_, isFloat := GlobalTypes[FLOATS][op.Operator.SymbolName]
 	return isInt || isFloat
 }
 
 func (op *Operation) IsInt() bool {
-	_, ok := GlobalTypes[INTS][op.Operator.VarType]
+	_, ok := GlobalTypes[INTS][op.Operator.SymbolName]
 	return ok
 }
 
 func (op *Operation) IsFloat() bool {
-	_, ok := GlobalTypes[FLOATS][op.Operator.VarType]
+	_, ok := GlobalTypes[FLOATS][op.Operator.SymbolName]
 	return ok
 }
 
 func (op *Operation) IsFloat64() bool {
-	return op.Operator.VarType == PrimitiveF64
+	return op.Operator.SymbolName == PrimitiveF64
 }
 
 func (op *Operation) IsFloat32() bool {
-	return op.Operator.VarType == PrimitiveF32
+	return op.Operator.SymbolName == PrimitiveF32
 }
 
 type Operand struct {
-	VarType string
-	Operand string
-}
-
-type OutOfOrder struct {
-	Vars chan Pair[Operation, Operand]
+	SymbolName string
+	Operand    string
 }
 
 type SliceOf[T comparable] struct {
@@ -148,26 +144,26 @@ func (f *File[T]) UpdateCodeReference(codeBlock T) {
 
 // IsValidType checks whenever a variable has a know or unknow type
 func (o Operation) IsValidType() bool {
-	return GlobalTypes[TYPE][o.Operator.VarType] != "" ||
-		GlobalTypes[INTS][o.Operator.VarType] != "" ||
-		GlobalTypes[FLOATS][o.Operator.VarType] != "" ||
-		GlobalTypes[STRING][o.Operator.VarType] != "" ||
-		GlobalTypes[BOOL][o.Operator.VarType] != "" ||
-		GlobalTypes[VOID][o.Operator.VarType] != "" ||
-		GlobalTypes[RNT][o.Operator.VarType] != "" ||
-		GlobalTypes[MEM][o.Operator.VarType] != ""
+	return GlobalTypes[TYPE][o.Operator.SymbolName] != "" ||
+		GlobalTypes[INTS][o.Operator.SymbolName] != "" ||
+		GlobalTypes[FLOATS][o.Operator.SymbolName] != "" ||
+		GlobalTypes[STRING][o.Operator.SymbolName] != "" ||
+		GlobalTypes[BOOL][o.Operator.SymbolName] != "" ||
+		GlobalTypes[VOID][o.Operator.SymbolName] != "" ||
+		GlobalTypes[RNT][o.Operator.SymbolName] != "" ||
+		GlobalTypes[MEM][o.Operator.SymbolName] != ""
 }
 
 func (o Operand) GrabRootType() string {
 	var ret string
 	switch {
-	case GlobalTypes[INTS][o.VarType] != INVALIDTYPE:
+	case GlobalTypes[INTS][o.SymbolName] != INVALIDTYPE:
 		ret = INTS
-	case GlobalTypes[STRING][o.VarType] != INVALIDTYPE:
+	case GlobalTypes[STRING][o.SymbolName] != INVALIDTYPE:
 		ret = STRING
-	case GlobalTypes[FLOATS][o.VarType] != INVALIDTYPE:
+	case GlobalTypes[FLOATS][o.SymbolName] != INVALIDTYPE:
 		ret = FLOATS
-	case GlobalTypes[RNT][o.VarType] != INVALIDTYPE:
+	case GlobalTypes[RNT][o.SymbolName] != INVALIDTYPE:
 		ret = RNT
 	}
 	return ret
