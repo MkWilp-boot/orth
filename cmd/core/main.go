@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"orth/cmd/core/embedded"
+	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
@@ -53,6 +54,7 @@ func main() {
 			program.Error = append(program.Error, parsedOperation.Right)
 			break
 		}
+		parsedOperation.Left = embedded_helpers.LinkVariableToValue(parsedOperation.Left, &analyzerOperations, &program)
 		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
 	}
 
@@ -68,7 +70,7 @@ func main() {
 	program.Operations = append(program.Operations, optimizedOperation...)
 
 	for _, warning := range program.Warnings {
-		fmt.Printf("%v", warning)
+		fmt.Println(warning.Message)
 	}
 
 	program, err := embedded.CrossReferenceBlocks(program)

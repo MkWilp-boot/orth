@@ -38,11 +38,25 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 				continue
 			}
 
-			for i := ip; i >= 0; i-- {
-				isVar := program.Operations[i].Operator.SymbolName == orthtypes.PrimitiveConst ||
-					program.Operations[i].Operator.SymbolName == orthtypes.PrimitiveVar
+			declarationContext, err := embedded_helpers.GetVariableContext(currentOperation.Operator.Operand, currentOperation.Context)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 
-				if isVar && program.Operations[i].Operator.Operand == currentOperation.Operator.Operand && currentOperation.RefBlock == -1 {
+			var lookTable *[]orthtypes.Operation
+			if currentOperation.Operator.SymbolName == orthtypes.PrimitiveVar {
+				lookTable = &program.Variables
+			} else {
+				lookTable = &program.Constants
+			}
+
+			for i := len(*lookTable) - 1; i >= 0; i-- {
+				isVar := (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveConst || (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveVar
+				nameMatch := (*lookTable)[i].Operator.Operand == currentOperation.Operator.Operand
+				contextMatch := (*lookTable)[i].Context.Name == declarationContext
+
+				if isVar && nameMatch && contextMatch && currentOperation.RefBlock == -1 {
 					program.Operations[ip].RefBlock = i
 					break
 				}

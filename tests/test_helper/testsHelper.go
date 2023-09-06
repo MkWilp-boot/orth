@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"orth/cmd/core/embedded"
+	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
@@ -49,6 +50,7 @@ func PrepareComp(fileName string) ([]error, []orthtypes.CompilerMessage) {
 			program.Error = append(program.Error, parsedOperation.Right)
 			break
 		}
+		parsedOperation.Left = embedded_helpers.LinkVariableToValue(parsedOperation.Left, &analyzerOperations, &program)
 		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
 	}
 

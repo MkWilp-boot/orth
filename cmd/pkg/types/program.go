@@ -138,6 +138,8 @@ func InstructionToStr(inst int) string {
 type Program struct {
 	Warnings   []CompilerMessage
 	Error      []error
+	Variables  []Operation
+	Constants  []Operation
 	Operations []Operation
 }
 
