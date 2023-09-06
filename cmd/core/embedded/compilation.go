@@ -20,12 +20,6 @@ const MASM_MAX_8BIT_CHAR_PER_LINE float64 = 20.0
 func Compile(program orthtypes.Program, assemblyType string) {
 	orth_debug.LogStep("[INFO] Started compilation workflow")
 
-	outOfOrder := orthtypes.OutOfOrder{
-		Vars: make(chan orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]),
-	}
-
-	go embedded_helpers.RetrieveProgramInfo(program, outOfOrder, embedded_helpers.GetVarsAndValues)
-
 	if assemblyType != "masm" {
 		panic("[TEMP]: the current supported assembly is MASM")
 	}
@@ -37,7 +31,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 		panic(err)
 	}
 
-	compileMasm(program, outOfOrder, output)
+	compileMasm(program, output)
 
 	if !*orth_debug.NoLink {
 		compileCmd := exec.Command("ml64.exe", finalAsm, "/nologo", "/Zi", "/W3", "/link", "/entry:main")
@@ -61,7 +55,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	embedded_helpers.CleanUp()
 }
 
-func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, output *os.File) {
+func compileMasm(program orthtypes.Program, output *os.File) {
 	orth_debug.LogStep("[CMD] Writing assembly")
 	defer output.Close()
 
@@ -70,15 +64,36 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 	writer.WriteString("include C:\\masm64\\include64\\masm64rt.inc\n")
 
 	// data segment (pre-defined)
-	writer.WriteString(".DATA ; constants\n")
+	writer.WriteString(".DATA\n")
 	for i := 0; i < 32; i++ {
 		writer.WriteString(fmt.Sprintf("	proc_arg_%d QWORD 0\n", i))
 	}
 	for i := 0; i < 32; i++ {
 		writer.WriteString(fmt.Sprintf("	proc_ret_%d QWORD 0\n", i))
 	}
-	for pair := range outOfOrder.Vars {
-		writer.WriteString("\t" + embedded_helpers.BuildVarDataSeg(pair) + "\n")
+
+	if len(program.Variables) > 0 {
+		writer.WriteString("; variables\n")
+		for _, variable := range program.Variables {
+			def := embedded_helpers.BuildVarDataSeg(orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
+				Left:  variable,
+				Right: program.Operations[variable.RefBlock].Operator,
+			})
+			writer.WriteString("	" + def + "\n")
+		}
+		writer.WriteString("; end variables\n")
+	}
+
+	if len(program.Constants) > 0 {
+		writer.WriteString("; constants\n")
+		for _, constant := range program.Constants {
+			def := embedded_helpers.BuildVarDataSeg(orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
+				Left:  constant,
+				Right: program.Operations[constant.RefBlock].Operator,
+			})
+			writer.WriteString("	" + def + "\n")
+		}
+		writer.WriteString("; end constants\n")
 	}
 	writer.WriteString("	nArgc QWORD 0\n")
 	writer.WriteString("	lError QWORD 0\n")
@@ -426,12 +441,18 @@ func compileMasm(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, out
 			writer.WriteString("	conout str$(rax)\n")
 		case orthtypes.Hold:
 			writer.WriteString("; Hold var\n")
+			var lookTable *[]orthtypes.Operation
+			if op.Operator.SymbolName == orthtypes.PrimitiveVar {
+				lookTable = &program.Variables
+			} else {
+				lookTable = &program.Constants
+			}
 
-			if op.RefBlock > len(program.Operations) || op.RefBlock < 0 {
+			if op.RefBlock > len(*lookTable) || op.RefBlock < 0 {
 				fmt.Fprint(os.Stderr, "Error, tried to point to a variable that does not exist")
 				os.Exit(1)
 			}
-			memoryVariable := program.Operations[op.RefBlock]
+			memoryVariable := (*lookTable)[op.RefBlock]
 			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(memoryVariable) + "\n")
 			writer.WriteString("	push rax\n")
 		case orthtypes.PutString:

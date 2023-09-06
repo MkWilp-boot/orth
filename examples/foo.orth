@@ -1,5 +1,12 @@
-const space = s " "
-
 proc main with 0 out 0 in
-    i 80 i 70 +
+    i 0 while dup i 2 > do
+        dup if
+            var some_str = s "I am inside the IF context\n"
+            hold some_str puts
+        else
+            var some_str = s "I am inside the else context\n"
+            hold some_str puts
+        end
+        i 1 +
+    end
 end

@@ -103,10 +103,6 @@ type Operand struct {
 	Operand    string
 }
 
-type OutOfOrder struct {
-	Vars chan Pair[Operation, Operand]
-}
-
 type SliceOf[T comparable] struct {
 	Slice *[]T
 }
