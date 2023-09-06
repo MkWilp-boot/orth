@@ -25,9 +25,8 @@ func init() {
 		os.Exit(1)
 	}
 	if !strings.HasSuffix(flag.Args()[0], orthtypes.FileType) {
-		fmt.Println("=================================================================================================")
-		fmt.Printf("WARNING! The following file %q is not of type %q, the content may not be well formatted\n", flag.Args()[0], orthtypes.FileType)
-		fmt.Println("=================================================================================================")
+		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", flag.Args()[0], orthtypes.FileType)
+		os.Exit(1)
 	}
 	if !*orth_debug.Help && (*orth_debug.Compile == "") {
 		fmt.Println("Error, must select a run option.")
