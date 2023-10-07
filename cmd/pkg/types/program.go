@@ -5,8 +5,10 @@ const (
 	MAX_PROC_OUTPUT_COUNT = 32
 )
 
+type Instruction uint32
+
 const (
-	Push int = iota
+	Push Instruction = iota
 	PushStr
 	Sum
 	Minus
@@ -62,10 +64,10 @@ const (
 	TotalOps
 )
 
-var instructionNames map[int]string
+var instructionNames map[Instruction]string
 
 func init() {
-	instructionNames = map[int]string{
+	instructionNames = map[Instruction]string{
 		Push:      "Push",
 		PushStr:   "PushStr",
 		Sum:       "Sum",
@@ -121,13 +123,13 @@ func init() {
 		PutChar:   "PutChar",
 	}
 
-	if len(instructionNames) != TotalOps {
+	if len(instructionNames) != int(TotalOps) {
 		panic("[DEV] Missing instruction on name map")
 	}
 }
 
-func InstructionToStr(inst int) string {
-	if inst < 0 || inst >= TotalOps {
+func InstructionToStr(inst Instruction) string {
+	if inst >= TotalOps {
 		return ""
 	}
 	return instructionNames[inst]
