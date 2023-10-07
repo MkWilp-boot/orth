@@ -12,7 +12,7 @@ import (
 
 const MainScope = "_global"
 
-func PopLast[T comparable](root *[]T) T {
+func PopLast[T any](root *[]T) T {
 	stack := *root
 	ret := stack[len(stack)-1]
 	*root = stack[:len(stack)-1]
@@ -74,7 +74,7 @@ func OperationIsVariableLike(operation orthtypes.Operation, program *orthtypes.P
 	return "", err
 }
 
-func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, param2 TOperand, instruction int) (string, bool) {
+func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, param2 TOperand, instruction orthtypes.Instruction) (string, bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Fprintln(os.Stderr, err)

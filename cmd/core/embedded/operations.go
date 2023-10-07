@@ -108,7 +108,6 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 				program.Operations[blockIp.Left].RefBlock = ip
 				program.Operations[ip].RefBlock = ip + 1 // end block
 			case program.Operations[blockIp.Left].Instruction == orthtypes.In:
-				//context = globalScope
 				fallthrough
 			case program.Operations[blockIp.Left].Instruction == orthtypes.Do:
 				if program.Operations[blockIp.Left].RefBlock == -1 {
@@ -685,7 +684,7 @@ func grabVariableDefinition(preProgram []orthtypes.StringEnum, i int) (string, s
 }
 
 // parseToken parses a single token into a instruction
-func parseToken(varType, operand string, context *orthtypes.Context, op int) orthtypes.Operation {
+func parseToken(varType, operand string, context *orthtypes.Context, op orthtypes.Instruction) orthtypes.Operation {
 	return orthtypes.Operation{
 		Instruction: op,
 		Operator: orthtypes.Operand{

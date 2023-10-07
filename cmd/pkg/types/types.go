@@ -63,7 +63,7 @@ type Pair[T1, T2 any] struct {
 }
 
 type Operation struct {
-	Instruction int
+	Instruction Instruction
 	Operator    Operand
 	Context     *Context
 	RefBlock    int
