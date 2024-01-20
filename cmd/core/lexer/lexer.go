@@ -1,10 +1,11 @@
 package lexer
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -21,20 +22,28 @@ func ppDefineDirective(line string) (string, string) {
 	return strings.TrimSpace(name), strings.TrimSpace(value)
 }
 
-func proProccessFile(rawFile, path string, parsedFiles chan orthtypes.File[string]) {
-	lines := strings.Split(rawFile, "\n")
+func preProccessFile(path string, parsedFiles chan orthtypes.File[string]) {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Printf("%q | %v\n", path, err)
+	}
+	defer file.Close()
 
+	var rawFile string
 	oFile := orthtypes.File[string]{
 		Name:      path,
 		CodeBlock: rawFile,
 	}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		rawFile = fmt.Sprintf("%s %s", rawFile, line)
+		oFile.UpdateCodeReference(rawFile)
 
-	for _, line := range lines {
 		if len(line) <= 0 || !strings.HasPrefix(line, "@") {
 			continue
 		}
-
-		directive := ""
+		var directive string
 
 		for i := 1; i < len(line) && line[i] != ' '; i++ {
 			directive += string(line[i])
@@ -55,19 +64,12 @@ func proProccessFile(rawFile, path string, parsedFiles chan orthtypes.File[strin
 			includeFile = strings.ReplaceAll(includeFile, `"`, "")
 			includeFile = strings.TrimSpace(includeFile)
 
-			includeFileContent, err := os.ReadFile(includeFile)
-
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
 			rawFile = strings.Replace(rawFile, fmt.Sprintf(`@include "%s"`, includeFile), "", -1)
 			oFile.UpdateCodeReference(rawFile)
 
 			filesToParse := make(chan orthtypes.File[string])
 
-			go proProccessFile(string(includeFileContent), includeFile, filesToParse)
+			go preProccessFile(includeFile, filesToParse)
 
 			for file := range filesToParse {
 				parsedFiles <- file
@@ -84,16 +86,10 @@ func proProccessFile(rawFile, path string, parsedFiles chan orthtypes.File[strin
 }
 
 func LoadProgramFromFile(path string) []orthtypes.File[string] {
-	fileBytes, err := os.ReadFile(path)
-	removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
-	path = removePathToFile.ReplaceAllString(path, "")
-
-	if err != nil {
-		panic(err)
-	}
-
+	// removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
+	// path = removePathToFile.ReplaceAllString(path, "")
 	filesParsed := make(chan orthtypes.File[string])
-	go proProccessFile(string(fileBytes), path, filesParsed)
+	go preProccessFile(path, filesParsed)
 
 	files := make([]orthtypes.File[string], 0)
 
