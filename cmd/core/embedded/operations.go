@@ -4,132 +4,57 @@ import (
 	"fmt"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
-	"orth/cmd/pkg/helpers"
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"regexp"
 	"strconv"
 )
 
+type refStackItem struct {
+	AbsPosition uint
+	Instruction orthtypes.Instruction
+}
+
+func stackPop[T any](stack *[]T) T {
+	var defaultValue T
+	if len(*stack) == 0 {
+		return defaultValue
+	}
+	item := (*stack)[len(*stack)-1]
+	*stack = (*stack)[:len(*stack)-1]
+
+	return item
+}
+
+func handleOperationEnd(stack *[]refStackItem, program *orthtypes.Program, operationIndex uint) {
+	lastStackItem := stackPop(stack)
+	//currentInstruction := program.Operations[operationIndex]
+	switch lastStackItem.Instruction {
+	case orthtypes.If:
+		program.Operations[lastStackItem.AbsPosition].RefBlock = int(operationIndex)
+	}
+}
+
 // CrossReferenceBlocks loops over a program and define all inter references
 // needed for execution. Ex: if-else-do blocks
 func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) {
-	var err error
-	stack := make([]orthtypes.Pair[int, orthtypes.Operation], 0)
+	stack := make([]refStackItem, 0, len(program.Operations))
 
-	for ip, currentOperation := range program.Operations {
-		if err != nil {
-			break
-		}
-		pair := orthtypes.Pair[int, orthtypes.Operation]{
-			Left:  ip,
-			Right: currentOperation,
-		}
-		switch currentOperation.Instruction {
-		case orthtypes.Mem:
-			if currentOperation.Context.Name == embedded_helpers.MainScope {
-				msg := fmt.Sprintf(orth_debug.InvalidUsageOfTokenOutside, orthtypes.PrimitiveMem, orthtypes.PrimitiveProc, embedded_helpers.MainScope)
-				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_04, "Mem", msg)
-			}
-		case orthtypes.Hold:
-			variableDeclared := currentOperation.Context.HasVariableDeclaredInOrAbove(currentOperation.Operator.Operand)
-			if !variableDeclared {
-				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_11, currentOperation.Operator.Operand, "hold")
-				continue
-			}
-
-			declarationContext, err := embedded_helpers.GetVariableContext(currentOperation.Operator.Operand, currentOperation.Context)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			var lookTable *[]orthtypes.Operation
-			if currentOperation.Operator.SymbolName == orthtypes.PrimitiveVar {
-				lookTable = &program.Variables
-			} else {
-				lookTable = &program.Constants
-			}
-
-			for i := len(*lookTable) - 1; i >= 0; i-- {
-				isVar := (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveConst || (*lookTable)[i].Operator.SymbolName == orthtypes.PrimitiveVar
-				nameMatch := (*lookTable)[i].Operator.Operand == currentOperation.Operator.Operand
-				contextMatch := (*lookTable)[i].Context.Name == declarationContext
-
-				if isVar && nameMatch && contextMatch && currentOperation.RefBlock == -1 {
-					program.Operations[ip].RefBlock = i
-					break
-				}
-			}
-		case orthtypes.SetString:
-			if ip-2 < 0 {
-				err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_09, "set_string")
-				fmt.Fprint(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			holdingVariable := program.Operations[ip-1]
-			newValue := program.Operations[ip-2]
-
-			isString := helpers.IsString(newValue.Operator.SymbolName)
-
-			if !isString {
-				err = orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_08,
-					"set_string",
-					"ptr",
-					"string",
-					holdingVariable.Operator.Operand,
-					newValue.Operator.SymbolName,
-				)
-				continue
-			}
+	for operationIndex, operation := range program.Operations {
+		switch operation.Instruction {
 		case orthtypes.If:
-			fallthrough
-		case orthtypes.Proc:
-			fallthrough
-		case orthtypes.While:
-			stack = append(stack, pair)
-		case orthtypes.Else:
-			blockIp := embedded_helpers.PopLast(&stack)
-
-			if program.Operations[blockIp.Left].Instruction != orthtypes.If {
-				fmt.Fprintln(os.Stderr, "Invalid Else clause")
-				os.Exit(1)
-			}
-
-			program.Operations[blockIp.Left].RefBlock = ip + 1
-			stack = append(stack, pair)
+			stack = append(stack, refStackItem{
+				AbsPosition: uint(operationIndex),
+				Instruction: operation.Instruction,
+			})
 		case orthtypes.End:
-			blockIp := embedded_helpers.PopLast(&stack)
-			switch {
-			case program.Operations[blockIp.Left].Instruction == orthtypes.If:
-				fallthrough
-			case program.Operations[blockIp.Left].Instruction == orthtypes.Else:
-				program.Operations[blockIp.Left].RefBlock = ip
-				program.Operations[ip].RefBlock = ip + 1 // end block
-			case program.Operations[blockIp.Left].Instruction == orthtypes.In:
-				fallthrough
-			case program.Operations[blockIp.Left].Instruction == orthtypes.Do:
-				if program.Operations[blockIp.Left].RefBlock == -1 {
-					fmt.Fprintln(os.Stderr, "Not enought arguments for a cross-refernce block operation")
-					os.Exit(1)
-				}
-				program.Operations[ip].RefBlock = program.Operations[blockIp.Left].RefBlock
-				program.Operations[blockIp.Left].RefBlock = ip + 1
-			default:
-				fmt.Fprintln(os.Stderr, "End block can only close [if | else | do | proc in] blocks")
-				os.Exit(1)
-			}
-		case orthtypes.In:
-			fallthrough
-		case orthtypes.Do:
-			blockIp := embedded_helpers.PopLast(&stack)
-			program.Operations[ip].RefBlock = blockIp.Left
-			stack = append(stack, pair)
+			handleOperationEnd(&stack, &program, uint(operationIndex))
 		}
 	}
 
-	return program, err
+	fmt.Printf("program.Operations[3].RefBlock: %v\n", program.Operations[3].RefBlock)
+	os.Exit(1)
+	return program, nil
 }
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program

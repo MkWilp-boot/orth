@@ -5,10 +5,10 @@ const (
 	MAX_PROC_OUTPUT_COUNT = 32
 )
 
-type Instruction uint32
+type Instruction uint16
 
 const (
-	Push Instruction = iota
+	Push Instruction = iota + 1
 	PushStr
 	Sum
 	Minus
@@ -123,7 +123,7 @@ func init() {
 		PutChar:   "PutChar",
 	}
 
-	if len(instructionNames) != int(TotalOps) {
+	if len(instructionNames) != int(TotalOps)-1 {
 		panic("[DEV] Missing instruction on name map")
 	}
 }
