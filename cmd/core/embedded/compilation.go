@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"math"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
@@ -72,29 +73,6 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		writer.WriteString(fmt.Sprintf("	proc_ret_%d QWORD 0\n", i))
 	}
 
-	if len(program.Variables) > 0 {
-		writer.WriteString("; variables\n")
-		for _, variable := range program.Variables {
-			def := embedded_helpers.BuildVarDataSeg(orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
-				Left:  variable,
-				Right: program.Operations[variable.RefBlock].Operator,
-			})
-			writer.WriteString("	" + def + "\n")
-		}
-		writer.WriteString("; end variables\n")
-	}
-
-	if len(program.Constants) > 0 {
-		writer.WriteString("; constants\n")
-		for _, constant := range program.Constants {
-			def := embedded_helpers.BuildVarDataSeg(orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
-				Left:  constant,
-				Right: program.Operations[constant.RefBlock].Operator,
-			})
-			writer.WriteString("	" + def + "\n")
-		}
-		writer.WriteString("; end constants\n")
-	}
 	writer.WriteString("	nArgc QWORD 0\n")
 	writer.WriteString("	lError QWORD 0\n")
 
@@ -196,8 +174,6 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	lastProcMain := false
 
 	for ip := 0; ip < len(program.Operations); ip++ {
-		writer.WriteString(fmt.Sprintf("addr_%d:\n", ip))
-
 		op := program.Operations[ip]
 		if op.Instruction == orthtypes.Skip {
 			continue
@@ -312,17 +288,23 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("; If\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	test rax, rax\n")
-			writer.WriteString(fmt.Sprintf("	jz addr_%d\n", op.RefBlock))
+
+			indexToJump := op.PrioritizeAddress()
+			if indexToJump == -1 {
+				log.Fatal("if indexToJump is -1")
+			}
+
+			writer.WriteString(fmt.Sprintf("	jz .L%d\n", indexToJump))
 		case orthtypes.Else:
+			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			writer.WriteString("; Else\n")
-			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
 		case orthtypes.Proc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
 
 			lastProcMain = op.Operator.Operand == "main"
 		case orthtypes.With:
-			writer.WriteString("; Proc\n")
+			writer.WriteString("; With\n")
 			procParamsCount, err := strconv.Atoi(op.Operator.Operand)
 			if err != nil && op.Operator.Operand != "cli" {
 				panic(err)
@@ -334,10 +316,8 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 			if lastProcMain && op.Operator.Operand == "cli" {
 				writer.WriteString("; ArgC & ArgV\n")
-				writer.WriteString("; =========================================================================\n")
 				writer.WriteString("	invoke GetCommandLineW\n")
 				writer.WriteString("	invoke CommandLineToArgvW, rax, addr nArgc\n")
-				writer.WriteString("; =========================================================================\n")
 				writer.WriteString("	push rax	; rax = pointer to argv\n")
 				writer.WriteString("	mov  rax, nArgc\n")
 				writer.WriteString("	push rax\n")
@@ -348,28 +328,35 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 				}
 			}
 		case orthtypes.End:
-			if program.Operations[op.RefBlock].Instruction == orthtypes.Proc {
-				writer.WriteString("; Endp\n")
+			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
+			procAddress, procFound := op.Addresses[orthtypes.Proc]
+			whileAddress, whileFound := op.Addresses[orthtypes.While]
 
-				if op.RefBlock+2 > len(program.Operations) || program.Operations[op.RefBlock+2].Instruction != orthtypes.Out {
+			switch {
+			case procFound:
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orthtypes.InstructionToStr(orthtypes.Proc)))
+
+				if procAddress+2 > len(program.Operations) || program.Operations[procAddress+2].Instruction != orthtypes.Out {
 					continue
 				}
-				outInstruction := program.Operations[op.RefBlock+2]
+				outInstruction := program.Operations[procAddress+2]
 				outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
 				if outAmount > 0 {
 					for i := outAmount - 1; i >= 0; i-- {
 						writer.WriteString(fmt.Sprintf("	pop proc_ret_%d\n", i))
 					}
 				}
-
 				writer.WriteString("	invoke clear_proc_params\n")
 				writer.WriteString("	ret\n")
-				writer.WriteString(program.Operations[op.RefBlock].Operator.Operand + " endp\n")
+				writer.WriteString(fmt.Sprint(program.Operations[procAddress].Operator.Operand, " ", "endp\n"))
 				continue
+			case whileFound:
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orthtypes.InstructionToStr(orthtypes.While)))
+				writer.WriteString(fmt.Sprintf("; Jump to %s\n", orthtypes.InstructionToStr(orthtypes.While)))
+				writer.WriteString(fmt.Sprintf("	jmp .L%d\n", whileAddress))
+				// post-instruction label
+				writer.WriteString(fmt.Sprintf(".LA%d:\n", ip))
 			}
-
-			writer.WriteString("; End\n")
-			writer.WriteString(fmt.Sprintf("	jmp addr_%d\n", op.RefBlock))
 		case orthtypes.Call:
 			writer.WriteString("; invoke\n")
 			procSignature := program.Filter(func(fop orthtypes.Operation, i int) bool {
@@ -422,12 +409,17 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rbx\n")
 		case orthtypes.While:
+			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			writer.WriteString("; While\n")
 		case orthtypes.Do:
 			writer.WriteString("; Do\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	test rax, rax\n")
-			writer.WriteString(fmt.Sprintf("	jz addr_%d\n", op.RefBlock))
+			endAddress, ok := op.Addresses[orthtypes.End]
+			if !ok {
+				log.Fatalln("do wihtout end")
+			}
+			writer.WriteString(fmt.Sprintf("	jz .LA%d\n", endAddress))
 		case orthtypes.Drop:
 			writer.WriteString("; Drop\n")
 			writer.WriteString("	pop trash\n")
@@ -448,11 +440,11 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 				lookTable = &program.Constants
 			}
 
-			if op.RefBlock > len(*lookTable) || op.RefBlock < 0 {
+			if 0 > len(*lookTable) || 0 < 0 {
 				fmt.Fprint(os.Stderr, "Error, tried to point to a variable that does not exist")
 				os.Exit(1)
 			}
-			memoryVariable := (*lookTable)[op.RefBlock]
+			memoryVariable := (*lookTable)[0]
 			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(memoryVariable) + "\n")
 			writer.WriteString("	push rax\n")
 		case orthtypes.PutString:

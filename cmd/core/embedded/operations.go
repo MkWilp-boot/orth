@@ -10,50 +10,44 @@ import (
 	"strconv"
 )
 
-type refStackItem struct {
-	AbsPosition uint
-	Instruction orthtypes.Instruction
-}
-
-func stackPop[T any](stack *[]T) T {
-	var defaultValue T
-	if len(*stack) == 0 {
-		return defaultValue
-	}
-	item := (*stack)[len(*stack)-1]
-	*stack = (*stack)[:len(*stack)-1]
-
-	return item
-}
-
-func handleOperationEnd(stack *[]refStackItem, program *orthtypes.Program, operationIndex uint) {
-	lastStackItem := stackPop(stack)
-	//currentInstruction := program.Operations[operationIndex]
-	switch lastStackItem.Instruction {
-	case orthtypes.If:
-		program.Operations[lastStackItem.AbsPosition].RefBlock = int(operationIndex)
-	}
-}
-
 // CrossReferenceBlocks loops over a program and define all inter references
 // needed for execution. Ex: if-else-do blocks
 func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) {
-	stack := make([]refStackItem, 0, len(program.Operations))
+	stack := make([]embedded_helpers.RefStackItem, 0, len(program.Operations))
 
 	for operationIndex, operation := range program.Operations {
 		switch operation.Instruction {
+		case orthtypes.While:
+			fallthrough
 		case orthtypes.If:
-			stack = append(stack, refStackItem{
+			fallthrough
+		case orthtypes.Proc:
+			stack = append(stack, embedded_helpers.RefStackItem{
+				AbsPosition: uint(operationIndex),
+				Instruction: operation.Instruction,
+			})
+		case orthtypes.Do:
+			embedded_helpers.HandleOperationDo(&stack, &program, uint(operationIndex))
+			stack = append(stack, embedded_helpers.RefStackItem{
+				AbsPosition: uint(operationIndex),
+				Instruction: operation.Instruction,
+			})
+		case orthtypes.Else:
+			embedded_helpers.HandleOperationElse(&stack, &program, uint(operationIndex))
+			stack = append(stack, embedded_helpers.RefStackItem{
 				AbsPosition: uint(operationIndex),
 				Instruction: operation.Instruction,
 			})
 		case orthtypes.End:
-			handleOperationEnd(&stack, &program, uint(operationIndex))
+			embedded_helpers.HandleOperationEnd(&stack, &program, uint(operationIndex))
 		}
 	}
 
-	fmt.Printf("program.Operations[3].RefBlock: %v\n", program.Operations[3].RefBlock)
-	os.Exit(1)
+	// for _, v := range program.Operations {
+	// 	pp := orthtypes.PPrintOperation(v)
+	// 	fmt.Println(pp)
+	// }
+
 	return program, nil
 }
 
@@ -616,7 +610,7 @@ func parseToken(varType, operand string, context *orthtypes.Context, op orthtype
 			SymbolName: varType,
 			Operand:    operand,
 		},
-		Context:  context,
-		RefBlock: -1,
+		Context:   context,
+		Addresses: make(map[orthtypes.Instruction]int),
 	}
 }

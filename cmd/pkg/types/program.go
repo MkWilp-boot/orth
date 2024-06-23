@@ -1,5 +1,10 @@
 package orthtypes
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	MAX_PROC_PARAM_COUNT  = 32
 	MAX_PROC_OUTPUT_COUNT = 32
@@ -126,6 +131,15 @@ func init() {
 	if len(instructionNames) != int(TotalOps)-1 {
 		panic("[DEV] Missing instruction on name map")
 	}
+}
+
+func PPrintOperation(op Operation) string {
+	builder := strings.Builder{}
+	for k, v := range op.Addresses {
+		builder.WriteString(fmt.Sprintf("\n** %s: %d", InstructionToStr(k), v))
+	}
+
+	return fmt.Sprintf("*%s; link_blocks: %s", InstructionToStr(op.Instruction), builder.String())
 }
 
 func InstructionToStr(inst Instruction) string {

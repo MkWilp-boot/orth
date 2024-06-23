@@ -66,7 +66,18 @@ type Operation struct {
 	Instruction Instruction
 	Operator    Operand
 	Context     *Context
-	RefBlock    int
+	Addresses   map[Instruction]int
+}
+
+func (op *Operation) PrioritizeAddress() int {
+	priorities := instructionJumpAddressPriority[op.Instruction]
+	for _, instruction := range priorities {
+		jumpAddress, ok := op.Addresses[instruction]
+		if ok {
+			return jumpAddress
+		}
+	}
+	return -1
 }
 
 func (op *Operation) IsString() bool {
@@ -188,8 +199,13 @@ type (
 )
 
 var GlobalTypes map[string]Type
+var instructionJumpAddressPriority map[Instruction][]Instruction
 
 func init() {
+	instructionJumpAddressPriority = make(map[Instruction][]Instruction)
+	instructionJumpAddressPriority[If] = []Instruction{Else, End}
+	instructionJumpAddressPriority[Else] = []Instruction{End}
+
 	GlobalTypes = make(map[string]Type, 0)
 	GlobalTypes[INTS] = make(map[string]string, 0)
 

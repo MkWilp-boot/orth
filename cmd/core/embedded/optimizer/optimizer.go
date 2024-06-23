@@ -72,8 +72,8 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 							SymbolName: orthtypes.PrimitiveInt,
 							Operand:    operand,
 						},
-						Context:  operation.Context,
-						RefBlock: operation.RefBlock,
+						Context:   operation.Context,
+						Addresses: operation.Addresses,
 					})
 					continue
 				}
@@ -86,8 +86,8 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 						SymbolName: orthtypes.PrimitiveSTR,
 						Operand:    p2.Operator.Operand + p1.Operator.Operand, // concat
 					},
-					Context:  operation.Context,
-					RefBlock: operation.RefBlock,
+					Context:   operation.Context,
+					Addresses: operation.Addresses,
 				})
 				continue
 			}
