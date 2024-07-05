@@ -49,11 +49,16 @@ const (
 	INVALIDTYPE = ""
 )
 
+type ContextDeclaration struct {
+	Name  string
+	Index uint
+}
+
 type Context struct {
 	Name         string
 	Order        uint
 	Parent       *Context
-	Declarations []string
+	Declarations []ContextDeclaration
 	InnerContext []*Context
 }
 
@@ -66,6 +71,7 @@ type Operation struct {
 	Instruction Instruction
 	Operator    Operand
 	Context     *Context
+	Links       map[string]Operation
 	Addresses   map[Instruction]int
 }
 
@@ -134,7 +140,7 @@ func (ctx *Context) MountFullLengthContext(name string) string {
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
 	for ctx != nil {
 		for _, v := range ctx.Declarations {
-			if v == variable {
+			if v.Name == variable {
 				return true
 			}
 		}

@@ -59,10 +59,11 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 		Name:         embedded_helpers.MainScope,
 		Order:        0,
 		Parent:       nil,
-		Declarations: make([]string, 0),
+		Declarations: make([]orthtypes.ContextDeclaration, 0),
 		InnerContext: make([]*orthtypes.Context, 0),
 	}
 
+	var globalInstructionIndex uint = 0
 	for fIndex, file := range tokenFiles {
 		for i, v := range *file.CodeBlock.Slice {
 			preProgram := (*tokenFiles[fIndex].CodeBlock.Slice)
@@ -162,7 +163,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					Name:         fmt.Sprintf("c?_if_%d$", len(context.InnerContext)),
 					Parent:       context,
 					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]string, 0),
+					Declarations: make([]orthtypes.ContextDeclaration, 0),
 					InnerContext: make([]*orthtypes.Context, 0),
 				}
 				context.InnerContext = append(context.InnerContext, &newContext)
@@ -180,7 +181,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					Name:         fmt.Sprintf("c?_else_%d$", len(context.InnerContext)),
 					Parent:       context.Parent, // else is not a child of "if"
 					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]string, 0),
+					Declarations: make([]orthtypes.ContextDeclaration, 0),
 					InnerContext: make([]*orthtypes.Context, 0),
 				}
 
@@ -271,7 +272,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					Name:         fmt.Sprintf("c?_proc_%s_%d$", pName, len(context.InnerContext)),
 					Parent:       context,
 					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]string, 0),
+					Declarations: make([]orthtypes.ContextDeclaration, 0),
 					InnerContext: make([]*orthtypes.Context, 0),
 				}
 				context.InnerContext = append(context.InnerContext, &newContext)
@@ -293,7 +294,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					Name:         fmt.Sprintf("c?_do_%d$", len(context.InnerContext)),
 					Parent:       context,
 					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]string, 0),
+					Declarations: make([]orthtypes.ContextDeclaration, 0),
 					InnerContext: make([]*orthtypes.Context, 0),
 				}
 				context.InnerContext = append(context.InnerContext, &newContext)
@@ -374,17 +375,18 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					return
 				}
 
-				context.Declarations = append(context.Declarations, vName)
+				context.Declarations = append(context.Declarations, orthtypes.ContextDeclaration{
+					Name:  vName,
+					Index: globalInstructionIndex,
+				})
 
-				ins := parseToken(vType, vValue, context, orthtypes.Push)
-				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
-					Left:  ins,
-					Right: nil,
-				}
+				value := parseToken(vType, vValue, context, orthtypes.Push)
+				constant := parseToken(orthtypes.PrimitiveConst, vName, context, orthtypes.Const)
+				constant.Links = make(map[string]orthtypes.Operation)
+				constant.Links["const_value"] = value
 
-				ins = parseToken(orthtypes.PrimitiveConst, vName, context, orthtypes.Const)
 				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
-					Left:  ins,
+					Left:  constant,
 					Right: nil,
 				}
 			case "var":
@@ -399,17 +401,18 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					return
 				}
 
-				context.Declarations = append(context.Declarations, vName)
+				context.Declarations = append(context.Declarations, orthtypes.ContextDeclaration{
+					Name:  vName,
+					Index: globalInstructionIndex,
+				})
 
-				ins := parseToken(vType, vValue, context, orthtypes.Push)
-				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
-					Left:  ins,
-					Right: nil,
-				}
+				value := parseToken(vType, vValue, context, orthtypes.Push)
+				variable := parseToken(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
+				variable.Links = make(map[string]orthtypes.Operation)
+				variable.Links["var_value"] = value
 
-				ins = parseToken(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
 				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
-					Left:  ins,
+					Left:  variable,
 					Right: nil,
 				}
 			case "deref":
@@ -552,6 +555,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 					return
 				}
 			}
+			globalInstructionIndex++
 		}
 	}
 

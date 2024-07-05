@@ -1,6 +1,6 @@
 proc main with 0 out 0 in
-    i 0 while dup i 5 > do
-        s "Teste\n" puts
-        i 1 +
-    end drop
+    const teste1 = i 10
+    var teste2 = i8 90
+    var teste3 = i32 9
+    var teste4 = i16 10
 end

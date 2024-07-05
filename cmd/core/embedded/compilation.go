@@ -12,6 +12,7 @@ import (
 	orthtypes "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 )
 
@@ -301,6 +302,44 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 		case orthtypes.Proc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
+
+			procLocalVariables := make([]struct{ Initializer, Decl, Type string }, len(op.Context.Declarations))
+
+			// fix for gobal variables
+			for ctxDeclI, ctxDecl := range op.Context.Declarations {
+				var programDecl orthtypes.Operation
+				scopeVariable := program.Operations[ctxDecl.Index]
+				switch scopeVariable.Instruction {
+				case orthtypes.Var:
+					programDecl = scopeVariable.Links["var_value"]
+				case orthtypes.Const:
+					programDecl = scopeVariable.Links["const_value"]
+				}
+
+				varType := embedded_helpers.VarTypeToLocalAsmType(programDecl.Operator)
+				varName := scopeVariable.Operator.Operand
+
+				procLocalVariables[ctxDeclI] = struct {
+					Initializer, Decl, Type string
+				}{
+					Type:        varType,
+					Decl:        fmt.Sprintf("	LOCAL %s :%s\n", varName, varType),
+					Initializer: fmt.Sprintf("	mov %s, %s\n", varName, programDecl.Operator.Operand),
+				}
+			}
+
+			sort.Slice(procLocalVariables, func(i, j int) bool {
+				left := embedded_helpers.AsmVariablePriority[procLocalVariables[i].Type]
+				right := embedded_helpers.AsmVariablePriority[procLocalVariables[j].Type]
+				return left > right
+			})
+
+			for _, variable := range procLocalVariables {
+				writer.WriteString(variable.Decl)
+			}
+			for _, variable := range procLocalVariables {
+				writer.WriteString(variable.Initializer)
+			}
 
 			lastProcMain = op.Operator.Operand == "main"
 		case orthtypes.With:

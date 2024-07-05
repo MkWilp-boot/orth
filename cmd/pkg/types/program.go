@@ -135,11 +135,16 @@ func init() {
 
 func PPrintOperation(op Operation) string {
 	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("%s\n", InstructionToStr(op.Instruction)))
+	builder.WriteString(fmt.Sprintf("	operand: %s | symbolName%q\n", op.Operator.Operand, op.Operator.SymbolName))
+	for k, v := range op.Links {
+		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
+	}
 	for k, v := range op.Addresses {
 		builder.WriteString(fmt.Sprintf("\n** %s: %d", InstructionToStr(k), v))
 	}
-
-	return fmt.Sprintf("*%s; link_blocks: %s", InstructionToStr(op.Instruction), builder.String())
+	builder.WriteString("****************************************************\n")
+	return builder.String()
 }
 
 func InstructionToStr(inst Instruction) string {

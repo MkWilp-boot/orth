@@ -68,16 +68,16 @@ func HandleOperationElse(stack *[]RefStackItem, program *orthtypes.Program, oper
 	}
 }
 
-func GetVariableContext(varName string, context *orthtypes.Context) (string, error) {
+func GetVariableContext(variable orthtypes.ContextDeclaration, context *orthtypes.Context) (string, error) {
 	if context == nil {
-		return "", errors.New("variable is undeclared: " + varName)
+		return "", errors.New(fmt.Sprintf("undefined variable at abs location: %d for context %s", variable.Index, context.Name))
 	}
 	for _, declaration := range context.Declarations {
-		if declaration == varName {
+		if declaration.Name == variable.Name {
 			return context.Name, nil
 		}
 	}
-	return GetVariableContext(varName, context.Parent)
+	return GetVariableContext(variable, context.Parent)
 }
 
 func LinkVariableToValue(operation orthtypes.Operation, analyzerOperations *[]orthtypes.Operation, program *orthtypes.Program) orthtypes.Operation {

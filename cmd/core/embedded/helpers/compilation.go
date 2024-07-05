@@ -11,6 +11,16 @@ import (
 	"strings"
 )
 
+var AsmVariablePriority = map[string]uint8{
+	"REAL10": 10,
+	"QWORD":  8,
+	"REAL8":  8,
+	"REAL4":  4,
+	"DWORD":  4,
+	"WORD":   2,
+	"BYTE":   1,
+}
+
 func CleanUp() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -56,6 +66,35 @@ func CleanUp() {
 // 	}
 // 	return retreive
 // }
+
+func VarTypeToLocalAsmType(operand orthtypes.Operand) string {
+	switch operand.SymbolName {
+	case orthtypes.PrimitiveSTR:
+		panic("string not supported for local scopes")
+	case orthtypes.PrimitiveI8:
+		return "BYTE"
+	case orthtypes.PrimitiveI16:
+		return "WORD"
+	case orthtypes.PrimitiveI32:
+		return "DWORD"
+	case orthtypes.PrimitiveInt:
+		if strings.Contains(runtime.GOARCH, "64") {
+			return "QWORD"
+		} else {
+			return "DWORD"
+		}
+	case orthtypes.PrimitiveI64:
+		return "QWORD"
+	case orthtypes.PrimitiveF32:
+		return "REAL4"
+	case orthtypes.PrimitiveF64:
+		return "REAL8"
+	default:
+		fmt.Fprintf(os.Stderr, "ivalid type od %q\n", operand.SymbolName)
+		os.Exit(1)
+		return ""
+	}
+}
 
 func VarTypeToAsmType(operand orthtypes.Operand) string {
 	var asmTypeInstruction string
