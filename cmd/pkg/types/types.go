@@ -1,6 +1,7 @@
 package orthtypes
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -49,11 +50,16 @@ const (
 	INVALIDTYPE = ""
 )
 
+type ContextDeclaration struct {
+	Name  string
+	Index uint
+}
+
 type Context struct {
 	Name         string
 	Order        uint
 	Parent       *Context
-	Declarations []string
+	Declarations []ContextDeclaration
 	InnerContext []*Context
 }
 
@@ -63,10 +69,22 @@ type Pair[T1, T2 any] struct {
 }
 
 type Operation struct {
-	Instruction int
+	Instruction Instruction
 	Operator    Operand
 	Context     *Context
-	RefBlock    int
+	Links       map[string]Operation
+	Addresses   map[Instruction]int
+}
+
+func (op *Operation) PrioritizeAddress() int {
+	priorities := instructionJumpAddressPriority[op.Instruction]
+	for _, instruction := range priorities {
+		jumpAddress, ok := op.Addresses[instruction]
+		if ok {
+			return jumpAddress
+		}
+	}
+	return -1
 }
 
 func (op *Operation) IsString() bool {
@@ -120,10 +138,22 @@ func (ctx *Context) MountFullLengthContext(name string) string {
 	return name
 }
 
+func (ctx *Context) GetVaraible(variable string, program *Program) (*Operation, error) {
+	for ctx != nil {
+		for _, decls := range ctx.Declarations {
+			if decls.Name == variable {
+				return &program.Operations[decls.Index], nil
+			}
+		}
+		ctx = ctx.Parent
+	}
+	return nil, errors.New("variable not found")
+}
+
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
 	for ctx != nil {
 		for _, v := range ctx.Declarations {
-			if v == variable {
+			if v.Name == variable {
 				return true
 			}
 		}
@@ -188,8 +218,13 @@ type (
 )
 
 var GlobalTypes map[string]Type
+var instructionJumpAddressPriority map[Instruction][]Instruction
 
 func init() {
+	instructionJumpAddressPriority = make(map[Instruction][]Instruction)
+	instructionJumpAddressPriority[If] = []Instruction{Else, End}
+	instructionJumpAddressPriority[Else] = []Instruction{End}
+
 	GlobalTypes = make(map[string]Type, 0)
 	GlobalTypes[INTS] = make(map[string]string, 0)
 

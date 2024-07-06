@@ -11,6 +11,16 @@ import (
 	"strings"
 )
 
+var AsmVariablePriority = map[string]uint8{
+	"REAL10": 10,
+	"QWORD":  8,
+	"REAL8":  8,
+	"REAL4":  4,
+	"DWORD":  4,
+	"WORD":   2,
+	"BYTE":   1,
+}
+
 func CleanUp() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -57,6 +67,35 @@ func CleanUp() {
 // 	return retreive
 // }
 
+func VarTypeToLocalAsmType(operand orthtypes.Operand) string {
+	switch operand.SymbolName {
+	case orthtypes.PrimitiveSTR:
+		panic("string not supported for local scopes")
+	case orthtypes.PrimitiveI8:
+		return "BYTE"
+	case orthtypes.PrimitiveI16:
+		return "WORD"
+	case orthtypes.PrimitiveI32:
+		return "DWORD"
+	case orthtypes.PrimitiveInt:
+		if strings.Contains(runtime.GOARCH, "64") {
+			return "QWORD"
+		} else {
+			return "DWORD"
+		}
+	case orthtypes.PrimitiveI64:
+		return "QWORD"
+	case orthtypes.PrimitiveF32:
+		return "REAL4"
+	case orthtypes.PrimitiveF64:
+		return "REAL8"
+	default:
+		fmt.Fprintf(os.Stderr, "ivalid type od %q\n", operand.SymbolName)
+		os.Exit(1)
+		return ""
+	}
+}
+
 func VarTypeToAsmType(operand orthtypes.Operand) string {
 	var asmTypeInstruction string
 	switch operand.SymbolName {
@@ -70,7 +109,7 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 		asmTypeInstruction = "dd"
 	case orthtypes.PrimitiveInt:
 		if strings.Contains(runtime.GOARCH, "64") {
-			asmTypeInstruction = "dw"
+			asmTypeInstruction = "dq"
 		} else {
 			asmTypeInstruction = "dd"
 		}
@@ -81,7 +120,7 @@ func VarTypeToAsmType(operand orthtypes.Operand) string {
 	case orthtypes.PrimitiveF64:
 		asmTypeInstruction = "real8"
 	default:
-		fmt.Fprintf(os.Stderr, "ivalid type od %q\n", operand.SymbolName)
+		fmt.Fprintf(os.Stderr, "ivalid type of %q\n", operand.SymbolName)
 		os.Exit(1)
 	}
 	return asmTypeInstruction
@@ -135,9 +174,13 @@ func MangleVarName(o orthtypes.Operation) string {
 		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
 	}
 
-	return fmt.Sprintf("_@%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
+	return fmt.Sprintf("%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
 }
 
-func BuildVarDataSeg(variable orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) string {
-	return fmt.Sprintf("%s %s %s", MangleVarName(variable.Left), VarTypeToAsmType(variable.Right), VarValueToAsmSyntax(variable.Right, true))
+func BuildVarDataSeg(variable orthtypes.Operation) string {
+	variableValue := variable.Links["variable_value"].Operator
+	return fmt.Sprintf("%s %s %s",
+		MangleVarName(variable),
+		VarTypeToAsmType(variableValue),
+		VarValueToAsmSyntax(variableValue, true))
 }
