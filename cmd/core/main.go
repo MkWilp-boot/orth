@@ -16,6 +16,7 @@ import (
 
 func init() {
 	flag.Parse()
+	sourceCodePath := flag.Args()[0]
 
 	if *orth_debug.Help {
 		flag.PrintDefaults()
@@ -24,8 +25,8 @@ func init() {
 		fmt.Println("Usage: <orth> <file_path>")
 		os.Exit(1)
 	}
-	if !strings.HasSuffix(flag.Args()[0], orthtypes.FileType) {
-		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", flag.Args()[0], orthtypes.FileType)
+	if !strings.HasSuffix(sourceCodePath, orthtypes.FileType) {
+		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", sourceCodePath, orthtypes.FileType)
 		os.Exit(1)
 	}
 	if !*orth_debug.Help && (*orth_debug.Compile == "") {
@@ -36,7 +37,8 @@ func init() {
 }
 
 func main() {
-	strProgram := lexer.LoadProgramFromFile(flag.Args()[0])
+	sourceCodePath := flag.Args()[0]
+	strProgram := lexer.LoadProgramFromFile(sourceCodePath)
 	lexedFiles := lexer.LexFile(strProgram)
 
 	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])

@@ -20,10 +20,10 @@ const (
 	InvalidUsageOfTokenOutside = "COMP_ERR: The token %q can only be used inside a %q context, rigth now it is been used in %q"
 )
 
-const commomFileSpecificationStruct = "in %q at line: %d colum: %d"
+const commomFileSpecificationStruct = "in %q at line: %d colum: %d\n"
 
 const (
-	ORTH_ERR_01 = "[ERROR] Undefined token/unknow token %q " + commomFileSpecificationStruct
+	ORTH_ERR_01 = "[ERROR] Undefined/unknow token %q " + commomFileSpecificationStruct
 	ORTH_ERR_02 = "[ERROR] Redeclaration of %q -> %q " + commomFileSpecificationStruct
 	ORTH_ERR_03 = "[ERROR] Redeclaration of %q -> %q in block %q"
 	ORTH_ERR_04 = "[ERROR] Invalid operation of type %q\nDetails:\n%s"
