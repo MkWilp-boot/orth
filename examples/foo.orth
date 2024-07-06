@@ -1,6 +1,6 @@
+const teste2 = s "teste\n"
 
 proc main with 0 out 0 in
-    const teste2 = s "teste\n"
     var teste = i 18
     hold teste deref putui
     hold teste2 puts
