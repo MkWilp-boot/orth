@@ -73,6 +73,21 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	for i := 0; i < 32; i++ {
 		writer.WriteString(fmt.Sprintf("	proc_ret_%d QWORD 0\n", i))
 	}
+	writer.Flush()
+
+	writer.WriteString("\n.DATA ; MultScoped variables\n")
+	for _, variable := range program.Variables {
+		asmVar := embedded_helpers.BuildVarDataSeg(variable)
+		writer.WriteString(fmt.Sprintf("	%s\n", asmVar))
+	}
+	writer.Flush()
+
+	writer.WriteString("\n.DATA ; MultScoped constants\n")
+	for _, variable := range program.Constants {
+		asmVar := embedded_helpers.BuildVarDataSeg(variable)
+		writer.WriteString(fmt.Sprintf("	%s\n", asmVar))
+	}
+	writer.WriteString("\n")
 
 	writer.WriteString("	nArgc QWORD 0\n")
 	writer.WriteString("	lError QWORD 0\n")
@@ -168,6 +183,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.WriteString("	mfree   pBuff  ; Free the allocated memory.\n")
 	writer.WriteString("	ret\n")
 	writer.WriteString("put_char endp\n")
+	writer.Flush()
 
 	var immediateStringCount int
 	immediateStrings := make(map[orthtypes.Operand]int)
@@ -305,16 +321,9 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 
 			procLocalVariables := make([]struct{ Initializer, Decl, Type string }, len(op.Context.Declarations))
 
-			// fix for gobal variables
 			for ctxDeclI, ctxDecl := range op.Context.Declarations {
-				var programDecl orthtypes.Operation
 				scopeVariable := program.Operations[ctxDecl.Index]
-				switch scopeVariable.Instruction {
-				case orthtypes.Var:
-					programDecl = scopeVariable.Links["var_value"]
-				case orthtypes.Const:
-					programDecl = scopeVariable.Links["const_value"]
-				}
+				programDecl := scopeVariable.Links["variable_value"]
 
 				varType := embedded_helpers.VarTypeToLocalAsmType(programDecl.Operator)
 				varName := scopeVariable.Operator.Operand
@@ -471,21 +480,17 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	conout str$(rax)\n")
 		case orthtypes.Hold:
-			writer.WriteString("; Hold var\n")
-			var lookTable *[]orthtypes.Operation
-			if op.Operator.SymbolName == orthtypes.PrimitiveVar {
-				lookTable = &program.Variables
+			// priority for local variables, since Hold instruction can't point to more than one symbol
+			if holdingVariable, ok := op.Links["hold_local"]; ok {
+				writer.WriteString("; Hold local\n")
+				writer.WriteString("	lea rax, " + holdingVariable.Operator.Operand + "\n")
+				writer.WriteString("	push rax\n")
 			} else {
-				lookTable = &program.Constants
+				holdingVariable := op.Links["hold_mult"]
+				writer.WriteString("; Hold MultScoped\n")
+				writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(holdingVariable) + "\n")
+				writer.WriteString("	push rax\n")
 			}
-
-			if 0 > len(*lookTable) || 0 < 0 {
-				fmt.Fprint(os.Stderr, "Error, tried to point to a variable that does not exist")
-				os.Exit(1)
-			}
-			memoryVariable := (*lookTable)[0]
-			writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(memoryVariable) + "\n")
-			writer.WriteString("	push rax\n")
 		case orthtypes.PutString:
 			writer.WriteString("; Print string\n")
 			writer.WriteString("	pop rax\n")
@@ -547,6 +552,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	or rax, rbx\n")
 			writer.WriteString("	push rax\n")
 		}
+		writer.Flush()
 	}
 	writer.WriteString(".DATA ; immediate strings\n")
 	for v, i := range immediateStrings {

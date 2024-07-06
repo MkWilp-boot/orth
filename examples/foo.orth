@@ -1,6 +1,7 @@
+
 proc main with 0 out 0 in
-    const teste1 = i 10
-    var teste2 = i8 90
-    var teste3 = i32 9
-    var teste4 = i16 10
+    const teste2 = s "teste\n"
+    var teste = i 18
+    hold teste deref putui
+    hold teste2 puts
 end

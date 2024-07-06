@@ -17,6 +17,27 @@ func CrossReferenceBlocks(program orthtypes.Program) (orthtypes.Program, error) 
 
 	for operationIndex, operation := range program.Operations {
 		switch operation.Instruction {
+		case orthtypes.Var:
+			if operation.Context.Name == embedded_helpers.MainScope {
+				program.Variables = append(program.Variables, operation)
+			}
+		case orthtypes.Const:
+			if operation.Context.Name == embedded_helpers.MainScope {
+				program.Constants = append(program.Constants, operation)
+			}
+		case orthtypes.Hold:
+			variable, err := operation.Context.GetVaraible(operation.Operator.Operand, &program)
+			if err != nil {
+				panic(err)
+			}
+			if program.Operations[operationIndex].Links == nil {
+				program.Operations[operationIndex].Links = make(map[string]orthtypes.Operation)
+			}
+			if variable.Context.Name == embedded_helpers.MainScope {
+				program.Operations[operationIndex].Links["hold_mult"] = *variable
+			} else {
+				program.Operations[operationIndex].Links["hold_local"] = *variable
+			}
 		case orthtypes.While:
 			fallthrough
 		case orthtypes.If:
@@ -383,7 +404,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				value := parseToken(vType, vValue, context, orthtypes.Push)
 				constant := parseToken(orthtypes.PrimitiveConst, vName, context, orthtypes.Const)
 				constant.Links = make(map[string]orthtypes.Operation)
-				constant.Links["const_value"] = value
+				constant.Links["variable_value"] = value
 
 				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
 					Left:  constant,
@@ -409,7 +430,7 @@ func ParseTokenAsOperation(tokenFiles []orthtypes.File[orthtypes.SliceOf[orthtyp
 				value := parseToken(vType, vValue, context, orthtypes.Push)
 				variable := parseToken(orthtypes.PrimitiveVar, vName, context, orthtypes.Var)
 				variable.Links = make(map[string]orthtypes.Operation)
-				variable.Links["var_value"] = value
+				variable.Links["variable_value"] = value
 
 				parsedOperation <- orthtypes.Pair[orthtypes.Operation, error]{
 					Left:  variable,

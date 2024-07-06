@@ -1,6 +1,7 @@
 package orthtypes
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -135,6 +136,18 @@ func (ctx *Context) MountFullLengthContext(name string) string {
 	}
 	name += ctx.Parent.MountFullLengthContext(name) + "_" + ctx.Name
 	return name
+}
+
+func (ctx *Context) GetVaraible(variable string, program *Program) (*Operation, error) {
+	for ctx != nil {
+		for _, decls := range ctx.Declarations {
+			if decls.Name == variable {
+				return &program.Operations[decls.Index], nil
+			}
+		}
+		ctx = ctx.Parent
+	}
+	return nil, errors.New("variable not found")
 }
 
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
