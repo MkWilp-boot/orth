@@ -5,7 +5,7 @@ import (
 	"log"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strconv"
 	"strings"
@@ -13,25 +13,25 @@ import (
 )
 
 var Functions map[string]func(
-	stack *[]orthtypes.Operand,
-	mem *[]orthtypes.Operand,
-	vars map[string]orthtypes.Operand)
+	stack *[]orth_types.Operand,
+	mem *[]orth_types.Operand,
+	vars map[string]orth_types.Operand)
 
 func init() {
-	Functions = make(map[string]func(*[]orthtypes.Operand, *[]orthtypes.Operand, map[string]orthtypes.Operand))
+	Functions = make(map[string]func(*[]orth_types.Operand, *[]orth_types.Operand, map[string]orth_types.Operand))
 
-	Functions["to_string"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["to_string"] = func(stack *[]orth_types.Operand, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		o1 := helpers.StackPop(stack)
 		res := ToString(o1)
 		*stack = append(*stack, res)
 	}
 
-	Functions["size_of"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["size_of"] = func(stack *[]orth_types.Operand, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		o1 := helpers.StackPop(stack)
 		switch o1.SymbolName {
-		case orthtypes.PrimitiveSTR:
-			*stack = append(*stack, orthtypes.Operand{
-				SymbolName: orthtypes.PrimitiveI32,
+		case orth_types.StdSTR:
+			*stack = append(*stack, orth_types.Operand{
+				SymbolName: orth_types.StdI32,
 				Operand:    fmt.Sprint(len(o1.Operand)),
 			})
 		default:
@@ -39,12 +39,12 @@ func init() {
 		}
 	}
 
-	Functions["length_of"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["length_of"] = func(stack *[]orth_types.Operand, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		o1 := helpers.StackPop(stack)
 		switch o1.SymbolName {
-		case orthtypes.PrimitiveSTR:
-			*stack = append(*stack, orthtypes.Operand{
-				SymbolName: orthtypes.PrimitiveI32,
+		case orth_types.StdSTR:
+			*stack = append(*stack, orth_types.Operand{
+				SymbolName: orth_types.StdI32,
 				Operand:    fmt.Sprint(utf8.RuneCountInString(o1.Operand)),
 			})
 		default:
@@ -52,7 +52,7 @@ func init() {
 		}
 	}
 
-	Functions["make_array"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["make_array"] = func(stack *[]orth_types.Operand, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		if len(*stack) < 2 {
 			panic(orth_debug.StackUnderFlow)
 		}
@@ -63,7 +63,7 @@ func init() {
 		insertCollectionToMem(mem, stack, typ, capacity)
 	}
 
-	Functions["free_var"] = func(stack *[]orthtypes.Operand, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["free_var"] = func(stack *[]orth_types.Operand, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		vName := helpers.StackPop(stack)
 		_, ok := vars[vName.Operand]
 
@@ -71,25 +71,25 @@ func init() {
 			panic(fmt.Errorf(orth_debug.VariableUndefined, vName.Operand))
 		}
 
-		if vName.SymbolName != orthtypes.PrimitiveConst {
+		if vName.SymbolName != orth_types.StdConst {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, vName.SymbolName, "free_var"))
 		}
 		delete(vars, vName.Operand)
 	}
 
-	Functions["dump_mem"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["dump_mem"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		DumpMem(*stack, *mem)
 	}
 
-	Functions["dump_stack"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["dump_stack"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		DumpStack(*stack)
 	}
 
-	Functions["dump_vars"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["dump_vars"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		DumpVars(vars)
 	}
 
-	Functions["exit"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["exit"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		code := helpers.StackPop(&*stack)
 		if helpers.IsInt(code.SymbolName) {
 			log.Println("Progam exited with code:", code.Operand)
@@ -98,11 +98,11 @@ func init() {
 		panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, code.SymbolName, "exit"))
 	}
 
-	Functions["fill"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["fill"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		value := helpers.StackPop(&*stack)
 		rangeable := helpers.StackPop(&*stack)
 
-		if rangeable.SymbolName != orthtypes.RNGABL {
+		if rangeable.SymbolName != orth_types.RNGABL {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.SymbolName, "fill"))
 		}
 		start, end := DissectRangeAsInt(rangeable)
@@ -115,22 +115,22 @@ func init() {
 		*stack = append(*stack, rangeable)
 	}
 
-	Functions["index"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["index"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		rangeable := helpers.StackPop(&*stack)
-		if rangeable.SymbolName != orthtypes.RNGABL {
+		if rangeable.SymbolName != orth_types.RNGABL {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.SymbolName, "index"))
 		}
 
 		nums := strings.Split(rangeable.Operand, "|")
 		index, _ := strconv.Atoi(nums[0])
 
-		*stack = append(*stack, orthtypes.Operand{
-			SymbolName: orthtypes.ADDR,
+		*stack = append(*stack, orth_types.Operand{
+			SymbolName: orth_types.ADDR,
 			Operand:    fmt.Sprint(index),
 		})
 	}
 
-	Functions["grab_at"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["grab_at"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		o1 := helpers.StackPop(&*stack)
 		o2 := helpers.StackPop(&*stack)
 
@@ -142,7 +142,7 @@ func init() {
 		vars[o1.Operand] = o3
 	}
 
-	Functions["grab_last"] = func(stack, mem *[]orthtypes.Operand, vars map[string]orthtypes.Operand) {
+	Functions["grab_last"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
 		o1 := helpers.StackPop(&*stack)
 		o2 := helpers.StackPop(&*stack)
 
@@ -150,7 +150,7 @@ func init() {
 	}
 }
 
-func DumpVars(vars map[string]orthtypes.Operand) {
+func DumpVars(vars map[string]orth_types.Operand) {
 	if len(vars) == 0 {
 		fmt.Println("***********************************************************")
 		fmt.Println("VARS IS EMPTY")
@@ -164,7 +164,7 @@ func DumpVars(vars map[string]orthtypes.Operand) {
 	}
 }
 
-func DumpStack(stack []orthtypes.Operand) {
+func DumpStack(stack []orth_types.Operand) {
 	if len(stack) == 0 {
 		fmt.Println("***********************************************************")
 		fmt.Println("STACK IS EMPTY")
@@ -178,7 +178,7 @@ func DumpStack(stack []orthtypes.Operand) {
 	}
 }
 
-func DumpMem(stack, mem []orthtypes.Operand) {
+func DumpMem(stack, mem []orth_types.Operand) {
 	opTo := helpers.StackPop(&stack)
 	opFrom := helpers.StackPop(&stack)
 
@@ -196,9 +196,9 @@ func DumpMem(stack, mem []orthtypes.Operand) {
 	}
 }
 
-func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtypes.Operand, capacity int) {
+func insertCollectionToMem(originalMem, stack *[]orth_types.Operand, typ orth_types.Operand, capacity int) {
 	// why go?
-	memCopy := make([]orthtypes.Operand, len(*originalMem), cap(*originalMem))
+	memCopy := make([]orth_types.Operand, len(*originalMem), cap(*originalMem))
 	copy(memCopy, *originalMem)
 
 	var start int
@@ -224,13 +224,13 @@ func insertCollectionToMem(originalMem, stack *[]orthtypes.Operand, typ orthtype
 
 	if foundPlace {
 		for i := start; i < capacity; i++ {
-			memCopy[i] = orthtypes.Operand{
+			memCopy[i] = orth_types.Operand{
 				SymbolName: typ.Operand,
 			}
 		}
 		*originalMem = memCopy
-		*stack = append(*stack, orthtypes.Operand{
-			SymbolName: orthtypes.RNGABL,
+		*stack = append(*stack, orth_types.Operand{
+			SymbolName: orth_types.RNGABL,
 			Operand:    fmt.Sprintf("%d|%d", start, start+capacity-1),
 		})
 	}

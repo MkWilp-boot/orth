@@ -3,30 +3,30 @@ package helpers
 import (
 	"fmt"
 	"orth/cmd/core/orth_debug"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"strconv"
 )
 
 func IsInt(t string) bool {
-	_, ok := orthtypes.GlobalTypes[orthtypes.INTS][t]
+	_, ok := orth_types.GlobalTypes[orth_types.INTS][t]
 	return ok
 }
 
 func IsFloat(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.FLOATS][t] != ""
+	return orth_types.GlobalTypes[orth_types.FLOATS][t] != ""
 }
 
 func IsBool(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.BOOL][t] != ""
+	return orth_types.GlobalTypes[orth_types.BOOL][t] != ""
 }
 
 func IsString(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.STRING][t] != ""
+	return orth_types.GlobalTypes[orth_types.STRING][t] != ""
 }
 
 // SameBaseType checks if the 2 variables have the same base type.
 // Ex: INT-INT, FLOAT-FLOAT, STRING-INT
-func SameBaseType(operands ...orthtypes.Operand) {
+func SameBaseType(operands ...orth_types.Operand) {
 	if operands[0].GrabRootType() != operands[1].GrabRootType() {
 		panic(fmt.Errorf("mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].SymbolName, operands[1].Operand, operands[1].SymbolName))
 	}
@@ -37,7 +37,7 @@ func SameBaseType(operands ...orthtypes.Operand) {
 //	CONVERSIONS
 //
 // ===================================
-func ToInt(o orthtypes.Operand) int {
+func ToInt(o orth_types.Operand) int {
 	if IsInt(o.SymbolName) {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
@@ -54,7 +54,7 @@ func ToInt(o orthtypes.Operand) int {
 		return int(f)
 	}
 
-	if o.SymbolName == orthtypes.ADDR {
+	if o.SymbolName == orth_types.ADDR {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic(orth_debug.DefaultRuntimeException)

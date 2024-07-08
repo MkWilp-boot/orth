@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strings"
 )
@@ -22,7 +22,7 @@ func ppDefineDirective(line string) (string, string) {
 	return strings.TrimSpace(name), strings.TrimSpace(value)
 }
 
-func preProccessFile(path string, parsedFiles chan orthtypes.File[string]) {
+func preProccessFile(path string, parsedFiles chan orth_types.File[string]) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Printf("%q | %v\n", path, err)
@@ -30,7 +30,7 @@ func preProccessFile(path string, parsedFiles chan orthtypes.File[string]) {
 	defer file.Close()
 
 	var rawFile string
-	oFile := orthtypes.File[string]{
+	oFile := orth_types.File[string]{
 		Name:      path,
 		CodeBlock: rawFile,
 	}
@@ -67,7 +67,7 @@ func preProccessFile(path string, parsedFiles chan orthtypes.File[string]) {
 			rawFile = strings.Replace(rawFile, fmt.Sprintf(`@include "%s"`, includeFile), "", -1)
 			oFile.UpdateCodeReference(rawFile)
 
-			filesToParse := make(chan orthtypes.File[string])
+			filesToParse := make(chan orth_types.File[string])
 
 			go preProccessFile(includeFile, filesToParse)
 
@@ -85,13 +85,13 @@ func preProccessFile(path string, parsedFiles chan orthtypes.File[string]) {
 	close(parsedFiles)
 }
 
-func LoadProgramFromFile(path string) []orthtypes.File[string] {
+func LoadProgramFromFile(path string) []orth_types.File[string] {
 	// removePathToFile := regexp.MustCompile(`((\.\.\/|\.\/)+|("))`)
 	// path = removePathToFile.ReplaceAllString(path, "")
-	filesParsed := make(chan orthtypes.File[string])
+	filesParsed := make(chan orth_types.File[string])
 	go preProccessFile(path, filesParsed)
 
-	files := make([]orthtypes.File[string], 0)
+	files := make([]orth_types.File[string], 0)
 
 	for file := range filesParsed {
 		files = append(files, file)
@@ -102,23 +102,23 @@ func LoadProgramFromFile(path string) []orthtypes.File[string] {
 
 // LexFile receives a pure text program then
 // separate and enumerates all tokens present within the provided program
-func LexFile(programFiles []orthtypes.File[string]) []orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]] {
-	lexedFiles := make([]orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]], 0)
+func LexFile(programFiles []orth_types.File[string]) []orth_types.File[orth_types.SliceOf[orth_types.StringEnum]] {
+	lexedFiles := make([]orth_types.File[orth_types.SliceOf[orth_types.StringEnum]], 0)
 
 	for _, file := range programFiles {
 		pLines := strings.Split(file.CodeBlock, "\r\n")
-		lines := make([]orthtypes.StringEnum, 0)
+		lines := make([]orth_types.StringEnum, 0)
 
 		for lineNumber, line := range pLines {
 			if len(line) == 0 {
 				continue
 			}
-			enumeration := make(chan orthtypes.Vec2DString)
+			enumeration := make(chan orth_types.Vec2DString)
 
 			go EnumerateLine(line, enumeration)
 
 			for enumeratedLine := range enumeration {
-				vec2d := orthtypes.StringEnum{
+				vec2d := orth_types.StringEnum{
 					Index:   lineNumber + 1,
 					Content: enumeratedLine,
 				}
@@ -126,9 +126,9 @@ func LexFile(programFiles []orthtypes.File[string]) []orthtypes.File[orthtypes.S
 			}
 		}
 
-		lexedFiles = append(lexedFiles, orthtypes.File[orthtypes.SliceOf[orthtypes.StringEnum]]{
+		lexedFiles = append(lexedFiles, orth_types.File[orth_types.SliceOf[orth_types.StringEnum]]{
 			Name: file.Name,
-			CodeBlock: orthtypes.SliceOf[orthtypes.StringEnum]{
+			CodeBlock: orth_types.SliceOf[orth_types.StringEnum]{
 				Slice: &lines,
 			},
 		})
@@ -146,7 +146,7 @@ func findCol(line string, start int, predicate func(string) bool) int {
 
 // EnumerateLine receives a single line and parses and enumerates
 // all tokens in that line feeding the `enumeration` chan
-func EnumerateLine(line string, enumeration chan<- orthtypes.Vec2DString) {
+func EnumerateLine(line string, enumeration chan<- orth_types.Vec2DString) {
 	line = strings.Split(line, "#")[0]
 	col := findCol(line, 0, func(s string) bool {
 		return s != " "
@@ -165,7 +165,7 @@ func EnumerateLine(line string, enumeration chan<- orthtypes.Vec2DString) {
 			return s == " "
 		})
 
-		enumeration <- orthtypes.Vec2DString{
+		enumeration <- orth_types.Vec2DString{
 			Index: col,
 			Token: line[col:colEnd],
 		}

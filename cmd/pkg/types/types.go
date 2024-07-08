@@ -1,4 +1,4 @@
-package orthtypes
+package orth_types
 
 import (
 	"errors"
@@ -12,30 +12,79 @@ const (
 	StdFalse = "0"
 )
 
+// types
 const (
-	PrimitiveI64     = "i64"
-	PrimitiveI32     = "i32"
-	PrimitiveI16     = "i16"
-	PrimitiveI8      = "i8"
-	PrimitiveInt     = "i"
-	PrimitiveF64     = "f64"
-	PrimitiveF32     = "f32"
-	PrimitiveSTR     = "s"
-	PrimitiveBOOL    = "b"
-	PrimitiveEND     = "end"
-	PrimitiveVOID    = "void"
-	PrimitiveRNT     = "rnt"
-	PrimitiveMem     = "mem"
-	PrimitiveType    = "type"
-	PrimitiveConst   = "const"
-	PrimitiveVar     = "var"
-	PrimitiveHold    = "hold"
-	PrimitiveProc    = "proc"
-	PrimitiveIn      = "in"
-	PrimitiveInvalid = ""
-	Bitwise          = "bitwise"
+	StdI64     = "i64"
+	StdI32     = "i32"
+	StdI16     = "i16"
+	StdI8      = "i8"
+	StdINT     = "i"
+	StdF64     = "f64"
+	StdF32     = "f32"
+	StdSTR     = "s"
+	StdBOOL    = "b"
+	StdINVALID = ""
 )
 
+// keywords
+const (
+	StdPlus        = "+"
+	StdMinus       = "-"
+	StdMult        = "*"
+	StdDiv         = "/"
+	StdEquals      = "=="
+	StdNotEquals   = "<>"
+	StdLowerThan   = "<"
+	StdGreaterThan = ">"
+	StdMod         = "%"
+	StdEND         = "end"
+	StdVOID        = "void"
+	StdRNT         = "rnt"
+	StdMem         = "mem"
+	StdType        = "type"
+	StdConst       = "const"
+	StdVar         = "var"
+	StdHold        = "hold"
+	StdProc        = "proc"
+	StdIn          = "in"
+	StdIf          = "if"
+	StdElse        = "else"
+	StdOver        = "over"
+	Std2Dup        = "2dup"
+	StdDup         = "dup"
+	StdWhile       = "while"
+	StdLeftShift   = "lshift"
+	StdRightShift  = "rshift"
+	StdLogicalAnd  = "land"
+	StdLogicalOr   = "lor"
+	StdDo          = "do"
+	StdDrop        = "drop"
+	StdSwap        = "swap"
+	StdStore       = "."
+	StdLoad        = ","
+	StdCall        = "call"
+	StdLoadAndStay = ",!"
+	StdInvoke      = "invoke"
+	StdOut         = "out"
+	StdWith        = "with"
+	StdBitwise     = "bitwise"
+)
+
+// builtin functions/symbols
+const (
+	StdPutUint   = "putui"
+	StdPutStr    = "puts"
+	StdSetNumber = "set_number"
+	StdSetStr    = "set_string"
+	StdDumpMem   = "dump_mem"
+	StdPutChar   = "put_char"
+	StdDeref     = "deref"
+	StdExit      = "exit"
+	StdAlloc     = "alloc"
+	StdFree      = "free"
+)
+
+// some shit I don't remember
 const (
 	INTS        = "ints"
 	FLOATS      = "floats"
@@ -109,11 +158,11 @@ func (op *Operation) IsFloat() bool {
 }
 
 func (op *Operation) IsFloat64() bool {
-	return op.Operator.SymbolName == PrimitiveF64
+	return op.Operator.SymbolName == StdF64
 }
 
 func (op *Operation) IsFloat32() bool {
-	return op.Operator.SymbolName == PrimitiveF32
+	return op.Operator.SymbolName == StdF32
 }
 
 type Operand struct {
@@ -222,38 +271,38 @@ var instructionJumpAddressPriority map[Instruction][]Instruction
 
 func init() {
 	instructionJumpAddressPriority = make(map[Instruction][]Instruction)
-	instructionJumpAddressPriority[If] = []Instruction{Else, End}
-	instructionJumpAddressPriority[Else] = []Instruction{End}
+	instructionJumpAddressPriority[InstructionIf] = []Instruction{InstructionElse, InstructionEnd}
+	instructionJumpAddressPriority[InstructionElse] = []Instruction{InstructionEnd}
 
 	GlobalTypes = make(map[string]Type, 0)
 	GlobalTypes[INTS] = make(map[string]string, 0)
 
-	GlobalTypes[INTS][PrimitiveI64] = "i64"
-	GlobalTypes[INTS][PrimitiveI32] = "i32"
-	GlobalTypes[INTS][PrimitiveI16] = "i16"
-	GlobalTypes[INTS][PrimitiveI8] = "i8"
-	GlobalTypes[INTS][PrimitiveInt] = "i"
+	GlobalTypes[INTS][StdI64] = "i64"
+	GlobalTypes[INTS][StdI32] = "i32"
+	GlobalTypes[INTS][StdI16] = "i16"
+	GlobalTypes[INTS][StdI8] = "i8"
+	GlobalTypes[INTS][StdINT] = "i"
 
 	GlobalTypes[FLOATS] = make(map[string]string, 0)
-	GlobalTypes[FLOATS][PrimitiveF64] = "f64"
-	GlobalTypes[FLOATS][PrimitiveF32] = "f32"
+	GlobalTypes[FLOATS][StdF64] = "f64"
+	GlobalTypes[FLOATS][StdF32] = "f32"
 
 	GlobalTypes[STRING] = make(map[string]string, 0)
-	GlobalTypes[STRING][PrimitiveSTR] = "s"
+	GlobalTypes[STRING][StdSTR] = "s"
 
 	GlobalTypes[BOOL] = make(map[string]string, 0)
-	GlobalTypes[BOOL][PrimitiveBOOL] = "b"
+	GlobalTypes[BOOL][StdBOOL] = "b"
 
 	GlobalTypes[VOID] = make(map[string]string)
-	GlobalTypes[VOID][PrimitiveVOID] = "v"
+	GlobalTypes[VOID][StdVOID] = "v"
 
 	GlobalTypes[RNT] = make(map[string]string, 0)
-	GlobalTypes[RNT][PrimitiveRNT] = "rnt"
+	GlobalTypes[RNT][StdRNT] = "rnt"
 	GlobalTypes[RNT][ADDR] = "address"
 	GlobalTypes[RNT][RNGABL] = "rangeable"
 
 	GlobalTypes[MEM] = make(map[string]string, 0)
-	GlobalTypes[MEM][PrimitiveMem] = "rnt"
+	GlobalTypes[MEM][StdMem] = "rnt"
 
 	GlobalTypes[TYPE] = make(map[string]string, 0)
 	GlobalTypes[TYPE]["type"] = "type"

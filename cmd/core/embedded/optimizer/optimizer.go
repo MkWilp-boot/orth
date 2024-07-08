@@ -3,38 +3,38 @@ package optimizer
 import (
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"strconv"
 )
 
-func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes.Operation, []orthtypes.CompilerMessage) {
-	stack := make([]orthtypes.Operation, 0)
-	warnings := make([]orthtypes.CompilerMessage, 0)
+func AnalyzeAndOptimizeOperations(operations []orth_types.Operation) ([]orth_types.Operation, []orth_types.CompilerMessage) {
+	stack := make([]orth_types.Operation, 0)
+	warnings := make([]orth_types.CompilerMessage, 0)
 
 	for _, operation := range operations {
 		switch operation.Instruction {
-		case orthtypes.Mult:
+		case orth_types.InstructionMult:
 			fallthrough
-		case orthtypes.Mod:
+		case orth_types.InstructionMod:
 			fallthrough
-		case orthtypes.Div:
+		case orth_types.InstructionDiv:
 			fallthrough
-		case orthtypes.Minus:
+		case orth_types.InstructionMinus:
 			fallthrough
-		case orthtypes.Sum:
-			if stack[len(stack)-1].Instruction == orthtypes.Push && stack[len(stack)-2].Instruction == orthtypes.Push {
+		case orth_types.InstructionSum:
+			if stack[len(stack)-1].Instruction == orth_types.InstructionPush && stack[len(stack)-2].Instruction == orth_types.InstructionPush {
 				p1 := embedded_helpers.PopLast(&stack)
 				p2 := embedded_helpers.PopLast(&stack)
 
 				if p1.Operator.SymbolName != p2.Operator.SymbolName {
 					msg := orth_debug.BuildMessage(
 						orth_debug.ORTH_WARN_01,
-						orthtypes.InstructionToStr(operation.Instruction),
+						orth_types.InstructionToStr(operation.Instruction),
 						p1.Operator.SymbolName,
 						p2.Operator.SymbolName,
 					)
-					warnings = append(warnings, orthtypes.CompilerMessage{
-						Type:    orthtypes.Commom,
+					warnings = append(warnings, orth_types.CompilerMessage{
+						Type:    orth_types.Commom,
 						Message: msg,
 					})
 				}
@@ -66,10 +66,10 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 						}
 					}
 
-					stack = append(stack, orthtypes.Operation{
-						Instruction: orthtypes.Push,
-						Operator: orthtypes.Operand{
-							SymbolName: orthtypes.PrimitiveInt,
+					stack = append(stack, orth_types.Operation{
+						Instruction: orth_types.InstructionPush,
+						Operator: orth_types.Operand{
+							SymbolName: orth_types.StdINT,
 							Operand:    operand,
 						},
 						Context:   operation.Context,
@@ -77,13 +77,13 @@ func AnalyzeAndOptimizeOperations(operations []orthtypes.Operation) ([]orthtypes
 					})
 					continue
 				}
-			} else if stack[len(stack)-1].Instruction == orthtypes.PushStr && stack[len(stack)-2].Instruction == orthtypes.PushStr {
+			} else if stack[len(stack)-1].Instruction == orth_types.InstructionPushStr && stack[len(stack)-2].Instruction == orth_types.InstructionPushStr {
 				p1 := embedded_helpers.PopLast(&stack)
 				p2 := embedded_helpers.PopLast(&stack)
-				stack = append(stack, orthtypes.Operation{
-					Instruction: orthtypes.PushStr,
-					Operator: orthtypes.Operand{
-						SymbolName: orthtypes.PrimitiveSTR,
+				stack = append(stack, orth_types.Operation{
+					Instruction: orth_types.InstructionPushStr,
+					Operator: orth_types.Operand{
+						SymbolName: orth_types.StdSTR,
 						Operand:    p2.Operator.Operand + p1.Operator.Operand, // concat
 					},
 					Context:   operation.Context,

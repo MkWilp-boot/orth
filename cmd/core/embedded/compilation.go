@@ -9,7 +9,7 @@ import (
 	embedded_helpers "orth/cmd/core/embedded/helpers"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
 	"sort"
@@ -19,7 +19,7 @@ import (
 const MASM_MAX_8BIT_CHAR_PER_LINE float64 = 20.0
 
 // Compile compiles a program into assembly
-func Compile(program orthtypes.Program, assemblyType string) {
+func Compile(program orth_types.Program, assemblyType string) {
 	orth_debug.LogStep("[INFO] Started compilation workflow")
 
 	if assemblyType != "masm" {
@@ -57,7 +57,7 @@ func Compile(program orthtypes.Program, assemblyType string) {
 	embedded_helpers.CleanUp()
 }
 
-func compileMasm(program orthtypes.Program, output *os.File) {
+func compileMasm(program orth_types.Program, output *os.File) {
 	orth_debug.LogStep("[CMD] Writing assembly")
 	defer output.Close()
 
@@ -186,21 +186,21 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 	writer.Flush()
 
 	var immediateStringCount int
-	immediateStrings := make(map[orthtypes.Operand]int)
+	immediateStrings := make(map[orth_types.Operand]int)
 
 	lastProcMain := false
 
 	for ip := 0; ip < len(program.Operations); ip++ {
 		op := program.Operations[ip]
-		if op.Instruction == orthtypes.Skip {
+		if op.Instruction == orth_types.Skip {
 			continue
 		}
 		// ignore vars so they are located on the data segment
 		switch op.Instruction {
-		case orthtypes.Push:
+		case orth_types.InstructionPush:
 			writer.WriteString("; push\n")
 			writer.WriteString("	push " + op.Operator.Operand + "\n")
-		case orthtypes.PushStr:
+		case orth_types.InstructionPushStr:
 			strNum, ok := immediateStrings[op.Operator]
 			if !ok {
 				immediateStrings[op.Operator] = immediateStringCount
@@ -210,15 +210,15 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	mov rax, offset str_" + fmt.Sprint(strNum) + "\n")
 			writer.WriteString("	push rax\n")
 			immediateStringCount++
-		case orthtypes.Mem:
+		case orth_types.InstructionMem:
 			writer.WriteString("; push offset mem\n")
 			writer.WriteString("	mov rax, offset mem\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.PutChar:
+		case orth_types.FunctionPutChar:
 			writer.WriteString("; put_char\n")
 			writer.WriteString("	pop rcx\n")
 			writer.WriteString("	invoke put_char\n")
-		case orthtypes.Alloc:
+		case orth_types.FunctionAlloc:
 			writer.WriteString("; alloc\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	push rbx\n")
@@ -226,16 +226,16 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	mov rax, rbx\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Free:
+		case orth_types.FunctionFree:
 			writer.WriteString("; free\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	mfree rax\n")
-		case orthtypes.SetNumber:
+		case orth_types.FunctionSetNumber:
 			writer.WriteString("; set_number\n")
 			writer.WriteString("	pop rax ; address\n")
 			writer.WriteString("	pop rbx ; value\n")
 			writer.WriteString("	mov [rax], rbx\n")
-		case orthtypes.SetString:
+		case orth_types.FunctionSetString:
 			writer.WriteString("; set_string\n")
 			writer.WriteString("	pop rdi ; destination\n")
 			writer.WriteString("	pop rsi ; source\n")
@@ -243,7 +243,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	invoke string_length\n")
 			writer.WriteString("	mov rcx, rax\n")
 			writer.WriteString("	rep movsb\n")
-		case orthtypes.Deref:
+		case orth_types.InstructionDeref:
 			writer.WriteString("; deref\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	push rbx\n")
@@ -251,30 +251,30 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	push rbx\n")
 			writer.WriteString("	mov rbx, rax\n")
-		case orthtypes.Load:
+		case orth_types.InstructionLoad:
 			writer.WriteString("; load\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	xor rbx, rbx\n")
 			writer.WriteString("	mov bl, BYTE PTR [rax]\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.Store:
+		case orth_types.InstructionStore:
 			writer.WriteString("; store\n")
 			writer.WriteString("	pop rbx ; value to store\n")
 			writer.WriteString("	pop rax ; address of mem\n")
 			writer.WriteString("	mov BYTE PTR [rax], bl\n")
 			writer.WriteString("	xor rax, rax\n")
-		case orthtypes.DumpMem:
+		case orth_types.FunctionDumpMem:
 			writer.WriteString("; dump_mem\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke p_dump_mem, rbx, rax\n")
-		case orthtypes.Sum:
+		case orth_types.InstructionSum:
 			writer.WriteString("; Sum\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	add rax, rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Gt:
+		case orth_types.InstructionGt:
 			writer.WriteString("; GT\n")
 			writer.WriteString("	mov rdx, 1\n")
 			writer.WriteString("	mov rcx, 0\n")
@@ -283,7 +283,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	cmp rax, rbx\n")
 			writer.WriteString("	cmovg rcx, rdx\n")
 			writer.WriteString("	push rcx\n")
-		case orthtypes.Lt:
+		case orth_types.InstructionLt:
 			writer.WriteString("; LT\n")
 			writer.WriteString("	mov rdx, 1\n")
 			writer.WriteString("	mov rcx, 0\n")
@@ -292,7 +292,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	cmp rax, rbx\n")
 			writer.WriteString("	cmovl rcx, rdx\n")
 			writer.WriteString("	push rcx\n")
-		case orthtypes.Equal:
+		case orth_types.InstructionEqual:
 			writer.WriteString("; Equal\n")
 			writer.WriteString("	mov rdx, 1\n")
 			writer.WriteString("	mov rcx, 0\n")
@@ -301,7 +301,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	cmp rax, rbx\n")
 			writer.WriteString("	cmove rcx, rdx\n")
 			writer.WriteString("	push rcx\n")
-		case orthtypes.If:
+		case orth_types.InstructionIf:
 			writer.WriteString("; If\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	test rax, rax\n")
@@ -312,10 +312,10 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			}
 
 			writer.WriteString(fmt.Sprintf("	jz .L%d\n", indexToJump))
-		case orthtypes.Else:
+		case orth_types.InstructionElse:
 			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			writer.WriteString("; Else\n")
-		case orthtypes.Proc:
+		case orth_types.InstructionProc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
 
@@ -351,7 +351,7 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			}
 
 			lastProcMain = op.Operator.Operand == "main"
-		case orthtypes.With:
+		case orth_types.InstructionWith:
 			writer.WriteString("; With\n")
 			procParamsCount, err := strconv.Atoi(op.Operator.Operand)
 			if err != nil && op.Operator.Operand != "cli" {
@@ -375,16 +375,16 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 					writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
 				}
 			}
-		case orthtypes.End:
+		case orth_types.InstructionEnd:
 			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
-			procAddress, procFound := op.Addresses[orthtypes.Proc]
-			whileAddress, whileFound := op.Addresses[orthtypes.While]
+			procAddress, procFound := op.Addresses[orth_types.InstructionProc]
+			whileAddress, whileFound := op.Addresses[orth_types.InstructionWhile]
 
 			switch {
 			case procFound:
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orthtypes.InstructionToStr(orthtypes.Proc)))
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionProc)))
 
-				if procAddress+2 > len(program.Operations) || program.Operations[procAddress+2].Instruction != orthtypes.Out {
+				if procAddress+2 > len(program.Operations) || program.Operations[procAddress+2].Instruction != orth_types.InstructionOut {
 					continue
 				}
 				outInstruction := program.Operations[procAddress+2]
@@ -399,20 +399,20 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 				writer.WriteString(fmt.Sprint(program.Operations[procAddress].Operator.Operand, " ", "endp\n"))
 				continue
 			case whileFound:
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orthtypes.InstructionToStr(orthtypes.While)))
-				writer.WriteString(fmt.Sprintf("; Jump to %s\n", orthtypes.InstructionToStr(orthtypes.While)))
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
+				writer.WriteString(fmt.Sprintf("; Jump to %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
 				writer.WriteString(fmt.Sprintf("	jmp .L%d\n", whileAddress))
 				// post-instruction label
 				writer.WriteString(fmt.Sprintf(".LA%d:\n", ip))
 			}
-		case orthtypes.Call:
+		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
-			procSignature := program.Filter(func(fop orthtypes.Operation, i int) bool {
+			procSignature := program.Filter(func(fop orth_types.Operation, i int) bool {
 				if i >= len(program.Operations) {
 					return false
 				}
-				isProc := fop.Instruction == orthtypes.Proc && op.Operator.Operand == fop.Operator.Operand
-				hasWith := isProc && program.Operations[i+1].Instruction == orthtypes.With
+				isProc := fop.Instruction == orth_types.InstructionProc && op.Operator.Operand == fop.Operator.Operand
+				hasWith := isProc && program.Operations[i+1].Instruction == orth_types.InstructionWith
 				return hasWith
 			})
 			if len(procSignature) != 1 {
@@ -436,12 +436,12 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			}
 
 			writer.WriteString("	invoke clear_proc_returns\n")
-		case orthtypes.Dup:
+		case orth_types.InstructionDup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.TwoDup:
+		case orth_types.InstructionTwoDup:
 			writer.WriteString("; 2Dup\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
@@ -449,37 +449,37 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Over:
+		case orth_types.InstructionOver:
 			writer.WriteString("; Over\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	push rbx\n")
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.While:
+		case orth_types.InstructionWhile:
 			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			writer.WriteString("; While\n")
-		case orthtypes.Do:
+		case orth_types.InstructionDo:
 			writer.WriteString("; Do\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	test rax, rax\n")
-			endAddress, ok := op.Addresses[orthtypes.End]
+			endAddress, ok := op.Addresses[orth_types.InstructionEnd]
 			if !ok {
 				log.Fatalln("do wihtout end")
 			}
 			writer.WriteString(fmt.Sprintf("	jz .LA%d\n", endAddress))
-		case orthtypes.Drop:
+		case orth_types.InstructionDrop:
 			writer.WriteString("; Drop\n")
 			writer.WriteString("	pop trash\n")
-		case orthtypes.Exit:
+		case orth_types.InstructionExit:
 			writer.WriteString("; Exit program\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke ExitProcess, rax\n")
-		case orthtypes.PutU64:
+		case orth_types.FunctionPutU64:
 			writer.WriteString("; DumpUI64\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	conout str$(rax)\n")
-		case orthtypes.Hold:
+		case orth_types.InstructionHold:
 			// priority for local variables, since Hold instruction can't point to more than one symbol
 			if holdingVariable, ok := op.Links["hold_local"]; ok {
 				writer.WriteString("; Hold local\n")
@@ -491,61 +491,61 @@ func compileMasm(program orthtypes.Program, output *os.File) {
 				writer.WriteString("	mov rax, offset " + embedded_helpers.MangleVarName(holdingVariable) + "\n")
 				writer.WriteString("	push rax\n")
 			}
-		case orthtypes.PutString:
+		case orth_types.FunctionPutString:
 			writer.WriteString("; Print string\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	invoke StdOut, rax\n")
-		case orthtypes.Mult:
+		case orth_types.InstructionMult:
 			writer.WriteString("; Mult\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	imul rax, rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Minus:
+		case orth_types.InstructionMinus:
 			writer.WriteString("; Sub\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	sub rbx, rax\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.Div:
+		case orth_types.InstructionDiv:
 			writer.WriteString("; Div\n")
 			writer.WriteString("	xor rdx, rdx\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	div rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.Mod:
+		case orth_types.InstructionMod:
 			writer.WriteString("; Mod\n")
 			writer.WriteString("	xor rdx, rdx\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	div rbx\n")
 			writer.WriteString("	push rdx\n")
-		case orthtypes.Swap:
+		case orth_types.InstructionSwap:
 			writer.WriteString("; Swap\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.LShift:
+		case orth_types.InstructionLShift:
 			writer.WriteString("; shift left\n")
 			writer.WriteString("	pop rcx\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	shl rbx, cl\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.RShift:
+		case orth_types.InstructionRShift:
 			writer.WriteString("; shift right\n")
 			writer.WriteString("	pop rcx\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	shr rbx, cl\n")
 			writer.WriteString("	push rbx\n")
-		case orthtypes.LAnd:
+		case orth_types.InstructionLAnd:
 			writer.WriteString("; bitwise and\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	and rax, rbx\n")
 			writer.WriteString("	push rax\n")
-		case orthtypes.LOr:
+		case orth_types.InstructionLOr:
 			writer.WriteString("; bitwise or\n")
 			writer.WriteString("	pop rbx\n")
 			writer.WriteString("	pop rax\n")

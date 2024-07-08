@@ -9,7 +9,7 @@ import (
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strings"
 )
@@ -25,8 +25,8 @@ func init() {
 		fmt.Println("Usage: <orth> <file_path>")
 		os.Exit(1)
 	}
-	if !strings.HasSuffix(sourceCodePath, orthtypes.FileType) {
-		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", sourceCodePath, orthtypes.FileType)
+	if !strings.HasSuffix(sourceCodePath, orth_types.FileType) {
+		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", sourceCodePath, orth_types.FileType)
 		os.Exit(1)
 	}
 	if !*orth_debug.Help && (*orth_debug.Compile == "") {
@@ -41,15 +41,15 @@ func main() {
 	strProgram := lexer.LoadProgramFromFile(sourceCodePath)
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
+	parsedOperations := make(chan orth_types.Pair[orth_types.Operation, error])
 
-	program := orthtypes.Program{
-		Operations: make([]orthtypes.Operation, 0),
+	program := orth_types.Program{
+		Operations: make([]orth_types.Operation, 0),
 	}
 
 	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
 
-	analyzerOperations := make([]orthtypes.Operation, 0)
+	analyzerOperations := make([]orth_types.Operation, 0)
 	for parsedOperation := range parsedOperations {
 		if parsedOperation.Right != nil {
 			program.Error = append(program.Error, parsedOperation.Right)
