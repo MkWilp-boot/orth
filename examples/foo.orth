@@ -1,5 +1,4 @@
 proc main with 0 out 0 in
-    var teste = i 18
-    
-    hold teste deref putui
+    var numero i8 10
+    hold numero deref putui
 end

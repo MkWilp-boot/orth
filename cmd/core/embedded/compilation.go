@@ -380,8 +380,13 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			procAddress, procFound := op.Addresses[orth_types.InstructionProc]
 			whileAddress, whileFound := op.Addresses[orth_types.InstructionWhile]
 
-			switch {
-			case procFound:
+			closingMainProc := false
+
+			for k, v := range op.Addresses {
+				closingMainProc = !closingMainProc && (k == orth_types.InstructionProc && program.Operations[v].Operator.Operand == "main")
+			}
+
+			if procFound {
 				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionProc)))
 
 				if procAddress+2 > len(program.Operations) || program.Operations[procAddress+2].Instruction != orth_types.InstructionOut {
@@ -395,10 +400,12 @@ func compileMasm(program orth_types.Program, output *os.File) {
 					}
 				}
 				writer.WriteString("	invoke clear_proc_params\n")
+				if closingMainProc {
+					writer.WriteString("	invoke ExitProcess, 0\n")
+				}
 				writer.WriteString("	ret\n")
 				writer.WriteString(fmt.Sprint(program.Operations[procAddress].Operator.Operand, " ", "endp\n"))
-				continue
-			case whileFound:
+			} else if whileFound {
 				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
 				writer.WriteString(fmt.Sprintf("; Jump to %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
 				writer.WriteString(fmt.Sprintf("	jmp .L%d\n", whileAddress))

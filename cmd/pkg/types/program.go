@@ -141,7 +141,7 @@ func PPrintOperation(op Operation) string {
 		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
 	}
 	for k, v := range op.Addresses {
-		builder.WriteString(fmt.Sprintf("\n** %s: %d", InstructionToStr(k), v))
+		builder.WriteString(fmt.Sprintf("\n** %s: %d\n", InstructionToStr(k), v))
 	}
 	builder.WriteString("****************************************************\n")
 	return builder.String()

@@ -221,8 +221,8 @@ func (f *File[T]) UpdateCodeReference(codeBlock T) {
 	f.CodeBlock = codeBlock
 }
 
-// IsValidType checks whenever a variable has a know or unknow type
-func (o Operation) IsValidType() bool {
+// IsValidTypeOp checks whenever a variable has a know or unknow type
+func IsValidTypeOp(o *Operation) bool {
 	return GlobalTypes[TYPE][o.Operator.SymbolName] != "" ||
 		GlobalTypes[INTS][o.Operator.SymbolName] != "" ||
 		GlobalTypes[FLOATS][o.Operator.SymbolName] != "" ||
@@ -231,6 +231,18 @@ func (o Operation) IsValidType() bool {
 		GlobalTypes[VOID][o.Operator.SymbolName] != "" ||
 		GlobalTypes[RNT][o.Operator.SymbolName] != "" ||
 		GlobalTypes[MEM][o.Operator.SymbolName] != ""
+}
+
+// IsValidTypeSybl checks whenever a variable has a know or unknow type
+func IsValidTypeSybl(s string) bool {
+	return GlobalTypes[TYPE][s] != "" ||
+		GlobalTypes[INTS][s] != "" ||
+		GlobalTypes[FLOATS][s] != "" ||
+		GlobalTypes[STRING][s] != "" ||
+		GlobalTypes[BOOL][s] != "" ||
+		GlobalTypes[VOID][s] != "" ||
+		GlobalTypes[RNT][s] != "" ||
+		GlobalTypes[MEM][s] != ""
 }
 
 func (o Operand) GrabRootType() string {

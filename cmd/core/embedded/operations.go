@@ -587,39 +587,30 @@ func grabVariableDefinition(preProgram []orth_types.StringEnum, i int) (string, 
 		os.Exit(1)
 	}
 	// check if has a value
-	if preProgram[i+2].Content.Token != "=" {
-		switch {
-		// used as a func param is currently disabled
-		// case preProgram[i+2].Content.Token == "call":
-		// 	preProgram[i+1].Content.ValidPos = true
-		// 	ins := parseTokenWithContext(orth_types.PrimitiveConst, preProgram[i+1].Content.Token, context, orth_types.Push)
-		// 	program.Operations = append(program.Operations, ins)
-		// 	continue
-		default:
-			fmt.Fprintln(os.Stderr, "var must be initialized with `=` sign")
-			os.Exit(1)
-		}
+	if !orth_types.IsValidTypeSybl(preProgram[i+2].Content.Token) {
+		fmt.Fprintln(os.Stderr, "var/const must be initialized with a valid type")
+		os.Exit(1)
 	}
 
-	for x := 1; x < 5; x++ {
+	for x := 1; x < 4; x++ {
 		preProgram[i+x].Content.ValidPos = true
 	}
 
-	vName := preProgram[i+1].Content.Token
-	vType := preProgram[i+3].Content.Token
+	varName := preProgram[i+1].Content.Token
+	varType := preProgram[i+2].Content.Token
 
-	var vValue string
+	var varValue string
 
-	switch vType {
+	switch varType {
 	case orth_types.StdSTR:
 		fallthrough
 	case orth_types.RNGABL:
-		vValue = preProgram[i+4].Content.Token[1 : len(preProgram[i+4].Content.Token)-1]
+		varValue = preProgram[i+3].Content.Token[1 : len(preProgram[i+3].Content.Token)-1]
 	default:
-		vValue = preProgram[i+4].Content.Token
+		varValue = preProgram[i+3].Content.Token
 	}
 
-	return vValue, vType, vName
+	return varValue, varType, varName
 }
 
 // parseToken parses a single token into a instruction
