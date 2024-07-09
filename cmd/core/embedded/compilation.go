@@ -13,7 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"strconv"
+	"strings"
 )
 
 const MASM_MAX_8BIT_CHAR_PER_LINE float64 = 20.0
@@ -195,7 +195,6 @@ func compileMasm(program orth_types.Program, output *os.File) {
 		if op.Instruction == orth_types.Skip {
 			continue
 		}
-		// ignore vars so they are located on the data segment
 		switch op.Instruction {
 		case orth_types.InstructionPush:
 			writer.WriteString("; push\n")
@@ -352,11 +351,15 @@ func compileMasm(program orth_types.Program, output *os.File) {
 
 			lastProcMain = op.Operator.Operand == "main"
 		case orth_types.InstructionWith:
-			writer.WriteString("; With\n")
-			procParamsCount, err := strconv.Atoi(op.Operator.Operand)
-			if err != nil && op.Operator.Operand != "cli" {
-				panic(err)
+			procParamsCount := 0
+			for k := range op.Links {
+				if !strings.HasPrefix(k, "proc_param_") {
+					continue
+				}
+				procParamsCount++
 			}
+
+			writer.WriteString("; Params\n")
 
 			if lastProcMain && procParamsCount > 0 {
 				fmt.Println("[WARN] `with` instruction detected with more than 0 parameters for proc main, if you are trying to get command line arguments, proceed with `with cli` instead")
@@ -372,7 +375,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				writer.WriteString("	xor rax, rax\n")
 			} else {
 				for i := procParamsCount - 1; i >= 0; i-- {
-					writer.WriteString(fmt.Sprintf("push proc_arg_%d\n", i))
+					writer.WriteString(fmt.Sprintf("	push proc_arg_%d\n", i))
 				}
 			}
 		case orth_types.InstructionEnd:
@@ -389,11 +392,23 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			if procFound {
 				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionProc)))
 
-				if procAddress+2 > len(program.Operations) || program.Operations[procAddress+2].Instruction != orth_types.InstructionOut {
-					continue
+				outOpertaion := orth_types.Operation{}
+				for _, operation := range program.Operations[procAddress:] {
+					if operation.Instruction != orth_types.InstructionOut {
+						continue
+					}
+					outOpertaion = operation
+					break
 				}
-				outInstruction := program.Operations[procAddress+2]
-				outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
+
+				outAmount := 0
+				for k := range outOpertaion.Links {
+					if !strings.HasPrefix(k, "proc_out_param_") {
+						continue
+					}
+					outAmount++
+				}
+
 				if outAmount > 0 {
 					for i := outAmount - 1; i >= 0; i-- {
 						writer.WriteString(fmt.Sprintf("	pop proc_ret_%d\n", i))
@@ -414,31 +429,42 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			}
 		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
-			procSignature := program.Filter(func(fop orth_types.Operation, i int) bool {
-				if i >= len(program.Operations) {
-					return false
+
+			var callingProcedureArgumentsCount int
+			var callingProcedureOutParamsCount int
+			var callingProcedureIndex int
+			for i, operation := range program.Operations {
+				if operation.Operator.Operand == op.Operator.Operand && operation.Instruction == orth_types.InstructionProc {
+					callingProcedureIndex = i
+					break
 				}
-				isProc := fop.Instruction == orth_types.InstructionProc && op.Operator.Operand == fop.Operator.Operand
-				hasWith := isProc && program.Operations[i+1].Instruction == orth_types.InstructionWith
-				return hasWith
-			})
-			if len(procSignature) != 1 {
-				errStr := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_07, "A procedure must especify the number of arguments taken. Did you mean `with 0`?")
-				panic(errStr)
 			}
-			withInst := program.Operations[procSignature[0].Left+1]
-			withAmount, err := strconv.Atoi(withInst.Operator.Operand)
-			if err != nil {
-				panic(err)
+
+			for _, operation := range program.Operations[callingProcedureIndex:] {
+				if operation.Instruction == orth_types.InstructionWith {
+					for k := range operation.Links {
+						if !strings.HasPrefix(k, "proc_param_") {
+							continue
+						}
+						callingProcedureArgumentsCount++
+					}
+				}
+				if operation.Instruction == orth_types.InstructionOut {
+					for k := range operation.Links {
+						if !strings.HasPrefix(k, "proc_out_param_") {
+							continue
+						}
+						callingProcedureOutParamsCount++
+					}
+				}
 			}
-			for i := 0; i < withAmount; i++ {
+
+			for i := 0; i < callingProcedureArgumentsCount; i++ {
 				writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
 			}
-			writer.WriteString("	invoke " + op.Operator.Operand + "\n")
+			writer.WriteString(fmt.Sprintf("	invoke %s\n", op.Operator.Operand))
 
-			outInstruction := program.Operations[procSignature[0].Left+2]
-			outAmount, _ := strconv.Atoi(outInstruction.Operator.Operand)
-			for i := 0; i < outAmount; i++ {
+			for i := 0; i < callingProcedureOutParamsCount; i++ {
 				writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
 			}
 

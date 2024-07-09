@@ -1,4 +1,3 @@
-proc main with 0 out 0 in
-    var numero i8 10
-    hold numero deref putui
+proc main in
+    
 end

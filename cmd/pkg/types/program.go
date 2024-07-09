@@ -1,10 +1,5 @@
 package orth_types
 
-import (
-	"fmt"
-	"strings"
-)
-
 const (
 	MAX_PROC_PARAM_COUNT  = 32
 	MAX_PROC_OUTPUT_COUNT = 32
@@ -48,6 +43,7 @@ const (
 	InstructionHold
 	InstructionNop
 	InstructionProc
+	InstructionParam
 	InstructionIn
 	InstructionInvoke
 	FunctionDumpMem
@@ -115,8 +111,9 @@ func init() {
 		InstructionLOr:      "LOr",
 		InstructionOver:     "Over",
 		InstructionExit:     "Exit",
-		InstructionWith:     "With",
-		InstructionOut:      "Out",
+		InstructionParam:    "Param",
+		InstructionWith:     ":",
+		InstructionOut:      "--",
 		InstructionDeref:    "Deref",
 		FunctionPutU64:      "PutU64",
 		FunctionPutString:   "PutString",
@@ -131,20 +128,6 @@ func init() {
 	if len(instructionNames) != int(TotalOps)-1 {
 		panic("[DEV] Missing instruction on name map")
 	}
-}
-
-func PPrintOperation(op Operation) string {
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s\n", InstructionToStr(op.Instruction)))
-	builder.WriteString(fmt.Sprintf("	operand: %s | symbolName%q\n", op.Operator.Operand, op.Operator.SymbolName))
-	for k, v := range op.Links {
-		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
-	}
-	for k, v := range op.Addresses {
-		builder.WriteString(fmt.Sprintf("\n** %s: %d\n", InstructionToStr(k), v))
-	}
-	builder.WriteString("****************************************************\n")
-	return builder.String()
 }
 
 func InstructionToStr(inst Instruction) string {

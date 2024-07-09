@@ -28,46 +28,47 @@ const (
 
 // keywords
 const (
-	StdPlus        = "+"
-	StdMinus       = "-"
-	StdMult        = "*"
-	StdDiv         = "/"
-	StdEquals      = "=="
-	StdNotEquals   = "<>"
-	StdLowerThan   = "<"
-	StdGreaterThan = ">"
-	StdMod         = "%"
-	StdEND         = "end"
-	StdVOID        = "void"
-	StdRNT         = "rnt"
-	StdMem         = "mem"
-	StdType        = "type"
-	StdConst       = "const"
-	StdVar         = "var"
-	StdHold        = "hold"
-	StdProc        = "proc"
-	StdIn          = "in"
-	StdIf          = "if"
-	StdElse        = "else"
-	StdOver        = "over"
-	Std2Dup        = "2dup"
-	StdDup         = "dup"
-	StdWhile       = "while"
-	StdLeftShift   = "lshift"
-	StdRightShift  = "rshift"
-	StdLogicalAnd  = "land"
-	StdLogicalOr   = "lor"
-	StdDo          = "do"
-	StdDrop        = "drop"
-	StdSwap        = "swap"
-	StdStore       = "."
-	StdLoad        = ","
-	StdCall        = "call"
-	StdLoadAndStay = ",!"
-	StdInvoke      = "invoke"
-	StdOut         = "out"
-	StdWith        = "with"
-	StdBitwise     = "bitwise"
+	StdPlus          = "+"
+	StdMinus         = "-"
+	StdMult          = "*"
+	StdDiv           = "/"
+	StdEquals        = "=="
+	StdNotEquals     = "<>"
+	StdLowerThan     = "<"
+	StdGreaterThan   = ">"
+	StdMod           = "%"
+	StdEND           = "end"
+	StdVOID          = "void"
+	StdRNT           = "rnt"
+	StdParam         = "param"
+	StdMem           = "mem"
+	StdType          = "type"
+	StdConst         = "const"
+	StdVar           = "var"
+	StdHold          = "hold"
+	StdProc          = "proc"
+	StdIn            = "in"
+	StdIf            = "if"
+	StdElse          = "else"
+	StdOver          = "over"
+	Std2Dup          = "2dup"
+	StdDup           = "dup"
+	StdWhile         = "while"
+	StdLeftShift     = "lshift"
+	StdRightShift    = "rshift"
+	StdLogicalAnd    = "land"
+	StdLogicalOr     = "lor"
+	StdDo            = "do"
+	StdDrop          = "drop"
+	StdSwap          = "swap"
+	StdStore         = "."
+	StdLoad          = ","
+	StdCall          = "call"
+	StdLoadAndStay   = ",!"
+	StdInvoke        = "invoke"
+	StdProcOutParams = "--"
+	StdProcInParams  = ":"
+	StdBitwise       = "bitwise"
 )
 
 // builtin functions/symbols
@@ -243,6 +244,21 @@ func IsValidTypeSybl(s string) bool {
 		GlobalTypes[VOID][s] != "" ||
 		GlobalTypes[RNT][s] != "" ||
 		GlobalTypes[MEM][s] != ""
+}
+
+func GrabType(o string) string {
+	switch {
+	case GlobalTypes[INTS][o] != INVALIDTYPE:
+		return GlobalTypes[INTS][o]
+	case GlobalTypes[STRING][o] != INVALIDTYPE:
+		return GlobalTypes[STRING][o]
+	case GlobalTypes[FLOATS][o] != INVALIDTYPE:
+		return GlobalTypes[FLOATS][o]
+	case GlobalTypes[RNT][o] != INVALIDTYPE:
+		return GlobalTypes[RNT][o]
+	default:
+		return ""
+	}
 }
 
 func (o Operand) GrabRootType() string {

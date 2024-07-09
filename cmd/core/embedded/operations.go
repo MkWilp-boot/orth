@@ -7,7 +7,6 @@ import (
 	orth_types "orth/cmd/pkg/types"
 	"os"
 	"regexp"
-	"strconv"
 )
 
 // CrossReferenceBlocks loops over a program and define all inter references
@@ -473,66 +472,70 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 					Left:  ins,
 					Right: nil,
 				}
-			case orth_types.StdOut:
-				preProgram[i+1].Content.ValidPos = true
-				amountStr := preProgram[i+1].Content.Token
-
-				amount, err := strconv.Atoi(amountStr)
-				if err != nil {
-					errStr := orth_debug.BuildErrorMessage(
-						orth_debug.ORTH_ERR_05,
-						"out",
-						"i~",
-						amountStr,
-						file.Name, v.Index, v.Content.Index,
-					)
-					panic(errStr)
+			case orth_types.StdProcOutParams:
+				procOutTypeParams := make([]string, 0)
+				for offset := 1; offset < len(preProgram) &&
+					(preProgram[i+offset].Content.Token != orth_types.StdIn && preProgram[i+offset].Content.Token != orth_types.StdProcOutParams); offset++ {
+					if !orth_types.IsValidTypeSybl(preProgram[i+offset].Content.Token) {
+						err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_12, preProgram[i+offset].Content.Token, "Used as proc out param", file.Name, v.Index, v.Content.Index)
+						fmt.Fprintln(os.Stderr, err)
+						os.Exit(1)
+					}
+					preProgram[i+offset].Content.ValidPos = true
+					procOutTypeParams = append(procOutTypeParams, orth_types.GrabType(preProgram[i+offset].Content.Token))
+				}
+				if len(procOutTypeParams) <= 0 {
+					err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_14, orth_types.StdProcOutParams, ">= 1", len(procOutTypeParams), file.Name, v.Index, v.Content.Index)
+					fmt.Fprint(os.Stderr, err)
+					os.Exit(1)
+				}
+				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionOut)
+				for i, param := range procOutTypeParams {
+					ins.Links[fmt.Sprintf("proc_out_param_%d", i)] = orth_types.Operation{
+						Instruction: orth_types.InstructionParam,
+						Context:     context,
+						Operator: orth_types.Operand{
+							SymbolName: orth_types.StdParam,
+							Operand:    param,
+						},
+					}
 				}
 
-				if amount > orth_types.MAX_PROC_OUTPUT_COUNT {
-					errStr := orth_debug.BuildErrorMessage(
-						orth_debug.ORTH_ERR_06,
-						orth_types.MAX_PROC_OUTPUT_COUNT,
-						amount,
-						file.Name, v.Index, v.Content.Index,
-					)
-					panic(errStr)
-				}
-
-				ins := parseToken(orth_types.StdRNT, amountStr, context, orth_types.InstructionOut)
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  ins,
 					Right: nil,
 				}
-			case orth_types.StdWith:
-				preProgram[i+1].Content.ValidPos = true
-				amountStr := preProgram[i+1].Content.Token
-
-				if amountStr != "cli" {
-					amount, err := strconv.Atoi(amountStr)
-					if err != nil {
-						errStr := orth_debug.BuildErrorMessage(
-							orth_debug.ORTH_ERR_05,
-							"with",
-							"i~ | cli",
-							amountStr,
-							file.Name, v.Index, v.Content.Index,
-						)
-						panic(errStr)
+			case orth_types.StdProcInParams:
+				procTypeParams := make([]string, 0)
+				for offset := 1; offset < len(preProgram) &&
+					(preProgram[i+offset].Content.Token != orth_types.StdIn && preProgram[i+offset].Content.Token != orth_types.StdProcOutParams); offset++ {
+					if !orth_types.IsValidTypeSybl(preProgram[i+offset].Content.Token) {
+						err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_12, preProgram[i+offset].Content.Token, "Used as proc param", file.Name, v.Index, v.Content.Index)
+						fmt.Fprint(os.Stderr, err)
+						os.Exit(1)
 					}
+					preProgram[i+offset].Content.ValidPos = true
+					procTypeParams = append(procTypeParams, orth_types.GrabType(preProgram[i+offset].Content.Token))
+				}
 
-					if amount > orth_types.MAX_PROC_PARAM_COUNT {
-						errStr := orth_debug.BuildErrorMessage(
-							orth_debug.ORTH_ERR_06,
-							orth_types.MAX_PROC_PARAM_COUNT,
-							amount,
-							file.Name, v.Index, v.Content.Index,
-						)
-						panic(errStr)
+				if len(procTypeParams) <= 0 {
+					err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_14, orth_types.StdProcInParams, ">= 1", len(procTypeParams), file.Name, v.Index, v.Content.Index)
+					fmt.Fprint(os.Stderr, err)
+					os.Exit(1)
+				}
+
+				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionWith)
+				for i, param := range procTypeParams {
+					ins.Links[fmt.Sprintf("proc_param_%d", i)] = orth_types.Operation{
+						Instruction: orth_types.InstructionParam,
+						Context:     context,
+						Operator: orth_types.Operand{
+							SymbolName: orth_types.StdParam,
+							Operand:    param,
+						},
 					}
 				}
 
-				ins := parseToken(orth_types.StdRNT, amountStr, context, orth_types.InstructionWith)
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  ins,
 					Right: nil,
@@ -623,5 +626,6 @@ func parseToken(varType, operand string, context *orth_types.Context, op orth_ty
 		},
 		Context:   context,
 		Addresses: make(map[orth_types.Instruction]int),
+		Links:     make(map[string]orth_types.Operation),
 	}
 }

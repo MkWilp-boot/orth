@@ -34,6 +34,9 @@ const (
 	ORTH_ERR_09 = "[ERROR] Stack underflow!. Instruction %q requires values that are not part of the stack!\n"
 	ORTH_ERR_10 = "[ERROR] The instruction of type %q requires a parameter of type %q, but found %q\n"
 	ORTH_ERR_11 = "[ERROR] Variable %q is undefined for instruction %q\n"
+	ORTH_ERR_12 = "[ERROR] Invalid type %q %s" + commomFileSpecificationStruct
+	ORTH_ERR_13 = "[ERROR] Incorrect number of arguments for instruction %q, required '%d' and got '%d' " + commomFileSpecificationStruct
+	ORTH_ERR_14 = "[ERROR] Incorrect number of arguments for instruction %q, required '%s' and got '%d' " + commomFileSpecificationStruct
 )
 
 const (
