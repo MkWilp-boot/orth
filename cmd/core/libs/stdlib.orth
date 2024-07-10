@@ -1,3 +1,0 @@
-proc simple_proc with 0 out 2 in
-    i 69 i 420
-end

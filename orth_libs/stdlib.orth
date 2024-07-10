@@ -1,0 +1,3 @@
+proc simple_proc -- i in
+    i 800
+end

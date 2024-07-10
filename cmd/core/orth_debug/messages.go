@@ -37,6 +37,7 @@ const (
 	ORTH_ERR_12 = "[ERROR] Invalid type %q %s" + commomFileSpecificationStruct
 	ORTH_ERR_13 = "[ERROR] Incorrect number of arguments for instruction %q, required '%d' and got '%d' " + commomFileSpecificationStruct
 	ORTH_ERR_14 = "[ERROR] Incorrect number of arguments for instruction %q, required '%s' and got '%d' " + commomFileSpecificationStruct
+	ORTH_ERR_15 = "[ERROR] Could not find include file %q on paths"
 )
 
 const (

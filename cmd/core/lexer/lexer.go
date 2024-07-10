@@ -2,10 +2,12 @@ package lexer
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
-	"log"
+	"orth/cmd/core/orth_debug"
 	orth_types "orth/cmd/pkg/types"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -22,23 +24,38 @@ func ppDefineDirective(line string) (string, string) {
 	return strings.TrimSpace(name), strings.TrimSpace(value)
 }
 
-func preProccessFile(path string, parsedFiles chan orth_types.File[string]) {
-	file, err := os.Open(path)
-	if err != nil {
-		log.Printf("%q | %v\n", path, err)
+func preProccessFile(includeFile string, parsedFiles chan orth_types.File[string]) {
+	file, _ := os.Open(includeFile)
+	// looks up for a file with same name on the include paths provided by the programmer
+	if file == nil && *orth_debug.I != "" {
+		paths := strings.Split(*orth_debug.I, ",")
+		for i := 0; i < len(paths); i++ {
+			paths[i] = strings.Trim(paths[i], " ")
+			paths[i] = path.Join(paths[i], includeFile)
+
+			if _, err := os.Stat(paths[i]); errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			file, _ = os.Open(paths[i])
+		}
 	}
+	if file == nil {
+		fmt.Fprint(os.Stderr, orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_15, includeFile))
+		os.Exit(1)
+	}
+
 	defer file.Close()
 
 	var rawFile string
-	oFile := orth_types.File[string]{
-		Name:      path,
+	source := orth_types.File[string]{
+		Name:      includeFile,
 		CodeBlock: rawFile,
 	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		rawFile = fmt.Sprintf("%s %s", rawFile, line)
-		oFile.UpdateCodeReference(rawFile)
+		source.UpdateCodeReference(rawFile)
 
 		if len(line) <= 0 || !strings.HasPrefix(line, "@") {
 			continue
@@ -55,7 +72,7 @@ func preProccessFile(path string, parsedFiles chan orth_types.File[string]) {
 			rawFile = strings.Replace(rawFile, fmt.Sprintf("@define %s %s", name, value), "", -1)
 			rawFile = strings.ReplaceAll(rawFile, name, value)
 
-			oFile.UpdateCodeReference(rawFile)
+			source.UpdateCodeReference(rawFile)
 		case "include":
 			includeFile := ""
 			for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
@@ -65,7 +82,7 @@ func preProccessFile(path string, parsedFiles chan orth_types.File[string]) {
 			includeFile = strings.TrimSpace(includeFile)
 
 			rawFile = strings.Replace(rawFile, fmt.Sprintf(`@include "%s"`, includeFile), "", -1)
-			oFile.UpdateCodeReference(rawFile)
+			source.UpdateCodeReference(rawFile)
 
 			filesToParse := make(chan orth_types.File[string])
 
@@ -80,7 +97,7 @@ func preProccessFile(path string, parsedFiles chan orth_types.File[string]) {
 		}
 	}
 
-	parsedFiles <- oFile
+	parsedFiles <- source
 
 	close(parsedFiles)
 }

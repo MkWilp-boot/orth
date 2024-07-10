@@ -1,3 +1,6 @@
+@include "stdlib.orth"
+
 proc main in
-    
+    call simple_proc
+    putui
 end
