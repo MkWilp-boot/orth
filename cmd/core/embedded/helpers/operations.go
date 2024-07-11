@@ -44,10 +44,14 @@ func HandleOperationEnd(stack *[]RefStackItem, program *orth_types.Program, curr
 	switch lastStackItem.Instruction {
 	case orth_types.InstructionIf:
 		ifOperation := lastStackItem
+
 		program.Operations[ifOperation.AbsPosition].Addresses[orth_types.InstructionEnd] = int(currentOperationIndex)
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionIf] = int(ifOperation.AbsPosition)
 	case orth_types.InstructionElse:
 		elseOperation := lastStackItem
+
 		program.Operations[elseOperation.AbsPosition].Addresses[orth_types.InstructionEnd] = int(currentOperationIndex)
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionElse] = int(elseOperation.AbsPosition)
 	case orth_types.InstructionProc:
 		procOperation := lastStackItem
 		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionProc] = int(procOperation.AbsPosition)
@@ -64,13 +68,14 @@ func HandleOperationElse(stack *[]RefStackItem, program *orth_types.Program, ope
 	lastStackItem := PopLast(stack)
 	switch lastStackItem.Instruction {
 	case orth_types.InstructionIf:
-		program.Operations[lastStackItem.AbsPosition].Addresses[orth_types.InstructionElse] = int(operationIndex)
+		ifOperation := lastStackItem
+		program.Operations[ifOperation.AbsPosition].Addresses[orth_types.InstructionElse] = int(operationIndex)
 	}
 }
 
 func GetVariableContext(variable orth_types.ContextDeclaration, context *orth_types.Context) (string, error) {
 	if context == nil {
-		return "", errors.New(fmt.Sprintf("undefined variable at abs location: %d for context %s", variable.Index, context.Name))
+		return "", fmt.Errorf("undefined variable at abs location: %d", variable.Index)
 	}
 	for _, declaration := range context.Declarations {
 		if declaration.Name == variable.Name {

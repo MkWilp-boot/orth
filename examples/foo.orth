@@ -1,6 +1,7 @@
-@include "stdlib.orth"
-
 proc main in
-    call simple_proc
-    putui
+    i8 0 i8 1 == if
+        s "sim\n" puts
+    else
+        s "nao\n" puts
+    end
 end

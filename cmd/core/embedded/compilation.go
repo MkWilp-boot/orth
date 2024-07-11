@@ -312,6 +312,8 @@ func compileMasm(program orth_types.Program, output *os.File) {
 
 			writer.WriteString(fmt.Sprintf("	jz .L%d\n", indexToJump))
 		case orth_types.InstructionElse:
+			endPosition := op.Addresses[orth_types.InstructionEnd]
+			writer.WriteString(fmt.Sprintf("	jmp .L%d\n", endPosition))
 			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			writer.WriteString("; Else\n")
 		case orth_types.InstructionProc:
@@ -382,6 +384,8 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
 			procAddress, procFound := op.Addresses[orth_types.InstructionProc]
 			whileAddress, whileFound := op.Addresses[orth_types.InstructionWhile]
+			_, elseFound := op.Addresses[orth_types.InstructionElse]
+			_, ifFound := op.Addresses[orth_types.InstructionIf]
 
 			closingMainProc := false
 
@@ -426,6 +430,10 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				writer.WriteString(fmt.Sprintf("	jmp .L%d\n", whileAddress))
 				// post-instruction label
 				writer.WriteString(fmt.Sprintf(".LA%d:\n", ip))
+			} else if elseFound {
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionElse)))
+			} else if ifFound {
+				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionIf)))
 			}
 		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
