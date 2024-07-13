@@ -320,21 +320,21 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
 
-			procLocalVariables := make([]struct{ Initializer, Decl, Type string }, len(op.Context.Declarations))
+			variables, _ := op.Context.GetNestedVariables(&program)
 
-			for ctxDeclI, ctxDecl := range op.Context.Declarations {
-				scopeVariable := program.Operations[ctxDecl.Index]
-				programDecl := scopeVariable.Links["variable_value"]
+			procLocalVariables := make([]struct{ Initializer, Decl, Type string }, len(variables))
+			for varAbsPosition, scopeVariable := range variables {
+				variableRawValue := scopeVariable.Links["variable_value"]
 
-				varType := embedded_helpers.VarTypeToLocalAsmType(programDecl.Operator)
-				varName := scopeVariable.Operator.Operand
+				varType := embedded_helpers.VarTypeToLocalAsmType(variableRawValue.Operator)
+				varName := embedded_helpers.MangleVarName(scopeVariable)
 
-				procLocalVariables[ctxDeclI] = struct {
+				procLocalVariables[varAbsPosition] = struct {
 					Initializer, Decl, Type string
 				}{
 					Type:        varType,
 					Decl:        fmt.Sprintf("	LOCAL %s :%s\n", varName, varType),
-					Initializer: fmt.Sprintf("	mov %s, %s\n", varName, programDecl.Operator.Operand),
+					Initializer: fmt.Sprintf("	mov %s, %s\n", varName, variableRawValue.Operator.Operand),
 				}
 			}
 
@@ -524,7 +524,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			// priority for local variables, since Hold instruction can't point to more than one symbol
 			if holdingVariable, ok := op.Links["hold_local"]; ok {
 				writer.WriteString("; Hold local\n")
-				writer.WriteString("	lea rax, " + holdingVariable.Operator.Operand + "\n")
+				writer.WriteString("	lea rax, " + embedded_helpers.MangleVarName(holdingVariable) + "\n")
 				writer.WriteString("	push rax\n")
 			} else {
 				holdingVariable := op.Links["hold_mult"]

@@ -27,7 +27,11 @@ func CrossReferenceBlocks(program orth_types.Program) (orth_types.Program, error
 		case orth_types.InstructionHold:
 			variable, err := operation.Context.GetVaraible(operation.Operator.Operand, &program)
 			if err != nil {
-				panic(err)
+				fmt.Fprint(os.Stderr, orth_debug.BuildErrorMessage(
+					orth_debug.ORTH_ERR_04,
+					orth_types.InstructionToStr(orth_types.InstructionHold),
+					err))
+				os.Exit(1)
 			}
 			if program.Operations[operationIndex].Links == nil {
 				program.Operations[operationIndex].Links = make(map[string]orth_types.Operation)
@@ -71,11 +75,11 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 	procNames := make(map[string]int)
 
 	context := &orth_types.Context{
-		Name:         embedded_helpers.MainScope,
-		Order:        0,
-		Parent:       nil,
-		Declarations: make([]orth_types.ContextDeclaration, 0),
-		InnerContext: make([]*orth_types.Context, 0),
+		Name:          embedded_helpers.MainScope,
+		Order:         0,
+		Parent:        nil,
+		Declarations:  make([]orth_types.ContextDeclaration, 0),
+		InnerContexts: make([]*orth_types.Context, 0),
 	}
 
 	var globalInstructionIndex uint = 0
@@ -175,13 +179,13 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				}
 			case orth_types.StdIf:
 				newContext := orth_types.Context{
-					Name:         fmt.Sprintf("c?_if_%d$", len(context.InnerContext)),
-					Parent:       context,
-					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]orth_types.ContextDeclaration, 0),
-					InnerContext: make([]*orth_types.Context, 0),
+					Name:          fmt.Sprintf("c?_if_%d$", len(context.InnerContexts)),
+					Parent:        context,
+					Order:         uint(len(context.InnerContexts)),
+					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					InnerContexts: make([]*orth_types.Context, 0),
 				}
-				context.InnerContext = append(context.InnerContext, &newContext)
+				context.InnerContexts = append(context.InnerContexts, &newContext)
 				context = &newContext
 
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionIf)
@@ -191,16 +195,18 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				}
 			case orth_types.StdElse:
 				// context is an "if" block that must not have a "else" block as a child, they should be siblings
-				// so no appending to context.InnerContext due to this restriction
+				// so append to context.Parent.InnerContext
 				newContext := orth_types.Context{
-					Name:         fmt.Sprintf("c?_else_%d$", len(context.InnerContext)),
-					Parent:       context.Parent, // else is not a child of "if"
-					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]orth_types.ContextDeclaration, 0),
-					InnerContext: make([]*orth_types.Context, 0),
+					Name:          fmt.Sprintf("c?_else_%d$", len(context.InnerContexts)),
+					Parent:        context.Parent, // else is not a child of "if"
+					Order:         uint(len(context.InnerContexts)),
+					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					InnerContexts: make([]*orth_types.Context, 0),
 				}
 
+				context.Parent.InnerContexts = append(context.Parent.InnerContexts, &newContext)
 				context = &newContext
+
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionElse)
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  ins,
@@ -284,13 +290,13 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				}
 
 				newContext := orth_types.Context{
-					Name:         fmt.Sprintf("c?_proc_%s_%d$", pName, len(context.InnerContext)),
-					Parent:       context,
-					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]orth_types.ContextDeclaration, 0),
-					InnerContext: make([]*orth_types.Context, 0),
+					Name:          fmt.Sprintf("c?_proc_%s_%d$", pName, len(context.InnerContexts)),
+					Parent:        context,
+					Order:         uint(len(context.InnerContexts)),
+					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					InnerContexts: make([]*orth_types.Context, 0),
 				}
-				context.InnerContext = append(context.InnerContext, &newContext)
+				context.InnerContexts = append(context.InnerContexts, &newContext)
 				context = &newContext
 
 				ins := parseToken(orth_types.StdProc, pName, context, orth_types.InstructionProc)
@@ -306,13 +312,13 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				}
 			case orth_types.StdDo:
 				newContext := orth_types.Context{
-					Name:         fmt.Sprintf("c?_do_%d$", len(context.InnerContext)),
-					Parent:       context,
-					Order:        uint(len(context.InnerContext)),
-					Declarations: make([]orth_types.ContextDeclaration, 0),
-					InnerContext: make([]*orth_types.Context, 0),
+					Name:          fmt.Sprintf("c?_do_%d$", len(context.InnerContexts)),
+					Parent:        context,
+					Order:         uint(len(context.InnerContexts)),
+					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					InnerContexts: make([]*orth_types.Context, 0),
 				}
-				context.InnerContext = append(context.InnerContext, &newContext)
+				context.InnerContexts = append(context.InnerContexts, &newContext)
 				context = &newContext
 
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionDo)

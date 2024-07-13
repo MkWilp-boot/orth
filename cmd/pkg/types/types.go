@@ -106,11 +106,11 @@ type ContextDeclaration struct {
 }
 
 type Context struct {
-	Name         string
-	Order        uint
-	Parent       *Context
-	Declarations []ContextDeclaration
-	InnerContext []*Context
+	Name          string
+	Order         uint
+	Parent        *Context
+	Declarations  []ContextDeclaration
+	InnerContexts []*Context
 }
 
 type Pair[T1, T2 any] struct {
@@ -197,7 +197,25 @@ func (ctx *Context) GetVaraible(variable string, program *Program) (*Operation, 
 		}
 		ctx = ctx.Parent
 	}
-	return nil, errors.New("variable not found")
+	return nil, errors.New("could not find variable, it's either out of scope or was not declared")
+}
+
+func (ctx *Context) GetNestedVariables(program *Program) ([]Operation, error) {
+	if ctx == nil {
+		return nil, errors.New("nil context")
+	}
+	variables := make([]Operation, 0, len(ctx.Declarations))
+	for _, variable := range ctx.Declarations {
+		variables = append(variables, program.Operations[variable.Index])
+	}
+	for _, innerContext := range ctx.InnerContexts {
+		nestedVariables, err := innerContext.GetNestedVariables(program)
+		// unlikely to have an "inner context" set to nil, but let's be safe...
+		if err == nil {
+			variables = append(variables, nestedVariables...)
+		}
+	}
+	return variables, nil
 }
 
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {

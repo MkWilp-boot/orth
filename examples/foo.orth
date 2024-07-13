@@ -1,7 +1,9 @@
 proc main in
     i8 0 i8 1 == if
-        s "sim\n" puts
+        var a i 10
+        hold a deref putui
     else
-        s "nao\n" puts
+        var a i 20
+        hold a deref putui
     end
 end

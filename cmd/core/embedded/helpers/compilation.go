@@ -141,7 +141,6 @@ func VarValueToAsmSyntax(operand orth_types.Operand, endWithNullByte bool) strin
 
 func MangleVarName(o orth_types.Operation) string {
 	var memType string
-
 	if o.Instruction == orth_types.InstructionVar || o.Operator.SymbolName == orth_types.StdVar {
 		memType = "Var"
 	} else if o.Instruction == orth_types.InstructionConst || o.Operator.SymbolName == orth_types.StdConst {

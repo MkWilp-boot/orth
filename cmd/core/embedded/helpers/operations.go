@@ -86,28 +86,7 @@ func GetVariableContext(variable orth_types.ContextDeclaration, context *orth_ty
 }
 
 func LinkVariableToValue(operation orth_types.Operation, analyzerOperations *[]orth_types.Operation, program *orth_types.Program) orth_types.Operation {
-	// if operation.Instruction == orth_types.Var {
-	// 	// set to skip so the value won't be on the final asm
-	// 	(*analyzerOperations)[len(*analyzerOperations)-1].Instruction = orth_types.Skip
-	// 	// set to len - 1 because the last element will always be the var value
-	// 	operation.RefBlock = len(*analyzerOperations) - 1
-	// 	program.Variables = append(program.Variables, operation)
-	// } else if operation.Instruction == orth_types.Const {
-	// 	// set to skip so the value won't be on the final asm
-	// 	(*analyzerOperations)[len(*analyzerOperations)-1].Instruction = orth_types.Skip
-	// 	// set to len - 1 because the last element will always be the var value
-	// 	operation.RefBlock = len(*analyzerOperations) - 1
-	// 	program.Constants = append(program.Constants, operation)
-	// } else {
-	// 	if operation.Instruction == orth_types.Hold {
-	// 		operationType, err := OperationIsVariableLike(operation, program)
-	// 		if err != nil {
-	// 			program.Error = append(program.Error, err)
-	// 			return orth_types.Operation{}
-	// 		}
-	// 		operation.Operator.SymbolName = operationType
-	// 	}
-	// }
+	// I'll think about this later
 	return operation
 }
 
