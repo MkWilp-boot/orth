@@ -1,9 +1,5 @@
 proc main in
-    i8 0 i8 1 == if
-        var a i 10
-        hold a deref putui
-    else
-        var a i 20
-        hold a deref putui
-    end
+    const i i32 100
+
+    hold i deref
 end

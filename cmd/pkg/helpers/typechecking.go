@@ -1,11 +1,21 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"orth/cmd/core/orth_debug"
 	orth_types "orth/cmd/pkg/types"
 	"strconv"
 )
+
+func IsNumeric(t string) bool {
+	return IsInt(t) || IsFloat(t)
+}
+
+func ToAddress(op orth_types.Operand) (int, bool) {
+	address, err := strconv.Atoi(op.Operand)
+	return address, IsInt(op.SymbolName) && err == nil
+}
 
 func IsInt(t string) bool {
 	_, ok := orth_types.GlobalTypes[orth_types.INTS][t]
@@ -26,10 +36,32 @@ func IsString(t string) bool {
 
 // SameBaseType checks if the 2 variables have the same base type.
 // Ex: INT-INT, FLOAT-FLOAT, STRING-INT
-func SameBaseType(operands ...orth_types.Operand) {
-	if operands[0].GrabRootType() != operands[1].GrabRootType() {
-		panic(fmt.Errorf("mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].SymbolName, operands[1].Operand, operands[1].SymbolName))
+func SameBaseType(operands ...orth_types.Operand) error {
+	if len(operands) == 0 {
+		return errors.New("no operands to loop")
 	}
+	baseOperand := operands[0]
+	for _, operand := range operands {
+		if operand.Operand != baseOperand.Operand {
+			return fmt.Errorf("mismatch types %q and %q", baseOperand.Operand, operand.Operand)
+		}
+	}
+
+	return nil
+}
+
+func OperatingOnEqualTypes(operations ...orth_types.Operation) error {
+	if len(operations) == 0 {
+		return errors.New("no operands to loop")
+	}
+	baseOperand := operations[0]
+	for _, operand := range operations {
+		if operand.Operator.SymbolName != baseOperand.Operator.SymbolName {
+			return fmt.Errorf("mismatch types %q and %q", baseOperand.Operator.SymbolName, operand.Operator.SymbolName)
+		}
+	}
+
+	return nil
 }
 
 // ===================================

@@ -36,6 +36,9 @@ func CrossReferenceBlocks(program orth_types.Program) (orth_types.Program, error
 			if program.Operations[operationIndex].Links == nil {
 				program.Operations[operationIndex].Links = make(map[string]orth_types.Operation)
 			}
+
+			program.Operations[operationIndex].Addresses[variable.Instruction] = operationIndex
+
 			if variable.Context.Name == embedded_helpers.MainScope {
 				program.Operations[operationIndex].Links["hold_mult"] = *variable
 			} else {
@@ -108,6 +111,8 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 			case orth_types.StdF32:
 				fallthrough
 			case orth_types.StdF64:
+				fallthrough
+			case orth_types.StdAddress:
 				fallthrough
 			case orth_types.StdBOOL:
 				preProgram[i+1].Content.ValidPos = true
@@ -345,7 +350,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 					Right: nil,
 				}
 			case orth_types.StdMem:
-				ins := parseToken(orth_types.StdMem, orth_types.StdMem, context, orth_types.InstructionMem)
+				ins := parseToken(orth_types.StdAddress, "0", context, orth_types.InstructionMem)
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  ins,
 					Right: nil,
@@ -442,18 +447,19 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 					Left:  ins,
 					Right: nil,
 				}
-			case orth_types.StdSetNumber:
-				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionSetNumber)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
-				}
-			case orth_types.StdSetStr:
-				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionSetString)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
-				}
+			// I hate this
+			// case orth_types.StdSetNumber:
+			// 	ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionSetNumber)
+			// 	parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
+			// 		Left:  ins,
+			// 		Right: nil,
+			// 	}
+			// case orth_types.StdSetStr:
+			// 	ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionSetString)
+			// 	parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
+			// 		Left:  ins,
+			// 		Right: nil,
+			// 	}
 			case orth_types.StdHold:
 				preProgram[i+1].Content.ValidPos = true
 				vName := preProgram[i+1].Content.Token

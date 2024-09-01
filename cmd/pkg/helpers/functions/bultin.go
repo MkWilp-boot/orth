@@ -90,7 +90,7 @@ func init() {
 	}
 
 	Functions["exit"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
-		code := helpers.StackPop(&*stack)
+		code := helpers.StackPop(stack)
 		if helpers.IsInt(code.SymbolName) {
 			log.Println("Progam exited with code:", code.Operand)
 			os.Exit(helpers.ToInt(code))
@@ -99,8 +99,8 @@ func init() {
 	}
 
 	Functions["fill"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
-		value := helpers.StackPop(&*stack)
-		rangeable := helpers.StackPop(&*stack)
+		value := helpers.StackPop(stack)
+		rangeable := helpers.StackPop(stack)
 
 		if rangeable.SymbolName != orth_types.RNGABL {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.SymbolName, "fill"))
@@ -116,7 +116,7 @@ func init() {
 	}
 
 	Functions["index"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
-		rangeable := helpers.StackPop(&*stack)
+		rangeable := helpers.StackPop(stack)
 		if rangeable.SymbolName != orth_types.RNGABL {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, rangeable.SymbolName, "index"))
 		}
@@ -131,8 +131,8 @@ func init() {
 	}
 
 	Functions["grab_at"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
-		o1 := helpers.StackPop(&*stack)
-		o2 := helpers.StackPop(&*stack)
+		o1 := helpers.StackPop(stack)
+		o2 := helpers.StackPop(stack)
 
 		if !helpers.IsInt(o2.SymbolName) {
 			panic(fmt.Errorf(orth_debug.InvalidTypeForInstruction, o2.SymbolName, "grab_at"))
@@ -143,8 +143,8 @@ func init() {
 	}
 
 	Functions["grab_last"] = func(stack, mem *[]orth_types.Operand, vars map[string]orth_types.Operand) {
-		o1 := helpers.StackPop(&*stack)
-		o2 := helpers.StackPop(&*stack)
+		o1 := helpers.StackPop(stack)
+		o2 := helpers.StackPop(stack)
 
 		vars[o1.Operand] = o2
 	}

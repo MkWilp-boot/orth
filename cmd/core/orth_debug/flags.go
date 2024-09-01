@@ -13,6 +13,7 @@ var (
 	NoLink       = flag.Bool("nl", false, "Generates the assembly whitout linking")
 	UnclearFiles = flag.Bool("uclr", false, "do not remove the generated output files")
 	I            = flag.String("I", "", "appends paths for includes separeted by ','")
+	Sim          = flag.Bool("sim", false, "simulate program's stack")
 )
 
 func LogStep(message string) {

@@ -1,5 +1,10 @@
 package orth_types
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	MAX_PROC_PARAM_COUNT  = 32
 	MAX_PROC_OUTPUT_COUNT = 32
@@ -8,7 +13,8 @@ const (
 type Instruction uint16
 
 const (
-	InstructionPush Instruction = iota + 1
+	InstructionInvalid Instruction = iota
+	InstructionPush
 	InstructionPushStr
 	InstructionSum
 	InstructionMinus
@@ -145,6 +151,58 @@ type Program struct {
 	Variables  []Operation
 	Constants  []Operation
 	Operations []Operation
+}
+
+type ProcedureSchema struct {
+	InParamsAmount, OutParamsAmount []Operation
+}
+
+func (p *Program) FindProc(operation Operation) (ProcedureSchema, error) {
+	callingProcedureArguments := make([]Operation, 0)
+	callingProcedureOutParams := make([]Operation, 0)
+
+	for callingProcedureIndex, op := range p.Operations {
+		if op.Operator.Operand == operation.Operator.Operand && op.Instruction == InstructionProc {
+			for _, operation := range p.Operations[callingProcedureIndex:] {
+				if operation.Instruction == InstructionWith {
+					for k, v := range operation.Links {
+						if !strings.HasPrefix(k, "proc_param_") {
+							continue
+						}
+						callingProcedureArguments = append(callingProcedureArguments, v)
+					}
+				}
+				if operation.Instruction == InstructionOut {
+					for k, v := range operation.Links {
+						if !strings.HasPrefix(k, "proc_out_param_") {
+							continue
+						}
+						callingProcedureOutParams = append(callingProcedureOutParams, v)
+					}
+				}
+			}
+
+			return ProcedureSchema{
+				InParamsAmount:  callingProcedureArguments,
+				OutParamsAmount: callingProcedureOutParams,
+			}, nil
+		}
+	}
+	return ProcedureSchema{}, fmt.Errorf("proc named %q was not found", operation.Operator.Operand)
+}
+
+func PPrintOperation(op Operation) string {
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("%s\n", InstructionToStr(op.Instruction)))
+	builder.WriteString(fmt.Sprintf("	operand: %s | symbolName%q\n", op.Operator.Operand, op.Operator.SymbolName))
+	for k, v := range op.Links {
+		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
+	}
+	for k, v := range op.Addresses {
+		builder.WriteString(fmt.Sprintf("\nAddr %s: %d\n", InstructionToStr(k), v))
+	}
+	builder.WriteString("****************************************************\n")
+	return builder.String()
 }
 
 func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {

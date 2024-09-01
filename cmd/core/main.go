@@ -9,6 +9,7 @@ import (
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
+	"orth/cmd/pkg/simulation"
 	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strings"
@@ -75,6 +76,9 @@ func main() {
 	}
 
 	program, err := embedded.CrossReferenceBlocks(program)
+	if *orth_debug.Sim {
+		simulation.SimulateStack(&program)
+	}
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
@@ -84,7 +88,12 @@ func main() {
 	switch {
 	case *orth_debug.Compile != "":
 		orth_debug.LogStep(fmt.Sprintf("[INFO] Compilation started. Selected assembly is %q", *orth_debug.Compile))
-		embedded.Compile(program, functions.CheckAsmType(*orth_debug.Compile))
+		asmTarget, err := functions.CheckAsmType(*orth_debug.Compile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		embedded.Compile(program, asmTarget)
 		orth_debug.LogStep("[INFO] Finished compilation.")
 	default:
 		flag.PrintDefaults()

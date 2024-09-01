@@ -1,13 +1,27 @@
 package functions
 
 import (
+	"errors"
 	orth_types "orth/cmd/pkg/types"
 	"strconv"
+	"unsafe"
 )
 
 // =======================================
 // SUM
 // =======================================
+
+func SumAddress(n1, n2 orth_types.Operand) (string, error) {
+	switch unsafe.Sizeof(uintptr(0)) {
+	case 8: // 64-bit system
+		return SumI64(n1, n2), nil
+	case 4: // 32-bit system
+		return SumI32(n1, n2), nil
+	default:
+		return "", errors.New("unexpected word size")
+	}
+}
+
 func SumI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {

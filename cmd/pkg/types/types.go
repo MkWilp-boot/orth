@@ -14,90 +14,91 @@ const (
 
 // types
 const (
-	StdI64     = "i64"
-	StdI32     = "i32"
-	StdI16     = "i16"
-	StdI8      = "i8"
-	StdINT     = "i"
-	StdF64     = "f64"
-	StdF32     = "f32"
-	StdSTR     = "s"
-	StdBOOL    = "b"
-	StdINVALID = ""
+	StdI64     string = "i64"
+	StdI32     string = "i32"
+	StdI16     string = "i16"
+	StdI8      string = "i8"
+	StdINT     string = "i"
+	StdF64     string = "f64"
+	StdF32     string = "f32"
+	StdSTR     string = "s"
+	StdBOOL    string = "b"
+	StdINVALID string = ""
 )
 
 // keywords
 const (
-	StdPlus          = "+"
-	StdMinus         = "-"
-	StdMult          = "*"
-	StdDiv           = "/"
-	StdEquals        = "=="
-	StdNotEquals     = "<>"
-	StdLowerThan     = "<"
-	StdGreaterThan   = ">"
-	StdMod           = "%"
-	StdEND           = "end"
-	StdVOID          = "void"
-	StdRNT           = "rnt"
-	StdParam         = "param"
-	StdMem           = "mem"
-	StdType          = "type"
-	StdConst         = "const"
-	StdVar           = "var"
-	StdHold          = "hold"
-	StdProc          = "proc"
-	StdIn            = "in"
-	StdIf            = "if"
-	StdElse          = "else"
-	StdOver          = "over"
-	Std2Dup          = "2dup"
-	StdDup           = "dup"
-	StdWhile         = "while"
-	StdLeftShift     = "lshift"
-	StdRightShift    = "rshift"
-	StdLogicalAnd    = "land"
-	StdLogicalOr     = "lor"
-	StdDo            = "do"
-	StdDrop          = "drop"
-	StdSwap          = "swap"
-	StdStore         = "."
-	StdLoad          = ","
-	StdCall          = "call"
-	StdLoadAndStay   = ",!"
-	StdInvoke        = "invoke"
-	StdProcOutParams = "--"
-	StdProcInParams  = ":"
-	StdBitwise       = "bitwise"
+	StdPlus          string = "+"
+	StdMinus         string = "-"
+	StdMult          string = "*"
+	StdDiv           string = "/"
+	StdEquals        string = "=="
+	StdNotEquals     string = "<>"
+	StdLowerThan     string = "<"
+	StdGreaterThan   string = ">"
+	StdMod           string = "%"
+	StdEND           string = "end"
+	StdVOID          string = "void"
+	StdRNT           string = "rnt"
+	StdParam         string = "param"
+	StdMem           string = "mem"
+	StdType          string = "type"
+	StdConst         string = "const"
+	StdVar           string = "var"
+	StdHold          string = "hold"
+	StdProc          string = "proc"
+	StdIn            string = "in"
+	StdIf            string = "if"
+	StdElse          string = "else"
+	StdOver          string = "over"
+	Std2Dup          string = "2dup"
+	StdDup           string = "dup"
+	StdWhile         string = "while"
+	StdLeftShift     string = "lshift"
+	StdRightShift    string = "rshift"
+	StdLogicalAnd    string = "land"
+	StdLogicalOr     string = "lor"
+	StdDo            string = "do"
+	StdDrop          string = "drop"
+	StdSwap          string = "swap"
+	StdStore         string = "."
+	StdLoad          string = ","
+	StdCall          string = "call"
+	StdLoadAndStay   string = ",!"
+	StdInvoke        string = "invoke"
+	StdProcOutParams string = "--"
+	StdProcInParams  string = ":"
+	StdAddress       string = "addr"
+	StdBitwise       string = "bitwise"
 )
 
 // builtin functions/symbols
 const (
-	StdPutUint   = "putui"
-	StdPutStr    = "puts"
-	StdSetNumber = "set_number"
-	StdSetStr    = "set_string"
-	StdDumpMem   = "dump_mem"
-	StdPutChar   = "put_char"
-	StdDeref     = "deref"
-	StdExit      = "exit"
-	StdAlloc     = "alloc"
-	StdFree      = "free"
+	StdPutUint   string = "putui"
+	StdPutStr    string = "puts"
+	StdSetNumber string = "set_number"
+	StdSetStr    string = "set_string"
+	StdDumpMem   string = "dump_mem"
+	StdPutChar   string = "put_char"
+	StdDeref     string = "deref"
+	StdExit      string = "exit"
+	StdAlloc     string = "alloc"
+	StdFree      string = "free"
 )
 
 // some shit I don't remember
 const (
-	INTS        = "ints"
-	FLOATS      = "floats"
-	STRING      = "string"
-	BOOL        = "bool"
-	VOID        = "void"
-	RNT         = "rnt"
-	ADDR        = "address"
-	RNGABL      = "rangeable"
-	MEM         = "mem"
-	TYPE        = "type"
-	INVALIDTYPE = ""
+	INTS        string = "ints"
+	FLOATS      string = "floats"
+	STRING      string = "string"
+	BOOL        string = "bool"
+	VOID        string = "void"
+	RNT         string = "rnt"
+	ADDR        string = "address"
+	RNGABL      string = "rangeable"
+	MEM         string = "mem"
+	TYPE        string = "type"
+	INVALIDTYPE string = ""
 )
 
 type ContextDeclaration struct {
@@ -126,15 +127,15 @@ type Operation struct {
 	Addresses   map[Instruction]int
 }
 
-func (op *Operation) PrioritizeAddress() int {
+func (op *Operation) PrioritizeAddress() (int, error) {
 	priorities := instructionJumpAddressPriority[op.Instruction]
 	for _, instruction := range priorities {
 		jumpAddress, ok := op.Addresses[instruction]
 		if ok {
-			return jumpAddress
+			return jumpAddress, nil
 		}
 	}
-	return -1
+	return 0, errors.New("no addresses")
 }
 
 func (op *Operation) IsString() bool {
@@ -328,6 +329,7 @@ func init() {
 	GlobalTypes[INTS][StdI16] = "i16"
 	GlobalTypes[INTS][StdI8] = "i8"
 	GlobalTypes[INTS][StdINT] = "i"
+	GlobalTypes[INTS][StdAddress] = "addr"
 
 	GlobalTypes[FLOATS] = make(map[string]string, 0)
 	GlobalTypes[FLOATS][StdF64] = "f64"

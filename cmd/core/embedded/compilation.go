@@ -305,9 +305,9 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			writer.WriteString("	pop rax\n")
 			writer.WriteString("	test rax, rax\n")
 
-			indexToJump := op.PrioritizeAddress()
-			if indexToJump == -1 {
-				log.Fatal("if indexToJump is -1")
+			indexToJump, err := op.PrioritizeAddress()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "no symbol were found for an 'if link'")
 			}
 
 			writer.WriteString(fmt.Sprintf("	jz .L%d\n", indexToJump))
@@ -438,6 +438,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
 
+			// TODO trocar para program.FindProc
 			var callingProcedureArgumentsCount int
 			var callingProcedureOutParamsCount int
 			var callingProcedureIndex int

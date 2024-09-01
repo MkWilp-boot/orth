@@ -1,15 +1,17 @@
 package functions
 
 import (
+	"errors"
 	"fmt"
 	"orth/cmd/core/orth_debug"
+	"orth/cmd/pkg/helpers"
 	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func PanicErrIfNonNil(err error) {
+func panicErrIfNonNil(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -18,9 +20,9 @@ func PanicErrIfNonNil(err error) {
 func DissectRangeAsInt(o1 orth_types.Operand) (int, int) {
 	opStart, opEnd := DissectRange(o1)
 	iStart, err := strconv.Atoi(opStart.Operand)
-	PanicErrIfNonNil(err)
+	panicErrIfNonNil(err)
 	iEnd, err := strconv.Atoi(opEnd.Operand)
-	PanicErrIfNonNil(err)
+	panicErrIfNonNil(err)
 	return iStart, iEnd
 }
 
@@ -41,16 +43,14 @@ func DissectRange(o1 orth_types.Operand) (orth_types.Operand, orth_types.Operand
 		}
 }
 
-func CheckAsmType(flagValue string) string {
+func CheckAsmType(flagValue string) (string, error) {
 	available := []string{"nasm", "masm", "fasm"}
 	for _, v := range available {
 		if flagValue == v {
-			return v
+			return v, nil
 		}
 	}
-	fmt.Fprintln(os.Stderr, "unsupported assembly type")
-	os.Exit(1)
-	return ""
+	return "", errors.New("unsupported assembly type")
 }
 
 // TypesAreEqual checks if the compared types the same INNER-TYPE variant
@@ -77,17 +77,10 @@ func TypesAreEqual(opreands ...orth_types.Operand) bool {
 // | [s, i] -> panic()
 func GetSupersetType(opreands ...orth_types.Operand) string {
 	switch {
-	case strings.Contains(opreands[0].SymbolName, "i") ||
-		strings.Contains(opreands[0].SymbolName, "i8") ||
-		strings.Contains(opreands[0].SymbolName, "i16") ||
-		strings.Contains(opreands[0].SymbolName, "i32") ||
-		strings.Contains(opreands[0].SymbolName, "i64"):
+	case helpers.IsInt(opreands[0].SymbolName):
 		return IntSupersetOfSlice(opreands...)
-	case strings.Contains(opreands[0].SymbolName, "f32") ||
-		strings.Contains(opreands[0].SymbolName, "f64"):
+	case helpers.IsFloat(opreands[0].SymbolName):
 		return FloatSupersetOfSlice(opreands...)
-	case strings.Contains(opreands[0].SymbolName, orth_types.ADDR):
-		return orth_types.ADDR
 	case opreands[0].SymbolName == orth_types.StdSTR:
 		return orth_types.StdSTR
 
@@ -117,19 +110,14 @@ func ModBasedOnType(superType string) func(string, orth_types.Operand, orth_type
 // SumBasedOnType sums a set of numbers based on the set's type
 func SumBasedOnType(superType string) (func(string, orth_types.Operand, orth_types.Operand) orth_types.Operand, error) {
 	switch {
-	case strings.Contains(superType, "i") ||
-		strings.Contains(superType, "i8") ||
-		strings.Contains(superType, "i16") ||
-		strings.Contains(superType, "i32") ||
-		strings.Contains(superType, "i64"):
+	case helpers.IsInt(superType):
 		return SumIntegers, nil
-	case strings.Contains(superType, "f32") ||
-		strings.Contains(superType, "f64"):
+	case helpers.IsFloat(superType):
 		return SumFloats, nil
 	case superType == orth_types.StdSTR:
 		return ConcatPrimitiveSTR, nil
 	case strings.Contains(superType, orth_types.ADDR):
-		return nil, fmt.Errorf(orth_debug.StrangeUseOfVariable, orth_types.ADDR, "PLUS")
+		return nil, fmt.Errorf(orth_debug.StrangeUseOfVariable, orth_types.ADDR, orth_types.InstructionToStr(orth_types.InstructionSum))
 	default:
 		panic("Invalid type")
 	}
@@ -247,9 +235,9 @@ func EqualInts(_ string, n1, n2 orth_types.Operand) orth_types.Operand {
 
 	var res string
 	if o1 == o2 {
-		res = "1"
+		res = orth_types.StdTrue
 	} else {
-		res = "0"
+		res = orth_types.StdFalse
 	}
 
 	return orth_types.Operand{
@@ -270,9 +258,16 @@ func DiffInts(_ string, n1, n2 orth_types.Operand) orth_types.Operand {
 		panic(err)
 	}
 
+	var op string
+	if o1 != o2 {
+		op = orth_types.StdTrue
+	} else {
+		op = orth_types.StdFalse
+	}
+
 	return orth_types.Operand{
 		SymbolName: orth_types.StdBOOL,
-		Operand:    fmt.Sprintf("%v", o1 != o2),
+		Operand:    op,
 	}
 }
 
@@ -290,9 +285,9 @@ func LowerThanInts(_ string, n1, n2 orth_types.Operand) orth_types.Operand {
 
 	var op string
 	if o1 < o2 {
-		op = "1"
+		op = orth_types.StdTrue
 	} else {
-		op = "0"
+		op = orth_types.StdFalse
 	}
 	return orth_types.Operand{
 		SymbolName: orth_types.StdBOOL,
@@ -314,9 +309,9 @@ func GreaterThanInts(_ string, n1, n2 orth_types.Operand) orth_types.Operand {
 
 	var op string
 	if o1 > o2 {
-		op = "1"
+		op = orth_types.StdTrue
 	} else {
-		op = "0"
+		op = orth_types.StdFalse
 	}
 	return orth_types.Operand{
 		SymbolName: orth_types.StdBOOL,
@@ -328,15 +323,15 @@ func GreaterThanInts(_ string, n1, n2 orth_types.Operand) orth_types.Operand {
 func MultplyIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
 	var mult string
 	switch superType {
-	case "i64":
+	case orth_types.StdI64:
 		mult = MultI64(n1, n2)
-	case "i32":
+	case orth_types.StdI32:
 		mult = MultI32(n1, n2)
-	case "i16":
+	case orth_types.StdI16:
 		mult = MultI16(n1, n2)
-	case "i8":
+	case orth_types.StdI8:
 		mult = MultI8(n1, n2)
-	case "i":
+	case orth_types.StdINT:
 		mult = MultI(n1, n2)
 	default:
 		panic("Not an integer")
@@ -348,19 +343,49 @@ func MultplyIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Ope
 	}
 }
 
+func BitwiseAnd(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	if !helpers.IsInt(superType) {
+		fmt.Fprintln(os.Stderr, "cannot perform 'logical and' on values that are not integers")
+		os.Exit(1)
+	}
+
+	left := helpers.ToInt(n1)
+	right := helpers.ToInt(n2)
+
+	return orth_types.Operand{
+		SymbolName: superType,
+		Operand:    fmt.Sprint(left & right),
+	}
+}
+
+func BitwiseOr(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	if !helpers.IsInt(superType) {
+		fmt.Fprintln(os.Stderr, "cannot perform 'logical or' on values that are not integers")
+		os.Exit(1)
+	}
+
+	left := helpers.ToInt(n1)
+	right := helpers.ToInt(n2)
+
+	return orth_types.Operand{
+		SymbolName: superType,
+		Operand:    fmt.Sprint(left | right),
+	}
+}
+
 // DivideIntegers divides a set of integers
 func DivideIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
 	var div string
 	switch superType {
-	case "i64":
+	case orth_types.StdI64:
 		div = DivI64(n1, n2)
-	case "i32":
+	case orth_types.StdI32:
 		div = DivI32(n1, n2)
-	case "i16":
+	case orth_types.StdI16:
 		div = DivI16(n1, n2)
-	case "i8":
+	case orth_types.StdI8:
 		div = DivI8(n1, n2)
-	case "i":
+	case orth_types.StdINT:
 		div = DivI(n1, n2)
 	default:
 		panic("Not an integer")
@@ -372,22 +397,129 @@ func DivideIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Oper
 	}
 }
 
+// Left and shift functions are basiclly copies of each other, don't ask
+
+func LeftShiftFloat(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	shiftAmount, err := strconv.Atoi(n1.Operand)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	bitSize := 32
+
+	if n2.SymbolName == orth_types.StdF64 {
+		bitSize = 64
+	}
+	floatValue, err := strconv.ParseFloat(n2.Operand, bitSize)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	decimalDigits := (floatValue - float64(int(floatValue)))
+	// shift the int part and sum with decimals to make another float (silly me)
+	floatValue = float64(int(floatValue)<<shiftAmount) + decimalDigits
+
+	precision := 0
+	if index := strings.Index(n2.Operand, "."); index != -1 {
+		precision = len(n2.Operand[index+1:])
+	}
+
+	return orth_types.Operand{
+		SymbolName: n2.SymbolName,
+		Operand:    strconv.FormatFloat(floatValue, 'f', precision, bitSize),
+	}
+}
+
+func LeftShiftInt(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	shiftAmount, _ := strconv.Atoi(n1.Operand)
+	intValue, err := strconv.Atoi(n2.Operand)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	intValue = intValue << shiftAmount
+
+	return orth_types.Operand{
+		SymbolName: n2.SymbolName,
+		Operand:    strconv.Itoa(intValue),
+	}
+}
+
+func RightShiftFloat(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	shiftAmount, err := strconv.Atoi(n1.Operand)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	bitSize := 32
+
+	if n2.SymbolName == orth_types.StdF64 {
+		bitSize = 64
+	}
+	floatValue, err := strconv.ParseFloat(n2.Operand, bitSize)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	decimalDigits := (floatValue - float64(int(floatValue)))
+	// shift the int part and sum with decimals to make another float (silly me)
+	floatValue = float64(int(floatValue)>>shiftAmount) + decimalDigits
+
+	precision := 0
+	if index := strings.Index(n2.Operand, "."); index != -1 {
+		precision = len(n2.Operand[index+1:])
+	}
+
+	return orth_types.Operand{
+		SymbolName: n2.SymbolName,
+		Operand:    strconv.FormatFloat(floatValue, 'f', precision, bitSize),
+	}
+}
+
+func RightShiftInt(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
+	shiftAmount, _ := strconv.Atoi(n1.Operand)
+	intValue, err := strconv.Atoi(n2.Operand)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	intValue = intValue >> shiftAmount
+
+	return orth_types.Operand{
+		SymbolName: n2.SymbolName,
+		Operand:    strconv.Itoa(intValue),
+	}
+}
+
 // SumIntegers sums up a set of integers
 func SumIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
 	var sum string
+	var err error
+
 	switch superType {
-	case "i64":
+	case orth_types.StdAddress:
+		sum, err = SumAddress(n1, n2)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	case orth_types.StdI64:
 		sum = SumI64(n1, n2)
-	case "i32":
+	case orth_types.StdI32:
 		sum = SumI32(n1, n2)
-	case "i16":
+	case orth_types.StdI16:
 		sum = SumI16(n1, n2)
-	case "i8":
+	case orth_types.StdI8:
 		sum = SumI8(n1, n2)
-	case "i":
+	case orth_types.StdINT:
 		sum = SumI(n1, n2)
 	default:
-		panic("Not an integer")
+		fmt.Fprintln(os.Stderr, "not an integer")
+		os.Exit(1)
 	}
 
 	return orth_types.Operand{
@@ -424,15 +556,15 @@ func ModIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand
 func SubIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
 	var sub string
 	switch superType {
-	case "i64":
+	case orth_types.StdI64:
 		sub = SubI64(n1, n2)
-	case "i32":
+	case orth_types.StdI32:
 		sub = SubI32(n1, n2)
-	case "i16":
+	case orth_types.StdI16:
 		sub = SubI16(n1, n2)
-	case "i8":
+	case orth_types.StdI8:
 		sub = SubI8(n1, n2)
-	case "i":
+	case orth_types.StdINT:
 		sub = SubI(n1, n2)
 	default:
 		panic("Not an integer")
@@ -447,30 +579,30 @@ func SubIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Operand
 // IntSupersetOfSlice gets the super type of a slice of integers
 func IntSupersetOfSlice(opreands ...orth_types.Operand) string {
 	for _, v := range opreands {
-		if v.SymbolName == "i64" {
+		if v.SymbolName == orth_types.StdI64 {
 			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.SymbolName == "i32" {
+		if v.SymbolName == orth_types.StdI32 {
 			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.SymbolName == "i16" {
+		if v.SymbolName == orth_types.StdI16 {
 			return v.SymbolName
 		}
 	}
 
 	for _, v := range opreands {
-		if v.SymbolName == "i8" {
+		if v.SymbolName == orth_types.StdI8 {
 			return v.SymbolName
 		}
 	}
 
-	return "i"
+	return orth_types.StdINT
 }
 
 // ModFloats divides a set of floays

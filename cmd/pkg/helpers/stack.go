@@ -5,6 +5,8 @@ import (
 	orth_types "orth/cmd/pkg/types"
 )
 
+const MEM_MAX_CAP uint = 64000
+
 // StackPop pops the last item from the stack
 func StackPop(root *[]orth_types.Operand) orth_types.Operand {
 	if len(*root) < 1 {
