@@ -57,7 +57,7 @@ func operateDoubleValueStack(stack *stack, operationGroup doubleOperandsOperatio
 	}
 
 	var operation func(superType string, n1, n2 orth_types.Operand) orth_types.Operand
-	if helpers.IsFloat(preview[0].Operator.Operand) {
+	if helpers.IsFloat(preview[0].Operator) {
 		operation = operationGroup.Float
 	} else {
 		operation = operationGroup.Integer
@@ -152,7 +152,7 @@ func SimulateStack(program *orth_types.Program) {
 		case orth_types.InstructionStore:
 			preview := stack.peek(2)
 			for _, item := range preview {
-				if !helpers.IsInt(item.Operator.SymbolName) {
+				if !helpers.IsInt(item.Operator) {
 					fmt.Fprintf(os.Stderr, "cannot have type %q used for %q instruction", item.Operator.SymbolName, orth_types.InstructionToStr(orth_types.InstructionStore))
 					os.Exit(1)
 				}
@@ -231,7 +231,7 @@ func SimulateStack(program *orth_types.Program) {
 		case orth_types.FunctionDumpMem:
 			preview := stack.peek(2)
 			for _, item := range preview {
-				if !helpers.IsInt(item.Operator.SymbolName) {
+				if !helpers.IsInt(item.Operator) {
 					fmt.Fprintf(os.Stderr, "cannot have type %q used for %q instruction", item.Operator.SymbolName, orth_types.InstructionToStr(orth_types.FunctionDumpMem))
 					os.Exit(1)
 				}
@@ -253,17 +253,17 @@ func SimulateStack(program *orth_types.Program) {
 			preview := stack.peek(2)
 			stack.rmv(2)
 
-			if !helpers.IsNumeric(preview[0].Operator.SymbolName) {
+			if !helpers.IsNumeric(preview[0].Operator) {
 				fmt.Fprintf(os.Stderr, "cannot have type %q as LShift value", preview[0].Operator.SymbolName)
 				os.Exit(1)
 			}
-			if !helpers.IsInt(preview[1].Operator.SymbolName) {
+			if !helpers.IsInt(preview[1].Operator) {
 				fmt.Fprintf(os.Stderr, "cannot have type %q as LShift amount", preview[1].Operator.SymbolName)
 				os.Exit(1)
 			}
 
 			var shiftResult orth_types.Operand
-			if helpers.IsFloat(preview[0].Operator.SymbolName) {
+			if helpers.IsFloat(preview[0].Operator) {
 				shiftResult = functions.LeftShiftFloat(orth_types.StdF32, preview[1].Operator, preview[0].Operator)
 			} else {
 				shiftResult = functions.LeftShiftInt(orth_types.StdF32, preview[1].Operator, preview[0].Operator)
@@ -277,17 +277,17 @@ func SimulateStack(program *orth_types.Program) {
 			preview := stack.peek(2)
 			stack.rmv(2)
 
-			if !helpers.IsNumeric(preview[0].Operator.SymbolName) {
+			if !helpers.IsNumeric(preview[0].Operator) {
 				fmt.Fprintf(os.Stderr, "cannot have type %q as %q value", preview[0].Operator.SymbolName, orth_types.InstructionToStr(orth_types.InstructionRShift))
 				os.Exit(1)
 			}
-			if !helpers.IsInt(preview[1].Operator.SymbolName) {
+			if !helpers.IsInt(preview[1].Operator) {
 				fmt.Fprintf(os.Stderr, "cannot have type %q for %q amount", preview[1].Operator.SymbolName, orth_types.InstructionToStr(orth_types.InstructionRShift))
 				os.Exit(1)
 			}
 
 			var shiftResult orth_types.Operand
-			if helpers.IsFloat(preview[0].Operator.SymbolName) {
+			if helpers.IsFloat(preview[0].Operator) {
 				shiftResult = functions.RightShiftFloat(orth_types.StdF32, preview[1].Operator, preview[0].Operator)
 			} else {
 				shiftResult = functions.RightShiftInt(orth_types.StdF32, preview[1].Operator, preview[0].Operator)
@@ -312,7 +312,7 @@ func SimulateStack(program *orth_types.Program) {
 			stack.push(preview[0])
 		case orth_types.InstructionExit:
 			preview := stack.peek(1)
-			if !helpers.IsInt(preview[0].Operator.SymbolName) {
+			if !helpers.IsInt(preview[0].Operator) {
 				fmt.Fprintln(os.Stderr, "'exit' only accepts integer values")
 				os.Exit(1)
 			}

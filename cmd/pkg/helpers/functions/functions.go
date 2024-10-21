@@ -77,9 +77,9 @@ func TypesAreEqual(opreands ...orth_types.Operand) bool {
 // | [s, i] -> panic()
 func GetSupersetType(opreands ...orth_types.Operand) string {
 	switch {
-	case helpers.IsInt(opreands[0].SymbolName):
+	case helpers.IsInt(opreands[0]):
 		return IntSupersetOfSlice(opreands...)
-	case helpers.IsFloat(opreands[0].SymbolName):
+	case helpers.IsFloat(opreands[0]):
 		return FloatSupersetOfSlice(opreands...)
 	case opreands[0].SymbolName == orth_types.StdSTR:
 		return orth_types.StdSTR
@@ -102,22 +102,6 @@ func ModBasedOnType(superType string) func(string, orth_types.Operand, orth_type
 		return ModFloats
 	case strings.Contains(superType, orth_types.StdSTR):
 		panic("Can not use 'orth_types.PrimitiveSTR' with '%' operation")
-	default:
-		panic("Invalid type")
-	}
-}
-
-// SumBasedOnType sums a set of numbers based on the set's type
-func SumBasedOnType(superType string) (func(string, orth_types.Operand, orth_types.Operand) orth_types.Operand, error) {
-	switch {
-	case helpers.IsInt(superType):
-		return SumIntegers, nil
-	case helpers.IsFloat(superType):
-		return SumFloats, nil
-	case superType == orth_types.StdSTR:
-		return ConcatPrimitiveSTR, nil
-	case strings.Contains(superType, orth_types.ADDR):
-		return nil, fmt.Errorf(orth_debug.StrangeUseOfVariable, orth_types.ADDR, orth_types.InstructionToStr(orth_types.InstructionSum))
 	default:
 		panic("Invalid type")
 	}
@@ -344,7 +328,7 @@ func MultplyIntegers(superType string, n1, n2 orth_types.Operand) orth_types.Ope
 }
 
 func BitwiseAnd(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
-	if !helpers.IsInt(superType) {
+	if !helpers.IsInt(n1) || !helpers.IsInt(n2) {
 		fmt.Fprintln(os.Stderr, "cannot perform 'logical and' on values that are not integers")
 		os.Exit(1)
 	}
@@ -359,7 +343,7 @@ func BitwiseAnd(superType string, n1, n2 orth_types.Operand) orth_types.Operand 
 }
 
 func BitwiseOr(superType string, n1, n2 orth_types.Operand) orth_types.Operand {
-	if !helpers.IsInt(superType) {
+	if _, ok := orth_types.GlobalTypes[orth_types.INTS][superType]; !ok {
 		fmt.Fprintln(os.Stderr, "cannot perform 'logical or' on values that are not integers")
 		os.Exit(1)
 	}

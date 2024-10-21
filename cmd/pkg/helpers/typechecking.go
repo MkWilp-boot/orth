@@ -8,26 +8,29 @@ import (
 	"strconv"
 )
 
-func IsNumeric(t string) bool {
-	return IsInt(t) || IsFloat(t)
+func IsNumeric(op orth_types.Operand) bool {
+	return IsInt(op) || IsFloat(op)
 }
 
 func ToAddress(op orth_types.Operand) (int, bool) {
 	address, err := strconv.Atoi(op.Operand)
-	return address, IsInt(op.SymbolName) && err == nil
+	return address, IsInt(op) && err == nil
 }
 
-func IsInt(t string) bool {
-	_, ok := orth_types.GlobalTypes[orth_types.INTS][t]
-	return ok
+func IsInt(op orth_types.Operand) bool {
+	_, ok := orth_types.GlobalTypes[orth_types.INTS][op.SymbolName]
+	_, err := strconv.Atoi(op.Operand)
+	return ok && err == nil
 }
 
-func IsFloat(t string) bool {
-	return orth_types.GlobalTypes[orth_types.FLOATS][t] != ""
+func IsFloat(op orth_types.Operand) bool {
+
+	return orth_types.GlobalTypes[orth_types.FLOATS][op.SymbolName] != ""
 }
 
-func IsBool(t string) bool {
-	return orth_types.GlobalTypes[orth_types.BOOL][t] != ""
+func IsBool(op orth_types.Operand) bool {
+	return orth_types.GlobalTypes[orth_types.BOOL][op.SymbolName] != "" &&
+		(op.Operand == orth_types.StdTrue || op.Operand == orth_types.StdFalse)
 }
 
 func IsString(t string) bool {
@@ -70,7 +73,7 @@ func OperatingOnEqualTypes(operations ...orth_types.Operation) error {
 //
 // ===================================
 func ToInt(o orth_types.Operand) int {
-	if IsInt(o.SymbolName) {
+	if IsInt(o) {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic("Unknow error " + err.Error())
@@ -78,7 +81,7 @@ func ToInt(o orth_types.Operand) int {
 		return n
 	}
 
-	if IsFloat(o.SymbolName) {
+	if IsFloat(o) {
 		f, err := strconv.ParseFloat(o.Operand, 64)
 		if err != nil {
 			panic("Unknow error " + err.Error())
