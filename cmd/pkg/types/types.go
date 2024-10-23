@@ -1,4 +1,4 @@
-package orthtypes
+package orth_types
 
 import (
 	"errors"
@@ -12,42 +12,93 @@ const (
 	StdFalse = "0"
 )
 
+// types
 const (
-	PrimitiveI64     = "i64"
-	PrimitiveI32     = "i32"
-	PrimitiveI16     = "i16"
-	PrimitiveI8      = "i8"
-	PrimitiveInt     = "i"
-	PrimitiveF64     = "f64"
-	PrimitiveF32     = "f32"
-	PrimitiveSTR     = "s"
-	PrimitiveBOOL    = "b"
-	PrimitiveEND     = "end"
-	PrimitiveVOID    = "void"
-	PrimitiveRNT     = "rnt"
-	PrimitiveMem     = "mem"
-	PrimitiveType    = "type"
-	PrimitiveConst   = "const"
-	PrimitiveVar     = "var"
-	PrimitiveHold    = "hold"
-	PrimitiveProc    = "proc"
-	PrimitiveIn      = "in"
-	PrimitiveInvalid = ""
-	Bitwise          = "bitwise"
+	StdI64     string = "i64"
+	StdI32     string = "i32"
+	StdI16     string = "i16"
+	StdI8      string = "i8"
+	StdINT     string = "i"
+	StdF64     string = "f64"
+	StdF32     string = "f32"
+	StdSTR     string = "s"
+	StdBOOL    string = "b"
+	StdINVALID string = ""
 )
 
+// keywords
 const (
-	INTS        = "ints"
-	FLOATS      = "floats"
-	STRING      = "string"
-	BOOL        = "bool"
-	VOID        = "void"
-	RNT         = "rnt"
-	ADDR        = "address"
-	RNGABL      = "rangeable"
-	MEM         = "mem"
-	TYPE        = "type"
-	INVALIDTYPE = ""
+	StdPlus          string = "+"
+	StdMinus         string = "-"
+	StdMult          string = "*"
+	StdDiv           string = "/"
+	StdEquals        string = "=="
+	StdNotEquals     string = "<>"
+	StdLowerThan     string = "<"
+	StdGreaterThan   string = ">"
+	StdMod           string = "%"
+	StdEND           string = "end"
+	StdVOID          string = "void"
+	StdRNT           string = "rnt"
+	StdParam         string = "param"
+	StdMem           string = "mem"
+	StdType          string = "type"
+	StdConst         string = "const"
+	StdVar           string = "var"
+	StdHold          string = "hold"
+	StdProc          string = "proc"
+	StdIn            string = "in"
+	StdIf            string = "if"
+	StdElse          string = "else"
+	StdOver          string = "over"
+	Std2Dup          string = "2dup"
+	StdDup           string = "dup"
+	StdWhile         string = "while"
+	StdLeftShift     string = "lshift"
+	StdRightShift    string = "rshift"
+	StdLogicalAnd    string = "land"
+	StdLogicalOr     string = "lor"
+	StdDo            string = "do"
+	StdDrop          string = "drop"
+	StdSwap          string = "swap"
+	StdStore         string = "."
+	StdLoad          string = ","
+	StdCall          string = "call"
+	StdLoadAndStay   string = ",!"
+	StdInvoke        string = "invoke"
+	StdProcOutParams string = "--"
+	StdProcInParams  string = ":"
+	StdAddress       string = "addr"
+	StdBitwise       string = "bitwise"
+)
+
+// builtin functions/symbols
+const (
+	StdPutUint   string = "putui"
+	StdPutStr    string = "puts"
+	StdSetNumber string = "set_number"
+	StdSetStr    string = "set_string"
+	StdDumpMem   string = "dump_mem"
+	StdPutChar   string = "put_char"
+	StdDeref     string = "deref"
+	StdExit      string = "exit"
+	StdAlloc     string = "alloc"
+	StdFree      string = "free"
+)
+
+// some shit I don't remember
+const (
+	INTS        string = "ints"
+	FLOATS      string = "floats"
+	STRING      string = "string"
+	BOOL        string = "bool"
+	VOID        string = "void"
+	RNT         string = "rnt"
+	ADDR        string = "address"
+	RNGABL      string = "rangeable"
+	MEM         string = "mem"
+	TYPE        string = "type"
+	INVALIDTYPE string = ""
 )
 
 type ContextDeclaration struct {
@@ -56,11 +107,11 @@ type ContextDeclaration struct {
 }
 
 type Context struct {
-	Name         string
-	Order        uint
-	Parent       *Context
-	Declarations []ContextDeclaration
-	InnerContext []*Context
+	Name          string
+	Order         uint
+	Parent        *Context
+	Declarations  []ContextDeclaration
+	InnerContexts []*Context
 }
 
 type Pair[T1, T2 any] struct {
@@ -76,15 +127,15 @@ type Operation struct {
 	Addresses   map[Instruction]int
 }
 
-func (op *Operation) PrioritizeAddress() int {
+func (op *Operation) PrioritizeAddress() (int, error) {
 	priorities := instructionJumpAddressPriority[op.Instruction]
 	for _, instruction := range priorities {
 		jumpAddress, ok := op.Addresses[instruction]
 		if ok {
-			return jumpAddress
+			return jumpAddress, nil
 		}
 	}
-	return -1
+	return 0, errors.New("no addresses")
 }
 
 func (op *Operation) IsString() bool {
@@ -109,11 +160,11 @@ func (op *Operation) IsFloat() bool {
 }
 
 func (op *Operation) IsFloat64() bool {
-	return op.Operator.SymbolName == PrimitiveF64
+	return op.Operator.SymbolName == StdF64
 }
 
 func (op *Operation) IsFloat32() bool {
-	return op.Operator.SymbolName == PrimitiveF32
+	return op.Operator.SymbolName == StdF32
 }
 
 type Operand struct {
@@ -147,7 +198,25 @@ func (ctx *Context) GetVaraible(variable string, program *Program) (*Operation, 
 		}
 		ctx = ctx.Parent
 	}
-	return nil, errors.New("variable not found")
+	return nil, errors.New("could not find variable, it's either out of scope or was not declared")
+}
+
+func (ctx *Context) GetNestedVariables(program *Program) ([]Operation, error) {
+	if ctx == nil {
+		return nil, errors.New("nil context")
+	}
+	variables := make([]Operation, 0, len(ctx.Declarations))
+	for _, variable := range ctx.Declarations {
+		variables = append(variables, program.Operations[variable.Index])
+	}
+	for _, innerContext := range ctx.InnerContexts {
+		nestedVariables, err := innerContext.GetNestedVariables(program)
+		// unlikely to have an "inner context" set to nil, but let's be safe...
+		if err == nil {
+			variables = append(variables, nestedVariables...)
+		}
+	}
+	return variables, nil
 }
 
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
@@ -172,8 +241,8 @@ func (f *File[T]) UpdateCodeReference(codeBlock T) {
 	f.CodeBlock = codeBlock
 }
 
-// IsValidType checks whenever a variable has a know or unknow type
-func (o Operation) IsValidType() bool {
+// IsValidTypeOp checks whenever a variable has a know or unknow type
+func IsValidTypeOp(o *Operation) bool {
 	return GlobalTypes[TYPE][o.Operator.SymbolName] != "" ||
 		GlobalTypes[INTS][o.Operator.SymbolName] != "" ||
 		GlobalTypes[FLOATS][o.Operator.SymbolName] != "" ||
@@ -182,6 +251,33 @@ func (o Operation) IsValidType() bool {
 		GlobalTypes[VOID][o.Operator.SymbolName] != "" ||
 		GlobalTypes[RNT][o.Operator.SymbolName] != "" ||
 		GlobalTypes[MEM][o.Operator.SymbolName] != ""
+}
+
+// IsValidTypeSybl checks whenever a variable has a know or unknow type
+func IsValidTypeSybl(s string) bool {
+	return GlobalTypes[TYPE][s] != "" ||
+		GlobalTypes[INTS][s] != "" ||
+		GlobalTypes[FLOATS][s] != "" ||
+		GlobalTypes[STRING][s] != "" ||
+		GlobalTypes[BOOL][s] != "" ||
+		GlobalTypes[VOID][s] != "" ||
+		GlobalTypes[RNT][s] != "" ||
+		GlobalTypes[MEM][s] != ""
+}
+
+func GrabType(o string) string {
+	switch {
+	case GlobalTypes[INTS][o] != INVALIDTYPE:
+		return GlobalTypes[INTS][o]
+	case GlobalTypes[STRING][o] != INVALIDTYPE:
+		return GlobalTypes[STRING][o]
+	case GlobalTypes[FLOATS][o] != INVALIDTYPE:
+		return GlobalTypes[FLOATS][o]
+	case GlobalTypes[RNT][o] != INVALIDTYPE:
+		return GlobalTypes[RNT][o]
+	default:
+		return ""
+	}
 }
 
 func (o Operand) GrabRootType() string {
@@ -222,38 +318,39 @@ var instructionJumpAddressPriority map[Instruction][]Instruction
 
 func init() {
 	instructionJumpAddressPriority = make(map[Instruction][]Instruction)
-	instructionJumpAddressPriority[If] = []Instruction{Else, End}
-	instructionJumpAddressPriority[Else] = []Instruction{End}
+	instructionJumpAddressPriority[InstructionIf] = []Instruction{InstructionElse, InstructionEnd}
+	instructionJumpAddressPriority[InstructionElse] = []Instruction{InstructionEnd}
 
 	GlobalTypes = make(map[string]Type, 0)
 	GlobalTypes[INTS] = make(map[string]string, 0)
 
-	GlobalTypes[INTS][PrimitiveI64] = "i64"
-	GlobalTypes[INTS][PrimitiveI32] = "i32"
-	GlobalTypes[INTS][PrimitiveI16] = "i16"
-	GlobalTypes[INTS][PrimitiveI8] = "i8"
-	GlobalTypes[INTS][PrimitiveInt] = "i"
+	GlobalTypes[INTS][StdI64] = "i64"
+	GlobalTypes[INTS][StdI32] = "i32"
+	GlobalTypes[INTS][StdI16] = "i16"
+	GlobalTypes[INTS][StdI8] = "i8"
+	GlobalTypes[INTS][StdINT] = "i"
+	GlobalTypes[INTS][StdAddress] = "addr"
 
 	GlobalTypes[FLOATS] = make(map[string]string, 0)
-	GlobalTypes[FLOATS][PrimitiveF64] = "f64"
-	GlobalTypes[FLOATS][PrimitiveF32] = "f32"
+	GlobalTypes[FLOATS][StdF64] = "f64"
+	GlobalTypes[FLOATS][StdF32] = "f32"
 
 	GlobalTypes[STRING] = make(map[string]string, 0)
-	GlobalTypes[STRING][PrimitiveSTR] = "s"
+	GlobalTypes[STRING][StdSTR] = "s"
 
 	GlobalTypes[BOOL] = make(map[string]string, 0)
-	GlobalTypes[BOOL][PrimitiveBOOL] = "b"
+	GlobalTypes[BOOL][StdBOOL] = "b"
 
 	GlobalTypes[VOID] = make(map[string]string)
-	GlobalTypes[VOID][PrimitiveVOID] = "v"
+	GlobalTypes[VOID][StdVOID] = "v"
 
 	GlobalTypes[RNT] = make(map[string]string, 0)
-	GlobalTypes[RNT][PrimitiveRNT] = "rnt"
+	GlobalTypes[RNT][StdRNT] = "rnt"
 	GlobalTypes[RNT][ADDR] = "address"
 	GlobalTypes[RNT][RNGABL] = "rangeable"
 
 	GlobalTypes[MEM] = make(map[string]string, 0)
-	GlobalTypes[MEM][PrimitiveMem] = "rnt"
+	GlobalTypes[MEM][StdMem] = "rnt"
 
 	GlobalTypes[TYPE] = make(map[string]string, 0)
 	GlobalTypes[TYPE]["type"] = "type"

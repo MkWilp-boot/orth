@@ -8,7 +8,7 @@ import (
 	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"os/exec"
 	"regexp"
@@ -22,7 +22,7 @@ func ErrSliceToStringSlice(errs []error) []string {
 	return sErrors
 }
 
-func WarningSliceToStringSlice(warns []orthtypes.CompilerMessage) []string {
+func WarningSliceToStringSlice(warns []orth_types.CompilerMessage) []string {
 	sWarns := make([]string, len(warns))
 	for i, warn := range warns {
 		sWarns[i] = warn.Message
@@ -30,21 +30,21 @@ func WarningSliceToStringSlice(warns []orthtypes.CompilerMessage) []string {
 	return sWarns
 }
 
-func PrepareComp(fileName string) ([]error, []orthtypes.CompilerMessage) {
+func PrepareComp(fileName string) ([]error, []orth_types.CompilerMessage) {
 	strProgram := lexer.LoadProgramFromFile(fileName)
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parsedOperations := make(chan orthtypes.Pair[orthtypes.Operation, error])
+	parsedOperations := make(chan orth_types.Pair[orth_types.Operation, error])
 
-	program := orthtypes.Program{
-		Operations: make([]orthtypes.Operation, 0),
-		Warnings:   make([]orthtypes.CompilerMessage, 0),
+	program := orth_types.Program{
+		Operations: make([]orth_types.Operation, 0),
+		Warnings:   make([]orth_types.CompilerMessage, 0),
 		Error:      make([]error, 0),
 	}
 
 	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
 
-	analyzerOperations := make([]orthtypes.Operation, 0)
+	analyzerOperations := make([]orth_types.Operation, 0)
 	for parsedOperation := range parsedOperations {
 		if parsedOperation.Right != nil {
 			program.Error = append(program.Error, parsedOperation.Right)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"orth/cmd/core/orth_debug"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"os"
 	"runtime"
 	"strconv"
@@ -43,51 +43,27 @@ func CleanUp() {
 	}
 }
 
-// func RetrieveProgramInfo(program orthtypes.Program, outOfOrder orthtypes.OutOfOrder, act func(*orthtypes.Program, orthtypes.Operation, int) []orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]) {
-// 	for i, operation := range program.Operations {
-// 		retreive := act(&program, operation, i)
-// 		for _, op := range retreive {
-// 			outOfOrder.Vars <- op
-// 		}
-// 	}
-// 	close(outOfOrder.Vars)
-// }
-
-// func GetVarsAndValues(program *orthtypes.Program, operation orthtypes.Operation, i int) []orthtypes.Pair[orthtypes.Operation, orthtypes.Operand] {
-// 	retreive := make([]orthtypes.Pair[orthtypes.Operation, orthtypes.Operand], 0, cap(program.Operations))
-// 	if (operation.Instruction == orthtypes.Var || operation.Instruction == orthtypes.Const) &&
-// 		program.Operations[i-1].Instruction == orthtypes.Push {
-// 		retreive = append(retreive, orthtypes.Pair[orthtypes.Operation, orthtypes.Operand]{
-// 			Left:  operation,
-// 			Right: program.Operations[i-1].Operator,
-// 		})
-// 		program.Operations[i].Instruction = orthtypes.Skip
-// 		program.Operations[i-1].Instruction = orthtypes.Skip
-// 	}
-// 	return retreive
-// }
-
-func VarTypeToLocalAsmType(operand orthtypes.Operand) string {
+func VarTypeToLocalAsmType(operand orth_types.Operand) string {
 	switch operand.SymbolName {
-	case orthtypes.PrimitiveSTR:
+	case orth_types.StdSTR:
 		panic("string not supported for local scopes")
-	case orthtypes.PrimitiveI8:
+	case orth_types.StdI8:
 		return "BYTE"
-	case orthtypes.PrimitiveI16:
+	case orth_types.StdI16:
 		return "WORD"
-	case orthtypes.PrimitiveI32:
+	case orth_types.StdI32:
 		return "DWORD"
-	case orthtypes.PrimitiveInt:
+	case orth_types.StdINT:
 		if strings.Contains(runtime.GOARCH, "64") {
 			return "QWORD"
 		} else {
 			return "DWORD"
 		}
-	case orthtypes.PrimitiveI64:
+	case orth_types.StdI64:
 		return "QWORD"
-	case orthtypes.PrimitiveF32:
+	case orth_types.StdF32:
 		return "REAL4"
-	case orthtypes.PrimitiveF64:
+	case orth_types.StdF64:
 		return "REAL8"
 	default:
 		fmt.Fprintf(os.Stderr, "ivalid type od %q\n", operand.SymbolName)
@@ -96,28 +72,28 @@ func VarTypeToLocalAsmType(operand orthtypes.Operand) string {
 	}
 }
 
-func VarTypeToAsmType(operand orthtypes.Operand) string {
+func VarTypeToAsmType(operand orth_types.Operand) string {
 	var asmTypeInstruction string
 	switch operand.SymbolName {
-	case orthtypes.PrimitiveSTR:
+	case orth_types.StdSTR:
 		asmTypeInstruction = "db"
-	case orthtypes.PrimitiveI8:
+	case orth_types.StdI8:
 		asmTypeInstruction = "byte"
-	case orthtypes.PrimitiveI16:
+	case orth_types.StdI16:
 		asmTypeInstruction = "dw"
-	case orthtypes.PrimitiveI32:
+	case orth_types.StdI32:
 		asmTypeInstruction = "dd"
-	case orthtypes.PrimitiveInt:
+	case orth_types.StdINT:
 		if strings.Contains(runtime.GOARCH, "64") {
 			asmTypeInstruction = "dq"
 		} else {
 			asmTypeInstruction = "dd"
 		}
-	case orthtypes.PrimitiveI64:
+	case orth_types.StdI64:
 		asmTypeInstruction = "dq"
-	case orthtypes.PrimitiveF32:
+	case orth_types.StdF32:
 		asmTypeInstruction = "real4"
-	case orthtypes.PrimitiveF64:
+	case orth_types.StdF64:
 		asmTypeInstruction = "real8"
 	default:
 		fmt.Fprintf(os.Stderr, "ivalid type of %q\n", operand.SymbolName)
@@ -152,10 +128,10 @@ func StringToByteRep(s string, endWithNullByte bool) (lietralValue string) {
 	return
 }
 
-func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string {
+func VarValueToAsmSyntax(operand orth_types.Operand, endWithNullByte bool) string {
 	var lietralValue string
 	switch operand.SymbolName {
-	case orthtypes.PrimitiveSTR:
+	case orth_types.StdSTR:
 		lietralValue = StringToByteRep(operand.Operand, endWithNullByte)
 	default:
 		lietralValue = operand.Operand
@@ -163,12 +139,11 @@ func VarValueToAsmSyntax(operand orthtypes.Operand, endWithNullByte bool) string
 	return lietralValue
 }
 
-func MangleVarName(o orthtypes.Operation) string {
+func MangleVarName(o orth_types.Operation) string {
 	var memType string
-
-	if o.Instruction == orthtypes.Var || o.Operator.SymbolName == orthtypes.PrimitiveVar {
+	if o.Instruction == orth_types.InstructionVar || o.Operator.SymbolName == orth_types.StdVar {
 		memType = "Var"
-	} else if o.Instruction == orthtypes.Const || o.Operator.SymbolName == orthtypes.PrimitiveConst {
+	} else if o.Instruction == orth_types.InstructionConst || o.Operator.SymbolName == orth_types.StdConst {
 		memType = "Const"
 	} else {
 		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
@@ -177,7 +152,7 @@ func MangleVarName(o orthtypes.Operation) string {
 	return fmt.Sprintf("%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
 }
 
-func BuildVarDataSeg(variable orthtypes.Operation) string {
+func BuildVarDataSeg(variable orth_types.Operation) string {
 	variableValue := variable.Links["variable_value"].Operator
 	return fmt.Sprintf("%s %s %s",
 		MangleVarName(variable),

@@ -1,14 +1,28 @@
 package functions
 
 import (
-	orthtypes "orth/cmd/pkg/types"
+	"errors"
+	orth_types "orth/cmd/pkg/types"
 	"strconv"
+	"unsafe"
 )
 
 // =======================================
 // SUM
 // =======================================
-func SumI64(n1, n2 orthtypes.Operand) string {
+
+func SumAddress(n1, n2 orth_types.Operand) (string, error) {
+	switch unsafe.Sizeof(uintptr(0)) {
+	case 8: // 64-bit system
+		return SumI64(n1, n2), nil
+	case 4: // 32-bit system
+		return SumI32(n1, n2), nil
+	default:
+		return "", errors.New("unexpected word size")
+	}
+}
+
+func SumI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -21,7 +35,7 @@ func SumI64(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int64(r1) + int64(r2)))
 }
 
-func SumI32(n1, n2 orthtypes.Operand) string {
+func SumI32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -34,7 +48,7 @@ func SumI32(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int32(r1) + int32(r2)))
 }
 
-func SumI16(n1, n2 orthtypes.Operand) string {
+func SumI16(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -47,7 +61,7 @@ func SumI16(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int16(r1) + int16(r2)))
 }
 
-func SumI8(n1, n2 orthtypes.Operand) string {
+func SumI8(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -60,7 +74,7 @@ func SumI8(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int8(r1) + int8(r2)))
 }
 
-func SumI(n1, n2 orthtypes.Operand) string {
+func SumI(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -76,7 +90,7 @@ func SumI(n1, n2 orthtypes.Operand) string {
 // =======================================
 // MOD
 // =======================================
-func ModI64(n1, n2 orthtypes.Operand) string {
+func ModI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -89,7 +103,7 @@ func ModI64(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int64(r1) % int64(r2)))
 }
 
-func ModI32(n1, n2 orthtypes.Operand) string {
+func ModI32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -102,7 +116,7 @@ func ModI32(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int32(r1) % int32(r2)))
 }
 
-func ModI16(n1, n2 orthtypes.Operand) string {
+func ModI16(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -115,7 +129,7 @@ func ModI16(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int16(r1) % int16(r2)))
 }
 
-func ModI8(n1, n2 orthtypes.Operand) string {
+func ModI8(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -128,7 +142,7 @@ func ModI8(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int8(r1) % int8(r2)))
 }
 
-func ModI(n1, n2 orthtypes.Operand) string {
+func ModI(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -144,7 +158,7 @@ func ModI(n1, n2 orthtypes.Operand) string {
 // =======================================
 // SUBTRACTION
 // =======================================
-func SubI64(n1, n2 orthtypes.Operand) string {
+func SubI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -157,7 +171,7 @@ func SubI64(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int64(r1) - int64(r2)))
 }
 
-func SubI32(n1, n2 orthtypes.Operand) string {
+func SubI32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -170,7 +184,7 @@ func SubI32(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int32(r1) - int32(r2)))
 }
 
-func SubI16(n1, n2 orthtypes.Operand) string {
+func SubI16(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -183,7 +197,7 @@ func SubI16(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int16(r1) - int16(r2)))
 }
 
-func SubI8(n1, n2 orthtypes.Operand) string {
+func SubI8(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -196,7 +210,7 @@ func SubI8(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int8(r1) - int8(r2)))
 }
 
-func SubI(n1, n2 orthtypes.Operand) string {
+func SubI(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -212,7 +226,7 @@ func SubI(n1, n2 orthtypes.Operand) string {
 // =======================================
 // DIVISION
 // =======================================
-func DivI64(n1, n2 orthtypes.Operand) string {
+func DivI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -224,7 +238,7 @@ func DivI64(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int64(r1) / int64(r2)))
 }
 
-func DivI32(n1, n2 orthtypes.Operand) string {
+func DivI32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -237,7 +251,7 @@ func DivI32(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int32(r1) / int32(r2)))
 }
 
-func DivI16(n1, n2 orthtypes.Operand) string {
+func DivI16(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -250,7 +264,7 @@ func DivI16(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int16(r1) / int16(r2)))
 }
 
-func DivI8(n1, n2 orthtypes.Operand) string {
+func DivI8(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -262,7 +276,7 @@ func DivI8(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int8(r1) / int8(r2)))
 }
 
-func DivI(n1, n2 orthtypes.Operand) string {
+func DivI(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -278,7 +292,7 @@ func DivI(n1, n2 orthtypes.Operand) string {
 // =======================================
 // MULTIPLICATION
 // =======================================
-func MultI64(n1, n2 orthtypes.Operand) string {
+func MultI64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -290,7 +304,7 @@ func MultI64(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int64(r1) * int64(r2)))
 }
 
-func MultI32(n1, n2 orthtypes.Operand) string {
+func MultI32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -302,7 +316,7 @@ func MultI32(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int32(r1) * int32(r2)))
 }
 
-func MultI16(n1, n2 orthtypes.Operand) string {
+func MultI16(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -314,7 +328,7 @@ func MultI16(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int16(r1) * int16(r2)))
 }
 
-func MultI8(n1, n2 orthtypes.Operand) string {
+func MultI8(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)
@@ -326,7 +340,7 @@ func MultI8(n1, n2 orthtypes.Operand) string {
 	return strconv.Itoa(int(int8(r1) * int8(r2)))
 }
 
-func MultI(n1, n2 orthtypes.Operand) string {
+func MultI(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.Atoi(n1.Operand)
 	if err != nil {
 		panic(err)

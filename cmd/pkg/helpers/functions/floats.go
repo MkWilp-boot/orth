@@ -2,14 +2,14 @@ package functions
 
 import (
 	"math"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"strconv"
 )
 
 // =======================================
 // SUM
 // =======================================
-func SumF64(n1, n2 orthtypes.Operand) string {
+func SumF64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 64)
 	if err != nil {
 		panic(err)
@@ -22,7 +22,7 @@ func SumF64(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(r1+r2, 'f', 2, 64)
 }
 
-func SumF32(n1, n2 orthtypes.Operand) string {
+func SumF32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 32)
 	if err != nil {
 		panic(err)
@@ -35,7 +35,7 @@ func SumF32(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(r1+r2, 'f', 2, 32)
 }
 
-func ModF64(n1, n2 orthtypes.Operand) string {
+func ModF64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 64)
 	if err != nil {
 		panic(err)
@@ -48,7 +48,7 @@ func ModF64(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(math.Mod(r1, r2), 'f', 2, 64)
 }
 
-func ModF32(n1, n2 orthtypes.Operand) string {
+func ModF32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 32)
 	if err != nil {
 		panic(err)
@@ -64,7 +64,7 @@ func ModF32(n1, n2 orthtypes.Operand) string {
 // =======================================
 // SUBTRACTION
 // =======================================
-func SubF64(n1, n2 orthtypes.Operand) string {
+func SubF64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 64)
 	if err != nil {
 		panic(err)
@@ -77,7 +77,7 @@ func SubF64(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(r1-r2, 'f', 2, 64)
 }
 
-func SubF32(n1, n2 orthtypes.Operand) string {
+func SubF32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 32)
 	if err != nil {
 		panic(err)
@@ -93,7 +93,7 @@ func SubF32(n1, n2 orthtypes.Operand) string {
 // =======================================
 // DIVISION
 // =======================================
-func DivF64(n1, n2 orthtypes.Operand) string {
+func DivF64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 64)
 	if err != nil {
 		panic(err)
@@ -106,7 +106,7 @@ func DivF64(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(r1/r2, 'f', 2, 64)
 }
 
-func DivF32(n1, n2 orthtypes.Operand) string {
+func DivF32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 32)
 	if err != nil {
 		panic(err)
@@ -122,7 +122,7 @@ func DivF32(n1, n2 orthtypes.Operand) string {
 // =======================================
 // MULTIPLICATION
 // =======================================
-func MultF64(n1, n2 orthtypes.Operand) string {
+func MultF64(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 64)
 	if err != nil {
 		panic(err)
@@ -135,7 +135,7 @@ func MultF64(n1, n2 orthtypes.Operand) string {
 	return strconv.FormatFloat(r1*r2, 'f', 2, 64)
 }
 
-func MultF32(n1, n2 orthtypes.Operand) string {
+func MultF32(n1, n2 orth_types.Operand) string {
 	r1, err := strconv.ParseFloat(n1.Operand, 32)
 	if err != nil {
 		panic(err)

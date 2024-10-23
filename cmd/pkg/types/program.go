@@ -1,4 +1,4 @@
-package orthtypes
+package orth_types
 
 import (
 	"fmt"
@@ -13,59 +13,61 @@ const (
 type Instruction uint16
 
 const (
-	Push Instruction = iota + 1
-	PushStr
-	Sum
-	Minus
-	Mult
-	Div
-	If
-	Else
-	End
-	Equal
-	Lt
-	Gt
-	NotEqual
-	Dup
-	TwoDup
-	PutU64
-	PutString
-	Do
-	Drop
-	While
-	Swap
-	Mod
-	Mem
-	Store
-	Load
-	LoadStay
-	Func
-	Call
-	OType
-	Const
-	Var
-	Gvar
-	Hold
+	InstructionInvalid Instruction = iota
+	InstructionPush
+	InstructionPushStr
+	InstructionSum
+	InstructionMinus
+	InstructionMult
+	InstructionDiv
+	InstructionIf
+	InstructionElse
+	InstructionEnd
+	InstructionEqual
+	InstructionLt
+	InstructionGt
+	InstructionNotEqual
+	InstructionDup
+	InstructionTwoDup
+	FunctionPutU64
+	FunctionPutString
+	InstructionDo
+	InstructionDrop
+	InstructionWhile
+	InstructionSwap
+	InstructionMod
+	InstructionMem
+	InstructionStore
+	InstructionLoad
+	InstructionLoadStay
+	InstructionFunc
+	InstructionCall
+	InstructionType
+	InstructionConst
+	InstructionVar
+	InstructionGvar
+	InstructionHold
+	InstructionNop
+	InstructionProc
+	InstructionParam
+	InstructionIn
+	InstructionInvoke
+	FunctionDumpMem
+	InstructionLShift
+	InstructionRShift
+	InstructionLAnd
+	InstructionLOr
+	InstructionOver
+	InstructionExit
+	InstructionWith
+	InstructionOut
+	InstructionDeref
+	FunctionSetNumber
+	FunctionSetString
+	FunctionAlloc
+	FunctionFree
+	FunctionPutChar
 	Skip
-	Nop
-	Proc
-	In
-	Invoke
-	DumpMem
-	LShift
-	RShift
-	LAnd
-	LOr
-	Over
-	Exit
-	With
-	Out
-	Deref
-	SetNumber
-	SetString
-	Alloc
-	Free
-	PutChar
 	TotalOps
 )
 
@@ -73,78 +75,65 @@ var instructionNames map[Instruction]string
 
 func init() {
 	instructionNames = map[Instruction]string{
-		Push:      "Push",
-		PushStr:   "PushStr",
-		Sum:       "Sum",
-		Minus:     "Minus",
-		Mult:      "Mult",
-		Div:       "Div",
-		If:        "If",
-		Else:      "Else",
-		End:       "End",
-		Equal:     "Equal",
-		Lt:        "Lt",
-		Gt:        "Gt",
-		NotEqual:  "NotEqual",
-		Dup:       "Dup",
-		TwoDup:    "TwoDup",
-		PutU64:    "PutU64",
-		PutString: "PutString",
-		Do:        "Do",
-		Drop:      "Drop",
-		While:     "While",
-		Swap:      "Swap",
-		Mod:       "Mod",
-		Mem:       "Mem",
-		Store:     "Store",
-		Load:      "Load",
-		LoadStay:  "LoadStay",
-		Func:      "Func",
-		Call:      "Call",
-		OType:     "OType",
-		Const:     "Const",
-		Var:       "Var",
-		Gvar:      "Gvar",
-		Hold:      "Hold",
-		Skip:      "Skip",
-		Nop:       "Nop",
-		Proc:      "Proc",
-		In:        "In",
-		Invoke:    "Invoke",
-		DumpMem:   "DumpMem",
-		LShift:    "LShift",
-		RShift:    "RShift",
-		LAnd:      "LAnd",
-		LOr:       "LOr",
-		Over:      "Over",
-		Exit:      "Exit",
-		With:      "With",
-		Out:       "Out",
-		Deref:     "Deref",
-		SetNumber: "SetNumber",
-		SetString: "SetString",
-		Alloc:     "Alloc",
-		Free:      "Free",
-		PutChar:   "PutChar",
+		Skip:                "Skip",
+		InstructionPush:     "Push",
+		InstructionPushStr:  "PushStr",
+		InstructionSum:      "Sum",
+		InstructionMinus:    "Minus",
+		InstructionMult:     "Mult",
+		InstructionDiv:      "Div",
+		InstructionIf:       "If",
+		InstructionElse:     "Else",
+		InstructionEnd:      "End",
+		InstructionEqual:    "Equal",
+		InstructionLt:       "Lt",
+		InstructionGt:       "Gt",
+		InstructionNotEqual: "NotEqual",
+		InstructionDup:      "Dup",
+		InstructionTwoDup:   "TwoDup",
+		InstructionDo:       "Do",
+		InstructionDrop:     "Drop",
+		InstructionWhile:    "While",
+		InstructionSwap:     "Swap",
+		InstructionMod:      "Mod",
+		InstructionMem:      "Mem",
+		InstructionStore:    "Store",
+		InstructionLoad:     "Load",
+		InstructionLoadStay: "LoadStay",
+		InstructionFunc:     "Func",
+		InstructionCall:     "Call",
+		InstructionType:     "Type",
+		InstructionConst:    "Const",
+		InstructionVar:      "Var",
+		InstructionGvar:     "Gvar",
+		InstructionHold:     "Hold",
+		InstructionNop:      "Nop",
+		InstructionProc:     "Proc",
+		InstructionIn:       "In",
+		InstructionInvoke:   "Invoke",
+		InstructionLShift:   "LShift",
+		InstructionRShift:   "RShift",
+		InstructionLAnd:     "LAnd",
+		InstructionLOr:      "LOr",
+		InstructionOver:     "Over",
+		InstructionExit:     "Exit",
+		InstructionParam:    "Param",
+		InstructionWith:     ":",
+		InstructionOut:      "--",
+		InstructionDeref:    "Deref",
+		FunctionPutU64:      "PutU64",
+		FunctionPutString:   "PutString",
+		FunctionDumpMem:     "DumpMem",
+		FunctionSetNumber:   "SetNumber",
+		FunctionSetString:   "SetString",
+		FunctionAlloc:       "Alloc",
+		FunctionFree:        "Free",
+		FunctionPutChar:     "PutChar",
 	}
 
 	if len(instructionNames) != int(TotalOps)-1 {
 		panic("[DEV] Missing instruction on name map")
 	}
-}
-
-func PPrintOperation(op Operation) string {
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s\n", InstructionToStr(op.Instruction)))
-	builder.WriteString(fmt.Sprintf("	operand: %s | symbolName%q\n", op.Operator.Operand, op.Operator.SymbolName))
-	for k, v := range op.Links {
-		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
-	}
-	for k, v := range op.Addresses {
-		builder.WriteString(fmt.Sprintf("\n** %s: %d", InstructionToStr(k), v))
-	}
-	builder.WriteString("****************************************************\n")
-	return builder.String()
 }
 
 func InstructionToStr(inst Instruction) string {
@@ -162,6 +151,58 @@ type Program struct {
 	Variables  []Operation
 	Constants  []Operation
 	Operations []Operation
+}
+
+type ProcedureSchema struct {
+	InParamsAmount, OutParamsAmount []Operation
+}
+
+func (p *Program) FindProc(operation Operation) (ProcedureSchema, error) {
+	callingProcedureArguments := make([]Operation, 0)
+	callingProcedureOutParams := make([]Operation, 0)
+
+	for callingProcedureIndex, op := range p.Operations {
+		if op.Operator.Operand == operation.Operator.Operand && op.Instruction == InstructionProc {
+			for _, operation := range p.Operations[callingProcedureIndex:] {
+				if operation.Instruction == InstructionWith {
+					for k, v := range operation.Links {
+						if !strings.HasPrefix(k, "proc_param_") {
+							continue
+						}
+						callingProcedureArguments = append(callingProcedureArguments, v)
+					}
+				}
+				if operation.Instruction == InstructionOut {
+					for k, v := range operation.Links {
+						if !strings.HasPrefix(k, "proc_out_param_") {
+							continue
+						}
+						callingProcedureOutParams = append(callingProcedureOutParams, v)
+					}
+				}
+			}
+
+			return ProcedureSchema{
+				InParamsAmount:  callingProcedureArguments,
+				OutParamsAmount: callingProcedureOutParams,
+			}, nil
+		}
+	}
+	return ProcedureSchema{}, fmt.Errorf("proc named %q was not found", operation.Operator.Operand)
+}
+
+func PPrintOperation(op Operation) string {
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("%s\n", InstructionToStr(op.Instruction)))
+	builder.WriteString(fmt.Sprintf("	operand: %s | symbolName%q\n", op.Operator.Operand, op.Operator.SymbolName))
+	for k, v := range op.Links {
+		builder.WriteString(fmt.Sprintf("	link_name: %q | link_type: %q | link_value: %q\n", k, v.Operator.SymbolName, v.Operator.Operand))
+	}
+	for k, v := range op.Addresses {
+		builder.WriteString(fmt.Sprintf("\nAddr %s: %d\n", InstructionToStr(k), v))
+	}
+	builder.WriteString("****************************************************\n")
+	return builder.String()
 }
 
 func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {

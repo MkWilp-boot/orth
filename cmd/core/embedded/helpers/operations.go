@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 
 	"golang.org/x/exp/constraints"
 )
@@ -15,7 +15,7 @@ const MainScope = "_global"
 
 type RefStackItem struct {
 	AbsPosition uint
-	Instruction orthtypes.Instruction
+	Instruction orth_types.Instruction
 }
 
 func PopLast[T any](stack *[]T) T {
@@ -29,48 +29,53 @@ func PopLast[T any](stack *[]T) T {
 	return item
 }
 
-func HandleOperationDo(stack *[]RefStackItem, program *orthtypes.Program, operationIndex uint) {
+func HandleOperationDo(stack *[]RefStackItem, program *orth_types.Program, operationIndex uint) {
 	lastStackItem := PopLast(stack)
 	switch lastStackItem.Instruction {
-	case orthtypes.While:
-		program.Operations[operationIndex].Addresses[orthtypes.While] = int(lastStackItem.AbsPosition)
+	case orth_types.InstructionWhile:
+		program.Operations[operationIndex].Addresses[orth_types.InstructionWhile] = int(lastStackItem.AbsPosition)
 	default:
 		log.Fatalln("non logical block found before 'DO' operation, syntax error")
 	}
 }
 
-func HandleOperationEnd(stack *[]RefStackItem, program *orthtypes.Program, currentOperationIndex uint) {
+func HandleOperationEnd(stack *[]RefStackItem, program *orth_types.Program, currentOperationIndex uint) {
 	lastStackItem := PopLast(stack)
 	switch lastStackItem.Instruction {
-	case orthtypes.If:
+	case orth_types.InstructionIf:
 		ifOperation := lastStackItem
-		program.Operations[ifOperation.AbsPosition].Addresses[orthtypes.End] = int(currentOperationIndex)
-	case orthtypes.Else:
-		elseOperation := lastStackItem
-		program.Operations[elseOperation.AbsPosition].Addresses[orthtypes.End] = int(currentOperationIndex)
-	case orthtypes.Proc:
-		procOperation := lastStackItem
-		program.Operations[currentOperationIndex].Addresses[orthtypes.Proc] = int(procOperation.AbsPosition)
-	case orthtypes.Do:
-		doOperation := lastStackItem
-		whileAddress := program.Operations[doOperation.AbsPosition].Addresses[orthtypes.While]
 
-		program.Operations[currentOperationIndex].Addresses[orthtypes.While] = int(whileAddress)
-		program.Operations[doOperation.AbsPosition].Addresses[orthtypes.End] = int(currentOperationIndex)
+		program.Operations[ifOperation.AbsPosition].Addresses[orth_types.InstructionEnd] = int(currentOperationIndex)
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionIf] = int(ifOperation.AbsPosition)
+	case orth_types.InstructionElse:
+		elseOperation := lastStackItem
+
+		program.Operations[elseOperation.AbsPosition].Addresses[orth_types.InstructionEnd] = int(currentOperationIndex)
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionElse] = int(elseOperation.AbsPosition)
+	case orth_types.InstructionProc:
+		procOperation := lastStackItem
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionProc] = int(procOperation.AbsPosition)
+	case orth_types.InstructionDo:
+		doOperation := lastStackItem
+		whileAddress := program.Operations[doOperation.AbsPosition].Addresses[orth_types.InstructionWhile]
+
+		program.Operations[currentOperationIndex].Addresses[orth_types.InstructionWhile] = int(whileAddress)
+		program.Operations[doOperation.AbsPosition].Addresses[orth_types.InstructionEnd] = int(currentOperationIndex)
 	}
 }
 
-func HandleOperationElse(stack *[]RefStackItem, program *orthtypes.Program, operationIndex uint) {
+func HandleOperationElse(stack *[]RefStackItem, program *orth_types.Program, operationIndex uint) {
 	lastStackItem := PopLast(stack)
 	switch lastStackItem.Instruction {
-	case orthtypes.If:
-		program.Operations[lastStackItem.AbsPosition].Addresses[orthtypes.Else] = int(operationIndex)
+	case orth_types.InstructionIf:
+		ifOperation := lastStackItem
+		program.Operations[ifOperation.AbsPosition].Addresses[orth_types.InstructionElse] = int(operationIndex)
 	}
 }
 
-func GetVariableContext(variable orthtypes.ContextDeclaration, context *orthtypes.Context) (string, error) {
+func GetVariableContext(variable orth_types.ContextDeclaration, context *orth_types.Context) (string, error) {
 	if context == nil {
-		return "", errors.New(fmt.Sprintf("undefined variable at abs location: %d for context %s", variable.Index, context.Name))
+		return "", fmt.Errorf("undefined variable at abs location: %d", variable.Index)
 	}
 	for _, declaration := range context.Declarations {
 		if declaration.Name == variable.Name {
@@ -80,42 +85,21 @@ func GetVariableContext(variable orthtypes.ContextDeclaration, context *orthtype
 	return GetVariableContext(variable, context.Parent)
 }
 
-func LinkVariableToValue(operation orthtypes.Operation, analyzerOperations *[]orthtypes.Operation, program *orthtypes.Program) orthtypes.Operation {
-	// if operation.Instruction == orthtypes.Var {
-	// 	// set to skip so the value won't be on the final asm
-	// 	(*analyzerOperations)[len(*analyzerOperations)-1].Instruction = orthtypes.Skip
-	// 	// set to len - 1 because the last element will always be the var value
-	// 	operation.RefBlock = len(*analyzerOperations) - 1
-	// 	program.Variables = append(program.Variables, operation)
-	// } else if operation.Instruction == orthtypes.Const {
-	// 	// set to skip so the value won't be on the final asm
-	// 	(*analyzerOperations)[len(*analyzerOperations)-1].Instruction = orthtypes.Skip
-	// 	// set to len - 1 because the last element will always be the var value
-	// 	operation.RefBlock = len(*analyzerOperations) - 1
-	// 	program.Constants = append(program.Constants, operation)
-	// } else {
-	// 	if operation.Instruction == orthtypes.Hold {
-	// 		operationType, err := OperationIsVariableLike(operation, program)
-	// 		if err != nil {
-	// 			program.Error = append(program.Error, err)
-	// 			return orthtypes.Operation{}
-	// 		}
-	// 		operation.Operator.SymbolName = operationType
-	// 	}
-	// }
+func LinkVariableToValue(operation orth_types.Operation, analyzerOperations *[]orth_types.Operation, program *orth_types.Program) orth_types.Operation {
+	// I'll think about this later
 	return operation
 }
 
-func OperationIsVariableLike(operation orthtypes.Operation, program *orthtypes.Program) (string, error) {
+func OperationIsVariableLike(operation orth_types.Operation, program *orth_types.Program) (string, error) {
 	for _, v := range program.Variables {
 		if v.Operator.Operand == operation.Operator.Operand {
-			return orthtypes.PrimitiveVar, nil
+			return orth_types.StdVar, nil
 		}
 	}
-	if operation.Operator.SymbolName != orthtypes.PrimitiveVar {
+	if operation.Operator.SymbolName != orth_types.StdVar {
 		for _, v := range program.Constants {
 			if v.Operator.Operand == operation.Operator.Operand {
-				return orthtypes.PrimitiveConst, nil
+				return orth_types.StdConst, nil
 			}
 		}
 	}
@@ -123,7 +107,7 @@ func OperationIsVariableLike(operation orthtypes.Operation, program *orthtypes.P
 	return "", err
 }
 
-func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, param2 TOperand, instruction orthtypes.Instruction) (string, bool) {
+func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, param2 TOperand, instruction orth_types.Instruction) (string, bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -132,11 +116,11 @@ func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, p
 	}()
 
 	operand := ""
-	if instruction == orthtypes.Mult {
+	if instruction == orth_types.InstructionMult {
 		operand = fmt.Sprint(param1 * param2)
-	} else if instruction == orthtypes.Sum {
+	} else if instruction == orth_types.InstructionSum {
 		operand = fmt.Sprint(param1 + param2)
-	} else if instruction == orthtypes.Mod {
+	} else if instruction == orth_types.InstructionMod {
 		var param1Inter interface{} = param1
 		switch param1Inter.(type) {
 		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
@@ -144,9 +128,9 @@ func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, p
 		default:
 			panic("modulo operation is only supported for integer types.")
 		}
-	} else if instruction == orthtypes.Div {
+	} else if instruction == orth_types.InstructionDiv {
 		operand = fmt.Sprint(param1 / param2)
-	} else if instruction == orthtypes.Minus {
+	} else if instruction == orth_types.InstructionMinus {
 		operand = fmt.Sprint(param1 - param2)
 	}
 

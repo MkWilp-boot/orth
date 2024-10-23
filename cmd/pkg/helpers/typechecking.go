@@ -1,35 +1,70 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"orth/cmd/core/orth_debug"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 	"strconv"
 )
 
-func IsInt(t string) bool {
-	_, ok := orthtypes.GlobalTypes[orthtypes.INTS][t]
-	return ok
+func IsNumeric(op orth_types.Operand) bool {
+	return IsInt(op) || IsFloat(op)
 }
 
-func IsFloat(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.FLOATS][t] != ""
+func ToAddress(op orth_types.Operand) (int, bool) {
+	address, err := strconv.Atoi(op.Operand)
+	return address, IsInt(op) && err == nil
 }
 
-func IsBool(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.BOOL][t] != ""
+func IsInt(op orth_types.Operand) bool {
+	_, ok := orth_types.GlobalTypes[orth_types.INTS][op.SymbolName]
+	_, err := strconv.Atoi(op.Operand)
+	return ok && err == nil
+}
+
+func IsFloat(op orth_types.Operand) bool {
+
+	return orth_types.GlobalTypes[orth_types.FLOATS][op.SymbolName] != ""
+}
+
+func IsBool(op orth_types.Operand) bool {
+	return orth_types.GlobalTypes[orth_types.BOOL][op.SymbolName] != "" &&
+		(op.Operand == orth_types.StdTrue || op.Operand == orth_types.StdFalse)
 }
 
 func IsString(t string) bool {
-	return orthtypes.GlobalTypes[orthtypes.STRING][t] != ""
+	return orth_types.GlobalTypes[orth_types.STRING][t] != ""
 }
 
 // SameBaseType checks if the 2 variables have the same base type.
 // Ex: INT-INT, FLOAT-FLOAT, STRING-INT
-func SameBaseType(operands ...orthtypes.Operand) {
-	if operands[0].GrabRootType() != operands[1].GrabRootType() {
-		panic(fmt.Errorf("mismatch types! [%q - %q] and [%q - %q]", operands[0].Operand, operands[0].SymbolName, operands[1].Operand, operands[1].SymbolName))
+func SameBaseType(operands ...orth_types.Operand) error {
+	if len(operands) == 0 {
+		return errors.New("no operands to loop")
 	}
+	baseOperand := operands[0]
+	for _, operand := range operands {
+		if operand.Operand != baseOperand.Operand {
+			return fmt.Errorf("mismatch types %q and %q", baseOperand.Operand, operand.Operand)
+		}
+	}
+
+	return nil
+}
+
+func OperatingOnEqualTypes(operations ...orth_types.Operation) error {
+	if len(operations) == 0 {
+		return errors.New("no operands to loop")
+	}
+	baseOperand := operations[0]
+	for _, operand := range operations {
+		if operand.Operator.SymbolName != baseOperand.Operator.SymbolName {
+			return fmt.Errorf("mismatch types %q and %q", baseOperand.Operator.SymbolName, operand.Operator.SymbolName)
+		}
+	}
+
+	return nil
 }
 
 // ===================================
@@ -37,8 +72,8 @@ func SameBaseType(operands ...orthtypes.Operand) {
 //	CONVERSIONS
 //
 // ===================================
-func ToInt(o orthtypes.Operand) int {
-	if IsInt(o.SymbolName) {
+func ToInt(o orth_types.Operand) int {
+	if IsInt(o) {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic("Unknow error " + err.Error())
@@ -46,7 +81,7 @@ func ToInt(o orthtypes.Operand) int {
 		return n
 	}
 
-	if IsFloat(o.SymbolName) {
+	if IsFloat(o) {
 		f, err := strconv.ParseFloat(o.Operand, 64)
 		if err != nil {
 			panic("Unknow error " + err.Error())
@@ -54,7 +89,7 @@ func ToInt(o orthtypes.Operand) int {
 		return int(f)
 	}
 
-	if o.SymbolName == orthtypes.ADDR {
+	if o.SymbolName == orth_types.ADDR {
 		n, err := strconv.Atoi(o.Operand)
 		if err != nil {
 			panic(orth_debug.DefaultRuntimeException)

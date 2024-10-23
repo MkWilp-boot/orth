@@ -2,11 +2,13 @@ package helpers
 
 import (
 	"fmt"
-	orthtypes "orth/cmd/pkg/types"
+	orth_types "orth/cmd/pkg/types"
 )
 
+const MEM_MAX_CAP uint = 64000
+
 // StackPop pops the last item from the stack
-func StackPop(root *[]orthtypes.Operand) orthtypes.Operand {
+func StackPop(root *[]orth_types.Operand) orth_types.Operand {
 	if len(*root) < 1 {
 		panic("Stack underflow error!")
 	}
@@ -19,21 +21,21 @@ func StackPop(root *[]orthtypes.Operand) orthtypes.Operand {
 
 // BasedOnType executes a 'act' and appends it's result to the 'root' (or stack)
 func BasedOnType(
-	root *[]orthtypes.Operand,
+	root *[]orth_types.Operand,
 	superType string,
-	act func(string, orthtypes.Operand, orthtypes.Operand) orthtypes.Operand,
-	operands ...orthtypes.Operand) {
+	act func(string, orth_types.Operand, orth_types.Operand) orth_types.Operand,
+	operands ...orth_types.Operand) {
 
 	stack := *root
 	originalType := operands[0].GrabRootType()
 	switch originalType {
-	case orthtypes.INTS:
+	case orth_types.INTS:
 		stack = append(stack, act(superType, operands[0], operands[1]))
-	case orthtypes.FLOATS:
+	case orth_types.FLOATS:
 		stack = append(stack, act(superType, operands[0], operands[1]))
-	case orthtypes.STRING:
+	case orth_types.STRING:
 		stack = append(stack, act(superType, operands[0], operands[1]))
-	case orthtypes.RNT:
+	case orth_types.RNT:
 		stack = append(stack, act(superType, operands[0], operands[1]))
 	default:
 		panic(fmt.Errorf("invalid type of %q", originalType))
