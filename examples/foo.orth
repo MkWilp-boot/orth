@@ -1,5 +1,3 @@
 proc main in
-    const i i32 100
-
-    hold i deref
+    s "ola" puts
 end

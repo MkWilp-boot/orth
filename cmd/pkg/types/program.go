@@ -205,13 +205,13 @@ func PPrintOperation(op Operation) string {
 	return builder.String()
 }
 
-func (p *Program) Filter(predicate func(op Operation, i int) bool) []Pair[int, Operation] {
-	ops := make([]Pair[int, Operation], 0)
+func (p *Program) Filter(predicate func(op Operation, i int) bool) []Details[int, Operation] {
+	ops := make([]Details[int, Operation], 0)
 	for i, op := range p.Operations {
 		if predicate(op, i) {
-			ops = append(ops, Pair[int, Operation]{
-				Left:  i,
-				Right: op,
+			ops = append(ops, Details[int, Operation]{
+				Subject: i,
+				Error:   op,
 			})
 		}
 	}

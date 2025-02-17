@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"orth/cmd/core/embedded"
 	embedded_helpers "orth/cmd/core/embedded/helpers"
-	"orth/cmd/core/embedded/optimizer"
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
@@ -42,7 +41,7 @@ func main() {
 	strProgram := lexer.LoadProgramFromFile(sourceCodePath)
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parsedOperations := make(chan orth_types.Pair[orth_types.Operation, error])
+	parsedOperations := make(chan orth_types.Details[orth_types.Operation, error])
 
 	program := orth_types.Program{
 		Operations: make([]orth_types.Operation, 0),
@@ -52,12 +51,12 @@ func main() {
 
 	analyzerOperations := make([]orth_types.Operation, 0)
 	for parsedOperation := range parsedOperations {
-		if parsedOperation.Right != nil {
-			program.Error = append(program.Error, parsedOperation.Right)
+		if parsedOperation.Error != nil {
+			program.Error = append(program.Error, parsedOperation.Error)
 			break
 		}
-		parsedOperation.Left = embedded_helpers.LinkVariableToValue(parsedOperation.Left, &analyzerOperations, &program)
-		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
+		parsedOperation.Subject = embedded_helpers.LinkVariableToValue(parsedOperation.Subject, &analyzerOperations, &program)
+		analyzerOperations = append(analyzerOperations, parsedOperation.Subject)
 	}
 
 	if len(program.Error) != 0 {
@@ -67,10 +66,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	optimizedOperation, warnings := optimizer.AnalyzeAndOptimizeOperations(analyzerOperations)
-	program.Warnings = append(program.Warnings, warnings...)
-	program.Operations = append(program.Operations, optimizedOperation...)
-
+	program.Operations = analyzerOperations
 	for _, warning := range program.Warnings {
 		fmt.Println(warning.Message)
 	}

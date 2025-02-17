@@ -114,9 +114,9 @@ type Context struct {
 	InnerContexts []*Context
 }
 
-type Pair[T1, T2 any] struct {
-	Left  T1
-	Right T2
+type Details[T1, T2 any] struct {
+	Subject T1
+	Error   T2
 }
 
 type Operation struct {

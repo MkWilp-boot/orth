@@ -74,7 +74,7 @@ func CrossReferenceBlocks(program orth_types.Program) (orth_types.Program, error
 }
 
 // ParseTokenAsOperation parses an slice of pre-instructions into a runnable program
-func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_types.StringEnum]], parsedOperation chan<- orth_types.Pair[orth_types.Operation, error]) {
+func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_types.StringEnum]], parsedOperation chan<- orth_types.Details[orth_types.Operation, error]) {
 	procNames := make(map[string]int)
 
 	context := &orth_types.Context{
@@ -117,70 +117,70 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 			case orth_types.StdBOOL:
 				preProgram[i+1].Content.ValidPos = true
 				ins := parseToken(v.Content.Token, preProgram[i+1].Content.Token, context, orth_types.InstructionPush)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdSTR:
 				preProgram[i+1].Content.ValidPos = true
 				ins := parseToken(orth_types.StdSTR, preProgram[i+1].Content.Token[1:len(preProgram[i+1].Content.Token)-1], context, orth_types.InstructionPushStr)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdPlus:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionSum)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdMinus:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionMinus)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdMult:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionMult)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdDiv:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionDiv)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdPutUint:
 				ins := parseToken(orth_types.StdVOID, "", context, orth_types.FunctionPutU64)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdEquals:
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionEqual)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdNotEquals:
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionNotEqual)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLowerThan:
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionLt)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdGreaterThan:
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionGt)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdIf:
 				newContext := orth_types.Context{
@@ -194,9 +194,9 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				context = &newContext
 
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionIf)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdElse:
 				// context is an "if" block that must not have a "else" block as a child, they should be siblings
@@ -213,72 +213,72 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				context = &newContext
 
 				ins := parseToken(orth_types.StdBOOL, "", context, orth_types.InstructionElse)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdEND:
 				if context.Parent != nil {
 					context = context.Parent
 				}
 				ins := parseToken(orth_types.StdEND, "", context, orth_types.InstructionEnd)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdPutStr:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionPutString)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdOver:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionOver)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.Std2Dup:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionTwoDup)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdDup:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionDup)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdWhile:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionWhile)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLeftShift:
 				ins := parseToken(orth_types.StdBitwise, "", context, orth_types.InstructionLShift)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdRightShift:
 				ins := parseToken(orth_types.StdBitwise, "", context, orth_types.InstructionRShift)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLogicalAnd:
 				ins := parseToken(orth_types.StdBitwise, "", context, orth_types.InstructionLAnd)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLogicalOr:
 				ins := parseToken(orth_types.StdBitwise, "", context, orth_types.InstructionLOr)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdProc:
 				preProgram[i+1].Content.ValidPos = true
@@ -286,9 +286,9 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 
 				procNames[pName]++
 				if procNames[pName] != 1 {
-					parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-						Left:  orth_types.Operation{},
-						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_02, "PROC", pName, file.Name, v.Index, v.Content.Index),
+					parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+						Subject: orth_types.Operation{},
+						Error:   orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_02, "PROC", pName, file.Name, v.Index, v.Content.Index),
 					}
 					close(parsedOperation)
 					return
@@ -305,15 +305,15 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				context = &newContext
 
 				ins := parseToken(orth_types.StdProc, pName, context, orth_types.InstructionProc)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdIn:
 				ins := parseToken(orth_types.StdIn, "", context, orth_types.InstructionIn)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdDo:
 				newContext := orth_types.Context{
@@ -327,75 +327,75 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				context = &newContext
 
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionDo)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdDrop:
 				ins := parseToken(orth_types.StdVOID, "", context, orth_types.InstructionDrop)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdSwap:
 				ins := parseToken(orth_types.StdVOID, "", context, orth_types.InstructionSwap)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdMod:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionMod)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdMem:
 				ins := parseToken(orth_types.StdAddress, "0", context, orth_types.InstructionMem)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdStore:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionStore)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLoad:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionLoad)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdCall:
 				preProgram[i+1].Content.ValidPos = true
 				ins := parseToken(orth_types.StdSTR, preProgram[i+1].Content.Token, context, orth_types.InstructionCall)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdLoadAndStay:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionLoadStay)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdType:
 				preProgram[i+1].Content.ValidPos = true
 
 				ins := parseToken(orth_types.StdType, preProgram[i+1].Content.Token, context, orth_types.InstructionPush)
 
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdConst:
 				vValue, vType, vName := grabVariableDefinition(preProgram, i)
 
 				if context.HasVariableDeclaredInOrAbove(vName) {
-					parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-						Left:  orth_types.Operation{},
-						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "constant", vName, context.Name),
+					parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+						Subject: orth_types.Operation{},
+						Error:   orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "constant", vName, context.Name),
 					}
 					close(parsedOperation)
 					return
@@ -411,17 +411,17 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				constant.Links = make(map[string]orth_types.Operation)
 				constant.Links["variable_value"] = value
 
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  constant,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: constant,
+					Error:   nil,
 				}
 			case orth_types.StdVar:
 				vValue, vType, vName := grabVariableDefinition(preProgram, i)
 
 				if context.HasVariableDeclaredInOrAbove(vName) {
-					parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-						Left:  orth_types.Operation{},
-						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "variable", vName, context.Name),
+					parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+						Subject: orth_types.Operation{},
+						Error:   orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_03, "variable", vName, context.Name),
 					}
 					close(parsedOperation)
 					return
@@ -437,15 +437,15 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				variable.Links = make(map[string]orth_types.Operation)
 				variable.Links["variable_value"] = value
 
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  variable,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: variable,
+					Error:   nil,
 				}
 			case orth_types.StdDeref:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionDeref)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			// I hate this
 			// case orth_types.StdSetNumber:
@@ -465,24 +465,24 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 				vName := preProgram[i+1].Content.Token
 
 				ins := parseToken(orth_types.StdHold, vName, context, orth_types.InstructionHold)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdInvoke:
 				preProgram[i+1].Content.ValidPos = true
 				pName := preProgram[i+1].Content.Token
 
 				ins := parseToken(orth_types.StdRNT, pName, context, orth_types.InstructionInvoke)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdExit:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.InstructionExit)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdProcOutParams:
 				procOutTypeParams := make([]string, 0)
@@ -513,9 +513,9 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 					}
 				}
 
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdProcInParams:
 				procTypeParams := make([]string, 0)
@@ -548,39 +548,39 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[orth_types.SliceOf[orth_
 					}
 				}
 
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdDumpMem:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionDumpMem)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdAlloc:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionAlloc)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdFree:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionFree)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			case orth_types.StdPutChar:
 				ins := parseToken(orth_types.StdRNT, "", context, orth_types.FunctionPutChar)
-				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-					Left:  ins,
-					Right: nil,
+				parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+					Subject: ins,
+					Error:   nil,
 				}
 			default:
 				if !v.Content.ValidPos {
-					parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
-						Left:  orth_types.Operation{},
-						Right: orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Token, file.Name, v.Index, v.Content.Index),
+					parsedOperation <- orth_types.Details[orth_types.Operation, error]{
+						Subject: orth_types.Operation{},
+						Error:   orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_01, v.Content.Token, file.Name, v.Index, v.Content.Index),
 					}
 					close(parsedOperation)
 					return

@@ -34,7 +34,7 @@ func PrepareComp(fileName string) ([]error, []orth_types.CompilerMessage) {
 	strProgram := lexer.LoadProgramFromFile(fileName)
 	lexedFiles := lexer.LexFile(strProgram)
 
-	parsedOperations := make(chan orth_types.Pair[orth_types.Operation, error])
+	parsedOperations := make(chan orth_types.Details[orth_types.Operation, error])
 
 	program := orth_types.Program{
 		Operations: make([]orth_types.Operation, 0),
@@ -46,12 +46,12 @@ func PrepareComp(fileName string) ([]error, []orth_types.CompilerMessage) {
 
 	analyzerOperations := make([]orth_types.Operation, 0)
 	for parsedOperation := range parsedOperations {
-		if parsedOperation.Right != nil {
-			program.Error = append(program.Error, parsedOperation.Right)
+		if parsedOperation.Error != nil {
+			program.Error = append(program.Error, parsedOperation.Error)
 			break
 		}
-		parsedOperation.Left = embedded_helpers.LinkVariableToValue(parsedOperation.Left, &analyzerOperations, &program)
-		analyzerOperations = append(analyzerOperations, parsedOperation.Left)
+		parsedOperation.Subject = embedded_helpers.LinkVariableToValue(parsedOperation.Subject, &analyzerOperations, &program)
+		analyzerOperations = append(analyzerOperations, parsedOperation.Subject)
 	}
 
 	if len(program.Error) != 0 {
