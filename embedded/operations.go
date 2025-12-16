@@ -2,9 +2,9 @@ package embedded
 
 import (
 	"fmt"
-	embedded_helpers "orth/cmd/core/embedded/helpers"
-	"orth/cmd/core/orth_debug"
-	orth_types "orth/cmd/pkg/types"
+	orth_debug "orth/debug"
+	embedded_helpers "orth/embedded/helpers"
+	orth_types "orth/pkg/types"
 	"os"
 	"regexp"
 )

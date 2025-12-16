@@ -3,9 +3,9 @@ package functions
 import (
 	"errors"
 	"fmt"
-	"orth/cmd/core/orth_debug"
-	"orth/cmd/pkg/helpers"
-	orth_types "orth/cmd/pkg/types"
+	orth_debug "orth/debug"
+	"orth/pkg/helpers"
+	orth_types "orth/pkg/types"
 	"os"
 	"strconv"
 	"strings"

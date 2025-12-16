@@ -3,8 +3,8 @@ package helpers
 import (
 	"errors"
 	"fmt"
-	"orth/cmd/core/orth_debug"
-	orth_types "orth/cmd/pkg/types"
+	orth_debug "orth/debug"
+	orth_types "orth/pkg/types"
 	"strconv"
 )
 

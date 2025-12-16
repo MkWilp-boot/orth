@@ -2,7 +2,7 @@ package functions
 
 import (
 	"math"
-	orth_types "orth/cmd/pkg/types"
+	orth_types "orth/pkg/types"
 	"strconv"
 )
 

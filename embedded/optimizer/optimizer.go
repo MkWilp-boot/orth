@@ -1,7 +1,7 @@
 package optimizer
 
 import (
-	orth_types "orth/cmd/pkg/types"
+	orth_types "orth/pkg/types"
 )
 
 func AnalyzeAndOptimizeOperations(operations []orth_types.Operation) ([]orth_types.Operation, []orth_types.CompilerMessage) {

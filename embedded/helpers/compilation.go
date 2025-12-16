@@ -3,8 +3,8 @@ package embedded_helpers
 import (
 	"fmt"
 	"log"
-	"orth/cmd/core/orth_debug"
-	orth_types "orth/cmd/pkg/types"
+	orth_debug "orth/debug"
+	orth_types "orth/pkg/types"
 	"os"
 	"runtime"
 	"strconv"

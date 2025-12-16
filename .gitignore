@@ -1,3 +1,4 @@
+tests/dumps/*.txt
 *.exe
 *.asm
 *.obj

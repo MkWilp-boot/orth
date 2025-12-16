@@ -2,11 +2,13 @@ package simulation
 
 import (
 	"fmt"
-	"orth/cmd/pkg/helpers"
-	"orth/cmd/pkg/helpers/functions"
-	orth_types "orth/cmd/pkg/types"
+	"orth/pkg/helpers"
+	"orth/pkg/helpers/functions"
+	orth_types "orth/pkg/types"
 	"os"
 )
+
+const mem_max_cap uint = 64000
 
 type doubleOperandsOperationtionGroup struct {
 	Integer func(superType string, n1, n2 orth_types.Operand) orth_types.Operand
@@ -74,7 +76,7 @@ func operateDoubleValueStack(stack *stack, operationGroup doubleOperandsOperatio
 // SimulateStack is an optional step that preceeds compilation, checking for errors, underflows, overflows
 // and other things that a programmer like me would do without even thinking
 func SimulateStack(program *orth_types.Program) {
-	virtualMem := make([]orth_types.Operation, helpers.MEM_MAX_CAP)
+	virtualMem := make([]orth_types.Operation, mem_max_cap)
 	stack := stack{
 		ptr:   -1,
 		items: make([]orth_types.Operation, 1024),
@@ -166,8 +168,8 @@ func SimulateStack(program *orth_types.Program) {
 				os.Exit(1)
 			}
 
-			if offset > int(helpers.MEM_MAX_CAP) {
-				fmt.Fprintf(os.Stderr, "%q offset larger than mem_max_cap: max allowed %d | actual %d", orth_types.InstructionToStr(orth_types.InstructionStore), helpers.MEM_MAX_CAP, offset)
+			if offset > int(mem_max_cap) {
+				fmt.Fprintf(os.Stderr, "%q offset larger than mem_max_cap: max allowed %d | actual %d", orth_types.InstructionToStr(orth_types.InstructionStore), mem_max_cap, offset)
 				os.Exit(1)
 			}
 			// [1:] because index 0 is the offset itself

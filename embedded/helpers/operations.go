@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	orth_types "orth/cmd/pkg/types"
+	orth_types "orth/pkg/types"
 
 	"golang.org/x/exp/constraints"
 )
