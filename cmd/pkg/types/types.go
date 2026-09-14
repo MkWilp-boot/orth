@@ -172,11 +172,7 @@ type Operand struct {
 	Operand    string
 }
 
-type SliceOf[T comparable] struct {
-	Slice *[]T
-}
-
-type File[T comparable] struct {
+type File[T any] struct {
 	Name      string
 	CodeBlock T
 }

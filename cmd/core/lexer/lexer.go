@@ -119,8 +119,8 @@ func LoadProgramFromFile(path string) []orth_types.File[string] {
 
 // LexFile receives a pure text program then
 // separate and enumerates all tokens present within the provided program
-func LexFile(programFiles []orth_types.File[string]) []orth_types.File[orth_types.SliceOf[orth_types.StringEnum]] {
-	lexedFiles := make([]orth_types.File[orth_types.SliceOf[orth_types.StringEnum]], 0)
+func LexFile(programFiles []orth_types.File[string]) []orth_types.File[[]orth_types.StringEnum] {
+	lexedFiles := make([]orth_types.File[[]orth_types.StringEnum], 0)
 
 	for _, file := range programFiles {
 		pLines := strings.Split(file.CodeBlock, "\r\n")
@@ -143,11 +143,9 @@ func LexFile(programFiles []orth_types.File[string]) []orth_types.File[orth_type
 			}
 		}
 
-		lexedFiles = append(lexedFiles, orth_types.File[orth_types.SliceOf[orth_types.StringEnum]]{
-			Name: file.Name,
-			CodeBlock: orth_types.SliceOf[orth_types.StringEnum]{
-				Slice: &lines,
-			},
+		lexedFiles = append(lexedFiles, orth_types.File[[]orth_types.StringEnum]{
+			Name:      file.Name,
+			CodeBlock: lines,
 		})
 	}
 	return lexedFiles

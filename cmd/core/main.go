@@ -17,15 +17,15 @@ import (
 
 func init() {
 	flag.Parse()
-	sourceCodePath := flag.Args()[0]
 
-	if *orth_debug.Help {
+	if *orth_debug.Help || len(flag.Args()) < 1 {
+		fmt.Println("Usage: <orth> <file_path> <flags>")
 		flag.PrintDefaults()
-	}
-	if len(flag.Args()) < 1 {
-		fmt.Println("Usage: <orth> <file_path>")
 		os.Exit(1)
 	}
+
+	sourceCodePath := flag.Args()[0]
+
 	if !strings.HasSuffix(sourceCodePath, orth_types.FileType) {
 		fmt.Printf("[ERROR] The selected file %q is not of type %q\n", sourceCodePath, orth_types.FileType)
 		os.Exit(1)
