@@ -135,8 +135,8 @@ type Operation struct {
 	Operator    Operand
 	Context     *Context
 	Links       map[string]Operation
-	ProcParams  map[string]Operation
-	ProcRtTypes map[string]Operation
+	ProcParams  []Operation
+	ProcRtTypes []Operation
 	Addresses   map[Instruction]int
 }
 

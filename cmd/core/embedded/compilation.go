@@ -335,8 +335,8 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				writer.WriteString("	xor rax, rax\n")
 			} else {
 				paramCount := len(op.ProcParams) - 1
-				for ptype := range op.ProcParams {
-					fmt.Fprintf(writer, "	; %q\n", ptype)
+				for _, ptype := range op.ProcParams {
+					fmt.Fprintf(writer, "	; ptype_%s_%d\n", ptype.Operator.SymbolName, paramCount)
 					fmt.Fprintf(writer, "	push proc_arg_%d\n", paramCount)
 					paramCount--
 				}
@@ -395,11 +395,10 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				outAmount := len(proc.ProcRtTypes)
 
 				if outAmount > 0 {
-					i := outAmount - 1
-					for typeReturn := range proc.ProcRtTypes {
-						fmt.Fprintf(writer, "; %q\n", typeReturn)
+					for i := len(proc.ProcRtTypes) - 1; i >= 0; i-- {
+						typeReturn := proc.ProcRtTypes[i]
+						fmt.Fprintf(writer, "; rtype_%s_%d\n", typeReturn.Operator.SymbolName, i)
 						fmt.Fprintf(writer, "	pop proc_ret_%d\n", i)
-						i--
 					}
 				}
 				writer.WriteString("	invoke clear_proc_params\n")

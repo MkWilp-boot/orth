@@ -307,8 +307,8 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 				context = &newContext
 
 				lastInvalidSymbol = ""
-				params := make(map[string]orth_types.Operation)
-				returns := make(map[string]orth_types.Operation)
+				params := make([]orth_types.Operation, 0)
+				returns := make([]orth_types.Operation, 0)
 
 				for j := 1; j < len(preProgram) && preProgram[i+j].Content.Token != orth_types.StdIn; j++ {
 					token := preProgram[i+j].Content.Token
@@ -318,7 +318,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					preProgram[i+j].Content.ValidPos = true
 
 					parsedToken := parseToken(token, token, context, orth_types.InstructionParam)
-					params[fmt.Sprintf("ptype_%s_%d", token, j-1)] = parsedToken
+					params = append(params, parsedToken)
 				}
 
 				parsingReturns := false
@@ -336,7 +336,8 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 							os.Exit(1)
 						}
 						preProgram[offset].Content.ValidPos = true
-						returns[fmt.Sprintf("rtype_%s_%d", preProgram[offset].Content.Token, j)] = parseToken(preProgram[offset].Content.Token, preProgram[offset].Content.Token, context, orth_types.InstructionReturnType)
+						parsedToken := parseToken(preProgram[offset].Content.Token, preProgram[offset].Content.Token, context, orth_types.InstructionReturnType)
+						returns = append(returns, parsedToken)
 					}
 					if len(returns) <= 0 {
 						err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_14, orth_types.StdProcParamsDiv, ">= 1", len(returns), file.Name, v.Index, v.Content.Index)
@@ -622,7 +623,7 @@ func parseToken(varType, operand string, context *orth_types.Context, op orth_ty
 	}
 }
 
-func parseProc(operand string, context *orth_types.Context, procParams, procRtTypes map[string]orth_types.Operation) orth_types.Operation {
+func parseProc(operand string, context *orth_types.Context, procParams, procRtTypes []orth_types.Operation) orth_types.Operation {
 	return orth_types.Operation{
 		Instruction: orth_types.InstructionProc,
 		Operator: orth_types.Operand{
