@@ -325,7 +325,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				fmt.Println("[WARN] `main proc` detected with more than 0 parameters, if you are trying to get command line arguments, proceed with `with cli` instead")
 			}
 
-			if lastProcMain && op.Operator.Operand == "cli" {
+			if op.Operator.Operand == "main" && op.ProcHasCli {
 				writer.WriteString("; argc & argv\n")
 				writer.WriteString("	invoke GetCommandLineW\n")
 				writer.WriteString("	invoke CommandLineToArgvW, rax, addr nArgc\n")
@@ -457,7 +457,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			writer.WriteString("	push rax\n")
 			writer.WriteString("	push rbx\n")
 		case orth_types.InstructionWhile:
-			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
+			fmt.Fprintf(writer, ".L%d:\n", ip)
 			writer.WriteString("; While\n")
 		case orth_types.InstructionDo:
 			writer.WriteString("; Do\n")
@@ -467,7 +467,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			if !ok {
 				log.Fatalln("do wihtout end")
 			}
-			writer.WriteString(fmt.Sprintf("	jz .LA%d\n", endAddress))
+			fmt.Fprintf(writer, "	jz .LA%d\n", endAddress)
 		case orth_types.InstructionDrop:
 			writer.WriteString("; Drop\n")
 			writer.WriteString("	pop trash\n")

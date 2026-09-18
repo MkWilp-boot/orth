@@ -1,14 +1,2 @@
-teste proc i32 s : s i32 in
-    puts
-    putui
-    s "a"
-    i32 32
-end
-
-main proc in
-    i32 32
-    s "b"
-    teste call
-    putui
-    puts
+main proc  in
 end

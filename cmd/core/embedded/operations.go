@@ -310,43 +310,58 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 				params := make([]orth_types.Operation, 0)
 				returns := make([]orth_types.Operation, 0)
 
-				for j := 1; j < len(preProgram) && preProgram[i+j].Content.Token != orth_types.StdIn; j++ {
-					token := preProgram[i+j].Content.Token
-					if preProgram[i+j].Content.Token == ":" {
-						break
-					}
-					preProgram[i+j].Content.ValidPos = true
+				isCli := preProgram[i+1].Content.Token == orth_types.StdCli
+				if !isCli {
+					for j := 1; j < len(preProgram) && preProgram[i+j].Content.Token != orth_types.StdIn; j++ {
+						token := preProgram[i+j].Content.Token
+						if preProgram[i+j].Content.Token == ":" {
+							break
+						}
+						preProgram[i+j].Content.ValidPos = true
 
-					parsedToken := parseToken(token, token, context, orth_types.InstructionParam)
-					params = append(params, parsedToken)
-				}
+						parsedToken := parseToken(token, token, context, orth_types.InstructionParam)
+						params = append(params, parsedToken)
+					}
 
-				parsingReturns := false
-				for j := i; j < len(preProgram) && preProgram[j].Content.Token != orth_types.StdIn; j++ {
-					if preProgram[j].Content.Token == orth_types.StdProcParamsDiv {
-						parsingReturns = !parsingReturns
-					}
-					if !parsingReturns {
-						continue
-					}
-					for offset := j + 1; offset < len(preProgram) && preProgram[offset].Content.Token != orth_types.StdIn; offset++ {
-						if !orth_types.IsValidTypeSybl(preProgram[offset].Content.Token) {
-							err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_12, preProgram[offset].Content.Token, "Used as proc return type", file.Name, v.Index, v.Content.Index)
+					parsingReturns := false
+					for j := i; j < len(preProgram) && preProgram[j].Content.Token != orth_types.StdIn; j++ {
+						if preProgram[j].Content.Token == orth_types.StdProcParamsDiv {
+							parsingReturns = !parsingReturns
+						}
+						if !parsingReturns {
+							continue
+						}
+						for offset := j + 1; offset < len(preProgram) && preProgram[offset].Content.Token != orth_types.StdIn; offset++ {
+							if !orth_types.IsValidTypeSybl(preProgram[offset].Content.Token) {
+								err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_12, preProgram[offset].Content.Token, "Used as proc return type", file.Name, v.Index, v.Content.Index)
+								fmt.Fprint(os.Stderr, err)
+								os.Exit(1)
+							}
+							preProgram[offset].Content.ValidPos = true
+							parsedToken := parseToken(preProgram[offset].Content.Token, preProgram[offset].Content.Token, context, orth_types.InstructionReturnType)
+							returns = append(returns, parsedToken)
+						}
+						if len(returns) <= 0 {
+							err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_14, orth_types.StdProcParamsDiv, ">= 1", len(returns), file.Name, v.Index, v.Content.Index)
 							fmt.Fprint(os.Stderr, err)
 							os.Exit(1)
 						}
-						preProgram[offset].Content.ValidPos = true
-						parsedToken := parseToken(preProgram[offset].Content.Token, preProgram[offset].Content.Token, context, orth_types.InstructionReturnType)
-						returns = append(returns, parsedToken)
+						break
 					}
-					if len(returns) <= 0 {
-						err := orth_debug.BuildErrorMessage(orth_debug.ORTH_ERR_14, orth_types.StdProcParamsDiv, ">= 1", len(returns), file.Name, v.Index, v.Content.Index)
-						fmt.Fprint(os.Stderr, err)
-						os.Exit(1)
-					}
-					break
 				}
-				instruction := parseProc(pName, context, params, returns)
+
+				instruction := orth_types.Operation{
+					Instruction: orth_types.InstructionProc,
+					Operator: orth_types.Operand{
+						SymbolName: "proc",
+						Operand:    pName,
+					},
+					Context:     context,
+					Addresses:   make(map[orth_types.Instruction]int),
+					ProcParams:  params,
+					ProcRtTypes: returns,
+					ProcHasCli:  isCli,
+				}
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  instruction,
 					Right: nil,

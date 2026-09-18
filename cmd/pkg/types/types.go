@@ -47,6 +47,7 @@ const (
 	StdVar           string = "var"
 	StdHold          string = "hold"
 	StdProc          string = "proc"
+	StdCli           string = "cli"
 	StdIn            string = "in"
 	StdIf            string = "if"
 	StdElse          string = "else"
@@ -137,6 +138,7 @@ type Operation struct {
 	Links       map[string]Operation
 	ProcParams  []Operation
 	ProcRtTypes []Operation
+	ProcHasCli  bool
 	Addresses   map[Instruction]int
 }
 
