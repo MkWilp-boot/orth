@@ -409,8 +409,11 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					Right: nil,
 				}
 			case orth_types.StdCall:
-				preProgram[i+1].Content.ValidPos = true
-				instruction := parseToken(orth_types.StdSTR, preProgram[i+1].Content.Token, context, orth_types.InstructionCall)
+				preProgram[i-1].Content.ValidPos = true
+				procName := lastInvalidSymbol
+
+				instruction := parseToken(orth_types.StdSTR, procName, context, orth_types.InstructionCall)
+				lastInvalidSymbol = ""
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  instruction,
 					Right: nil,

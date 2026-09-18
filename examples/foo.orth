@@ -1,3 +1,7 @@
-main proc i32 i64 : f32 in
+teste proc s i64 : i32 s in
+    
+end
+
+main proc in
     
 end

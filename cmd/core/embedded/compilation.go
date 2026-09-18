@@ -395,8 +395,11 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				outAmount := len(proc.ProcRtTypes)
 
 				if outAmount > 0 {
-					for i := outAmount - 1; i >= 0; i-- {
+					i := outAmount - 1
+					for typeReturn := range proc.ProcRtTypes {
+						fmt.Fprintf(writer, "; %q\n", typeReturn)
 						fmt.Fprintf(writer, "	pop proc_ret_%d\n", i)
+						i--
 					}
 				}
 				writer.WriteString("	invoke clear_proc_params\n")
@@ -419,46 +422,21 @@ func compileMasm(program orth_types.Program, output *os.File) {
 		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
 
-			// TODO trocar para program.FindProc
-			// var callingProcedureArgumentsCount int
-			// var callingProcedureOutParamsCount int
-			// var callingProcedureIndex int
-			// for i, operation := range program.Operations {
-			// 	if operation.Operator.Operand == op.Operator.Operand && operation.Instruction == orth_types.InstructionProc {
-			// 		callingProcedureIndex = i
-			// 		break
-			// 	}
-			// }
+			proc, err := program.FindProc(op)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-			// for _, operation := range program.Operations[callingProcedureIndex:] {
-			// 	if operation.Instruction == orth_types.InstructionWith {
-			// 		for k := range operation.Links {
-			// 			if !strings.HasPrefix(k, "proc_param_") {
-			// 				continue
-			// 			}
-			// 			callingProcedureArgumentsCount++
-			// 		}
-			// 	}
-			// 	if operation.Instruction == orth_types.InstructionOut {
-			// 		for k := range operation.Links {
-			// 			if !strings.HasPrefix(k, "proc_out_param_") {
-			// 				continue
-			// 			}
-			// 			callingProcedureOutParamsCount++
-			// 		}
-			// 	}
-			// }
+			for i := 0; i < len(proc.ProcParams); i++ {
+				fmt.Fprintf(writer, "	pop proc_arg_%d\n", i)
+			}
+			fmt.Fprintf(writer, "	invoke %s\n", op.Operator.Operand)
 
-			// for i := 0; i < callingProcedureArgumentsCount; i++ {
-			// 	writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
-			// }
-			// writer.WriteString(fmt.Sprintf("	invoke %s\n", op.Operator.Operand))
+			for i := 0; i < len(proc.ProcRtTypes); i++ {
+				fmt.Fprintf(writer, "	push proc_ret_%d\n", i)
+			}
 
-			// for i := 0; i < callingProcedureOutParamsCount; i++ {
-			// 	writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
-			// }
-
-			// writer.WriteString("	invoke clear_proc_returns\n")
+			writer.WriteString("	invoke clear_proc_returns\n")
 		case orth_types.InstructionDup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")
