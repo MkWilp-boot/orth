@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"strings"
 )
 
 const MASM_MAX_8BIT_CHAR_PER_LINE float64 = 20.0
@@ -68,24 +67,24 @@ func compileMasm(program orth_types.Program, output *os.File) {
 	// data segment (pre-defined)
 	writer.WriteString(".DATA\n")
 	for i := 0; i < 32; i++ {
-		writer.WriteString(fmt.Sprintf("	proc_arg_%d QWORD 0\n", i))
+		fmt.Fprintf(writer, "	proc_arg_%d QWORD 0\n", i)
 	}
 	for i := 0; i < 32; i++ {
-		writer.WriteString(fmt.Sprintf("	proc_ret_%d QWORD 0\n", i))
+		fmt.Fprintf(writer, "	proc_ret_%d QWORD 0\n", i)
 	}
 	writer.Flush()
 
 	writer.WriteString("\n.DATA ; MultScoped variables\n")
 	for _, variable := range program.Variables {
 		asmVar := embedded_helpers.BuildVarDataSeg(variable)
-		writer.WriteString(fmt.Sprintf("	%s\n", asmVar))
+		fmt.Fprintf(writer, "	%s\n", asmVar)
 	}
 	writer.Flush()
 
 	writer.WriteString("\n.DATA ; MultScoped constants\n")
 	for _, variable := range program.Constants {
 		asmVar := embedded_helpers.BuildVarDataSeg(variable)
-		writer.WriteString(fmt.Sprintf("	%s\n", asmVar))
+		fmt.Fprintf(writer, "	%s\n", asmVar)
 	}
 	writer.WriteString("\n")
 
@@ -115,7 +114,7 @@ func compileMasm(program orth_types.Program, output *os.File) {
 
 	writer.WriteString("clear_proc_returns PROC\n")
 	for i := 0; i < 32; i++ {
-		writer.WriteString(fmt.Sprintf("	mov proc_ret_%d, 0\n", i))
+		fmt.Fprintf(writer, "	mov proc_ret_%d, 0\n", i)
 	}
 	writer.WriteString("	ret\n")
 	writer.WriteString("clear_proc_returns ENDP\n")
@@ -310,15 +309,38 @@ func compileMasm(program orth_types.Program, output *os.File) {
 				fmt.Fprintln(os.Stderr, "no symbol were found for an 'if link'")
 			}
 
-			writer.WriteString(fmt.Sprintf("	jz .L%d\n", indexToJump))
+			fmt.Fprintf(writer, "	jz .L%d\n", indexToJump)
 		case orth_types.InstructionElse:
 			endPosition := op.Addresses[orth_types.InstructionEnd]
-			writer.WriteString(fmt.Sprintf("	jmp .L%d\n", endPosition))
-			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
+			fmt.Fprintf(writer, "	jmp .L%d\n", endPosition)
+			fmt.Fprintf(writer, ".L%d:\n", ip)
 			writer.WriteString("; Else\n")
 		case orth_types.InstructionProc:
 			writer.WriteString("; Proc\n")
 			writer.WriteString(op.Operator.Operand + " proc\n")
+
+			writer.WriteString("; Params\n")
+
+			if lastProcMain && len(op.ProcParams) > 0 {
+				fmt.Println("[WARN] `main proc` detected with more than 0 parameters, if you are trying to get command line arguments, proceed with `with cli` instead")
+			}
+
+			if lastProcMain && op.Operator.Operand == "cli" {
+				writer.WriteString("; argc & argv\n")
+				writer.WriteString("	invoke GetCommandLineW\n")
+				writer.WriteString("	invoke CommandLineToArgvW, rax, addr nArgc\n")
+				writer.WriteString("	push rax	; rax = pointer to argv\n")
+				writer.WriteString("	mov  rax, nArgc\n")
+				writer.WriteString("	push rax\n")
+				writer.WriteString("	xor rax, rax\n")
+			} else {
+				paramCount := len(op.ProcParams) - 1
+				for ptype := range op.ProcParams {
+					fmt.Fprintf(writer, "	; %q\n", ptype)
+					fmt.Fprintf(writer, "	push proc_arg_%d\n", paramCount)
+					paramCount--
+				}
+			}
 
 			variables, _ := op.Context.GetNestedVariables(&program)
 
@@ -352,36 +374,8 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			}
 
 			lastProcMain = op.Operator.Operand == "main"
-		case orth_types.InstructionWith:
-			procParamsCount := 0
-			for k := range op.Links {
-				if !strings.HasPrefix(k, "proc_param_") {
-					continue
-				}
-				procParamsCount++
-			}
-
-			writer.WriteString("; Params\n")
-
-			if lastProcMain && procParamsCount > 0 {
-				fmt.Println("[WARN] `with` instruction detected with more than 0 parameters for proc main, if you are trying to get command line arguments, proceed with `with cli` instead")
-			}
-
-			if lastProcMain && op.Operator.Operand == "cli" {
-				writer.WriteString("; ArgC & ArgV\n")
-				writer.WriteString("	invoke GetCommandLineW\n")
-				writer.WriteString("	invoke CommandLineToArgvW, rax, addr nArgc\n")
-				writer.WriteString("	push rax	; rax = pointer to argv\n")
-				writer.WriteString("	mov  rax, nArgc\n")
-				writer.WriteString("	push rax\n")
-				writer.WriteString("	xor rax, rax\n")
-			} else {
-				for i := procParamsCount - 1; i >= 0; i-- {
-					writer.WriteString(fmt.Sprintf("	push proc_arg_%d\n", i))
-				}
-			}
 		case orth_types.InstructionEnd:
-			writer.WriteString(fmt.Sprintf(".L%d:\n", ip))
+			fmt.Fprintf(writer, ".L%d:\n", ip)
 			procAddress, procFound := op.Addresses[orth_types.InstructionProc]
 			whileAddress, whileFound := op.Addresses[orth_types.InstructionWhile]
 			_, elseFound := op.Addresses[orth_types.InstructionElse]
@@ -394,28 +388,15 @@ func compileMasm(program orth_types.Program, output *os.File) {
 			}
 
 			if procFound {
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionProc)))
+				fmt.Fprintf(writer, "; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionProc))
 
-				outOpertaion := orth_types.Operation{}
-				for _, operation := range program.Operations[procAddress:] {
-					if operation.Instruction != orth_types.InstructionOut {
-						continue
-					}
-					outOpertaion = operation
-					break
-				}
+				proc := program.Operations[procAddress]
 
-				outAmount := 0
-				for k := range outOpertaion.Links {
-					if !strings.HasPrefix(k, "proc_out_param_") {
-						continue
-					}
-					outAmount++
-				}
+				outAmount := len(proc.ProcRtTypes)
 
 				if outAmount > 0 {
 					for i := outAmount - 1; i >= 0; i-- {
-						writer.WriteString(fmt.Sprintf("	pop proc_ret_%d\n", i))
+						fmt.Fprintf(writer, "	pop proc_ret_%d\n", i)
 					}
 				}
 				writer.WriteString("	invoke clear_proc_params\n")
@@ -423,61 +404,61 @@ func compileMasm(program orth_types.Program, output *os.File) {
 					writer.WriteString("	invoke ExitProcess, 0\n")
 				}
 				writer.WriteString("	ret\n")
-				writer.WriteString(fmt.Sprint(program.Operations[procAddress].Operator.Operand, " ", "endp\n"))
+				fmt.Fprint(writer, program.Operations[procAddress].Operator.Operand, " ", "endp\n")
 			} else if whileFound {
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
-				writer.WriteString(fmt.Sprintf("; Jump to %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile)))
-				writer.WriteString(fmt.Sprintf("	jmp .L%d\n", whileAddress))
+				fmt.Fprintf(writer, "; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile))
+				fmt.Fprintf(writer, "; Jump to %s\n", orth_types.InstructionToStr(orth_types.InstructionWhile))
+				fmt.Fprintf(writer, "	jmp .L%d\n", whileAddress)
 				// post-instruction label
-				writer.WriteString(fmt.Sprintf(".LA%d:\n", ip))
+				fmt.Fprintf(writer, ".LA%d:\n", ip)
 			} else if elseFound {
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionElse)))
+				fmt.Fprintf(writer, "; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionElse))
 			} else if ifFound {
-				writer.WriteString(fmt.Sprintf("; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionIf)))
+				fmt.Fprintf(writer, "; End for %s\n", orth_types.InstructionToStr(orth_types.InstructionIf))
 			}
 		case orth_types.InstructionCall:
 			writer.WriteString("; invoke\n")
 
 			// TODO trocar para program.FindProc
-			var callingProcedureArgumentsCount int
-			var callingProcedureOutParamsCount int
-			var callingProcedureIndex int
-			for i, operation := range program.Operations {
-				if operation.Operator.Operand == op.Operator.Operand && operation.Instruction == orth_types.InstructionProc {
-					callingProcedureIndex = i
-					break
-				}
-			}
+			// var callingProcedureArgumentsCount int
+			// var callingProcedureOutParamsCount int
+			// var callingProcedureIndex int
+			// for i, operation := range program.Operations {
+			// 	if operation.Operator.Operand == op.Operator.Operand && operation.Instruction == orth_types.InstructionProc {
+			// 		callingProcedureIndex = i
+			// 		break
+			// 	}
+			// }
 
-			for _, operation := range program.Operations[callingProcedureIndex:] {
-				if operation.Instruction == orth_types.InstructionWith {
-					for k := range operation.Links {
-						if !strings.HasPrefix(k, "proc_param_") {
-							continue
-						}
-						callingProcedureArgumentsCount++
-					}
-				}
-				if operation.Instruction == orth_types.InstructionOut {
-					for k := range operation.Links {
-						if !strings.HasPrefix(k, "proc_out_param_") {
-							continue
-						}
-						callingProcedureOutParamsCount++
-					}
-				}
-			}
+			// for _, operation := range program.Operations[callingProcedureIndex:] {
+			// 	if operation.Instruction == orth_types.InstructionWith {
+			// 		for k := range operation.Links {
+			// 			if !strings.HasPrefix(k, "proc_param_") {
+			// 				continue
+			// 			}
+			// 			callingProcedureArgumentsCount++
+			// 		}
+			// 	}
+			// 	if operation.Instruction == orth_types.InstructionOut {
+			// 		for k := range operation.Links {
+			// 			if !strings.HasPrefix(k, "proc_out_param_") {
+			// 				continue
+			// 			}
+			// 			callingProcedureOutParamsCount++
+			// 		}
+			// 	}
+			// }
 
-			for i := 0; i < callingProcedureArgumentsCount; i++ {
-				writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
-			}
-			writer.WriteString(fmt.Sprintf("	invoke %s\n", op.Operator.Operand))
+			// for i := 0; i < callingProcedureArgumentsCount; i++ {
+			// 	writer.WriteString(fmt.Sprintf("	pop proc_arg_%d\n", i))
+			// }
+			// writer.WriteString(fmt.Sprintf("	invoke %s\n", op.Operator.Operand))
 
-			for i := 0; i < callingProcedureOutParamsCount; i++ {
-				writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
-			}
+			// for i := 0; i < callingProcedureOutParamsCount; i++ {
+			// 	writer.WriteString(fmt.Sprintf("	push proc_ret_%d\n", i))
+			// }
 
-			writer.WriteString("	invoke clear_proc_returns\n")
+			// writer.WriteString("	invoke clear_proc_returns\n")
 		case orth_types.InstructionDup:
 			writer.WriteString("; Dup\n")
 			writer.WriteString("	pop rax\n")

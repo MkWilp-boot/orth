@@ -46,6 +46,7 @@ func main() {
 
 	program := orth_types.Program{
 		Operations: make([]orth_types.Operation, 0),
+		Procedures: make([]orth_types.Operation, 0),
 	}
 
 	go embedded.ParseTokenAsOperation(lexedFiles, parsedOperations)
@@ -55,6 +56,9 @@ func main() {
 		if parsedOperation.Right != nil {
 			program.Error = append(program.Error, parsedOperation.Right)
 			break
+		}
+		if parsedOperation.Left.Instruction == orth_types.InstructionProc {
+			program.AppendProc(parsedOperation.Left)
 		}
 		parsedOperation.Left = embedded_helpers.LinkVariableToValue(parsedOperation.Left, &analyzerOperations, &program)
 		analyzerOperations = append(analyzerOperations, parsedOperation.Left)

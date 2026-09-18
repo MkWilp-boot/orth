@@ -1,7 +1,9 @@
 package orth_types
 
 import (
+	"errors"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -50,6 +52,7 @@ const (
 	InstructionNop
 	InstructionProc
 	InstructionParam
+	InstructionReturnType
 	InstructionIn
 	InstructionInvoke
 	FunctionDumpMem
@@ -59,8 +62,6 @@ const (
 	InstructionLOr
 	InstructionOver
 	InstructionExit
-	InstructionWith
-	InstructionOut
 	InstructionDeref
 	FunctionSetNumber
 	FunctionSetString
@@ -75,62 +76,66 @@ var instructionNames map[Instruction]string
 
 func init() {
 	instructionNames = map[Instruction]string{
-		Skip:                "Skip",
-		InstructionPush:     "Push",
-		InstructionPushStr:  "PushStr",
-		InstructionSum:      "Sum",
-		InstructionMinus:    "Minus",
-		InstructionMult:     "Mult",
-		InstructionDiv:      "Div",
-		InstructionIf:       "If",
-		InstructionElse:     "Else",
-		InstructionEnd:      "End",
-		InstructionEqual:    "Equal",
-		InstructionLt:       "Lt",
-		InstructionGt:       "Gt",
-		InstructionNotEqual: "NotEqual",
-		InstructionDup:      "Dup",
-		InstructionTwoDup:   "TwoDup",
-		InstructionDo:       "Do",
-		InstructionDrop:     "Drop",
-		InstructionWhile:    "While",
-		InstructionSwap:     "Swap",
-		InstructionMod:      "Mod",
-		InstructionMem:      "Mem",
-		InstructionStore:    "Store",
-		InstructionLoad:     "Load",
-		InstructionLoadStay: "LoadStay",
-		InstructionFunc:     "Func",
-		InstructionCall:     "Call",
-		InstructionType:     "Type",
-		InstructionConst:    "Const",
-		InstructionVar:      "Var",
-		InstructionGvar:     "Gvar",
-		InstructionHold:     "Hold",
-		InstructionNop:      "Nop",
-		InstructionProc:     "Proc",
-		InstructionIn:       "In",
-		InstructionInvoke:   "Invoke",
-		InstructionLShift:   "LShift",
-		InstructionRShift:   "RShift",
-		InstructionLAnd:     "LAnd",
-		InstructionLOr:      "LOr",
-		InstructionOver:     "Over",
-		InstructionExit:     "Exit",
-		InstructionParam:    "Param",
-		InstructionWith:     ":",
-		InstructionOut:      "--",
-		InstructionDeref:    "Deref",
-		FunctionPutU64:      "PutU64",
-		FunctionPutString:   "PutString",
-		FunctionDumpMem:     "DumpMem",
-		FunctionSetNumber:   "SetNumber",
-		FunctionSetString:   "SetString",
-		FunctionAlloc:       "Alloc",
-		FunctionFree:        "Free",
-		FunctionPutChar:     "PutChar",
+		InstructionPush:       "InstructionPush",
+		InstructionPushStr:    "InstructionPushStr",
+		InstructionSum:        "InstructionSum",
+		InstructionMinus:      "InstructionMinus",
+		InstructionMult:       "InstructionMult",
+		InstructionDiv:        "InstructionDiv",
+		InstructionIf:         "InstructionIf",
+		InstructionElse:       "InstructionElse",
+		InstructionEnd:        "InstructionEnd",
+		InstructionEqual:      "InstructionEqual",
+		InstructionLt:         "InstructionLt",
+		InstructionGt:         "InstructionGt",
+		InstructionNotEqual:   "InstructionNotEqual",
+		InstructionDup:        "InstructionDup",
+		InstructionTwoDup:     "InstructionTwoDup",
+		InstructionDo:         "InstructionDo",
+		InstructionDrop:       "InstructionDrop",
+		InstructionWhile:      "InstructionWhile",
+		InstructionSwap:       "InstructionSwap",
+		InstructionMod:        "InstructionMod",
+		InstructionMem:        "InstructionMem",
+		InstructionStore:      "InstructionStore",
+		InstructionLoad:       "InstructionLoad",
+		InstructionLoadStay:   "InstructionLoadStay",
+		InstructionFunc:       "InstructionFunc",
+		InstructionCall:       "InstructionCall",
+		InstructionType:       "InstructionType",
+		InstructionConst:      "InstructionConst",
+		InstructionVar:        "InstructionVar",
+		InstructionGvar:       "InstructionGvar",
+		InstructionHold:       "InstructionHold",
+		InstructionNop:        "InstructionNop",
+		InstructionProc:       "InstructionProc",
+		InstructionIn:         "InstructionIn",
+		InstructionInvoke:     "InstructionInvoke",
+		InstructionLShift:     "InstructionLShift",
+		InstructionRShift:     "InstructionRShift",
+		InstructionLAnd:       "InstructionLAnd",
+		InstructionLOr:        "InstructionLOr",
+		InstructionOver:       "InstructionOver",
+		InstructionExit:       "InstructionExit",
+		InstructionParam:      "InstructionParam",
+		InstructionReturnType: "InstructionReturnType",
+		InstructionDeref:      "InstructionDeref",
+		FunctionPutU64:        "FunctionPutU64",
+		FunctionPutString:     "FunctionPutString",
+		FunctionDumpMem:       "FunctionDumpMem",
+		FunctionSetNumber:     "FunctionSetNumber",
+		FunctionSetString:     "FunctionSetString",
+		FunctionAlloc:         "FunctionAlloc",
+		FunctionFree:          "FunctionFree",
+		FunctionPutChar:       "FunctionPutChar",
+		Skip:                  "Skip",
 	}
-
+	for ins := InstructionInvalid + 1; ins < TotalOps-1; ins++ {
+		_, found := instructionNames[ins]
+		if !found {
+			panic(fmt.Sprintf("[DEV] Missing instruction %d on name map", ins))
+		}
+	}
 	if len(instructionNames) != int(TotalOps)-1 {
 		panic("[DEV] Missing instruction on name map")
 	}
@@ -147,48 +152,50 @@ func InstructionToStr(inst Instruction) string {
 // orth code into machine code
 type Program struct {
 	Warnings   []CompilerMessage
+	Procedures []Operation
 	Error      []error
 	Variables  []Operation
 	Constants  []Operation
 	Operations []Operation
 }
 
-type ProcedureSchema struct {
-	InParamsAmount, OutParamsAmount []Operation
+func (p *Program) FindProcByOperand(operand string) (*Operation, error) {
+	if operand == "" {
+		return nil, errors.New("invalid operand")
+	}
+	if len(p.Procedures) == 0 {
+		return nil, fmt.Errorf("proc %q not found", operand)
+	}
+	i, found := slices.BinarySearchFunc(p.Procedures, operand, func(a Operation, b string) int {
+		return strings.Compare(a.Operator.Operand, b)
+	})
+	if !found {
+		return nil, errors.New("proc does not exist")
+	}
+	return &p.Procedures[i], nil
 }
 
-func (p *Program) FindProc(operation Operation) (ProcedureSchema, error) {
-	callingProcedureArguments := make([]Operation, 0)
-	callingProcedureOutParams := make([]Operation, 0)
-
-	for callingProcedureIndex, op := range p.Operations {
-		if op.Operator.Operand == operation.Operator.Operand && op.Instruction == InstructionProc {
-			for _, operation := range p.Operations[callingProcedureIndex:] {
-				if operation.Instruction == InstructionWith {
-					for k, v := range operation.Links {
-						if !strings.HasPrefix(k, "proc_param_") {
-							continue
-						}
-						callingProcedureArguments = append(callingProcedureArguments, v)
-					}
-				}
-				if operation.Instruction == InstructionOut {
-					for k, v := range operation.Links {
-						if !strings.HasPrefix(k, "proc_out_param_") {
-							continue
-						}
-						callingProcedureOutParams = append(callingProcedureOutParams, v)
-					}
-				}
-			}
-
-			return ProcedureSchema{
-				InParamsAmount:  callingProcedureArguments,
-				OutParamsAmount: callingProcedureOutParams,
-			}, nil
-		}
+func (p *Program) FindProc(operand Operation) (*Operation, error) {
+	if operand.Operator.Operand == "" {
+		return nil, errors.New("invalid operand")
 	}
-	return ProcedureSchema{}, fmt.Errorf("proc named %q was not found", operation.Operator.Operand)
+	if len(p.Procedures) == 0 {
+		return nil, fmt.Errorf("proc %q not found", operand.Operator.Operand)
+	}
+	i, found := slices.BinarySearchFunc(p.Procedures, operand, func(a Operation, b Operation) int {
+		return strings.Compare(a.Operator.Operand, b.Operator.Operand)
+	})
+	if !found {
+		return nil, errors.New("proc does not exist")
+	}
+	return &p.Procedures[i], nil
+}
+
+func (p *Program) AppendProc(proc Operation) {
+	p.Procedures = append(p.Procedures, proc)
+	slices.SortFunc(p.Procedures, func(a, b Operation) int {
+		return strings.Compare(a.Operator.Operand, b.Operator.Operand)
+	})
 }
 
 func PPrintOperation(op Operation) string {

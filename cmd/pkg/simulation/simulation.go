@@ -182,33 +182,42 @@ func SimulateStack(program *orth_types.Program) {
 			preview := stack.peek(1)
 			stack.push(preview...)
 		case orth_types.InstructionCall:
-			callingProcSchema, err := program.FindProc(operation)
+			proc, err := program.FindProc(operation)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-			preview := stack.peek(len(callingProcSchema.InParamsAmount))
-			for i, stackItem := range preview {
-				if callingProcSchema.InParamsAmount[i].Operator.Operand != stackItem.Operator.SymbolName {
-					fmt.Fprintf(os.Stderr, "Proc param required type %q but got %q", callingProcSchema.InParamsAmount[i].Operator.Operand, stackItem.Operator.SymbolName)
+
+			params, _ := proc.ProcDataAsSlices()
+			preview := stack.peek(len(proc.ProcParams))
+			pairs := orth_types.Zip(params, preview)
+
+			for _, pair := range pairs {
+				if pair.Left.Operator.SymbolName != pair.Right.Operator.SymbolName {
+					fmt.Fprintf(os.Stderr, "Proc param required type %q but got %q", pair.Left.Operator.Operand, pair.Right.Operator.SymbolName)
 					os.Exit(1)
 				}
 			}
+
 			// if param type checking went well, remove params from the main stack
-			stack.rmv(len(callingProcSchema.InParamsAmount))
+			stack.rmv(len(proc.ProcParams))
 		case orth_types.InstructionEnd:
 			procAddress, closingProc := operation.Addresses[orth_types.InstructionProc]
 			if closingProc {
-				callingProcSchema, err := program.FindProc(program.Operations[procAddress])
+				proc, err := program.FindProc(program.Operations[procAddress])
 				if err != nil {
 					fmt.Fprintln(os.Stderr, err)
 					os.Exit(1)
 				}
 
-				preview := stack.peek(len(callingProcSchema.OutParamsAmount))
-				for i, stackItem := range preview {
-					if callingProcSchema.OutParamsAmount[i].Operator.Operand != stackItem.Operator.SymbolName {
-						fmt.Fprintf(os.Stderr, "Proc return required type %q but got %q", callingProcSchema.OutParamsAmount[i].Operator.Operand, stackItem.Operator.SymbolName)
+				preview := stack.peek(len(proc.ProcRtTypes))
+				_, returns := proc.ProcDataAsSlices()
+
+				pairs := orth_types.Zip(returns, preview)
+
+				for _, pair := range pairs {
+					if pair.Left.Operator.SymbolName != pair.Right.Operator.SymbolName {
+						fmt.Fprintf(os.Stderr, "Proc return required type %q but got %q", pair.Left.Operator.SymbolName, pair.Right.Operator.SymbolName)
 						os.Exit(1)
 					}
 				}

@@ -66,8 +66,7 @@ const (
 	StdCall          string = "call"
 	StdLoadAndStay   string = ",!"
 	StdInvoke        string = "invoke"
-	StdProcOutParams string = "--"
-	StdProcInParams  string = ":"
+	StdProcParamsDiv string = ":"
 	StdAddress       string = "addr"
 	StdBitwise       string = "bitwise"
 )
@@ -96,6 +95,7 @@ const (
 	RNT         string = "rnt"
 	ADDR        string = "address"
 	RNGABL      string = "rangeable"
+	PTR         string = "ptr"
 	MEM         string = "mem"
 	TYPE        string = "type"
 	INVALIDTYPE string = ""
@@ -119,12 +119,37 @@ type Pair[T1, T2 any] struct {
 	Right T2
 }
 
+func Zip[T, U any](ts []T, us []U) []Pair[T, U] {
+	if len(ts) != len(us) {
+		panic("slices have different length")
+	}
+	pairs := make([]Pair[T, U], len(ts))
+	for i := 0; i < len(ts); i++ {
+		pairs[i] = Pair[T, U]{ts[i], us[i]}
+	}
+	return pairs
+}
+
 type Operation struct {
 	Instruction Instruction
 	Operator    Operand
 	Context     *Context
 	Links       map[string]Operation
+	ProcParams  map[string]Operation
+	ProcRtTypes map[string]Operation
 	Addresses   map[Instruction]int
+}
+
+func (op Operation) ProcDataAsSlices() (procParams []Operation, procRtTypes []Operation) {
+	procParams = make([]Operation, len(op.ProcParams))
+	procRtTypes = make([]Operation, len(op.ProcRtTypes))
+	for _, param := range op.ProcParams {
+		procParams = append(procParams, param)
+	}
+	for _, rtype := range op.ProcRtTypes {
+		procRtTypes = append(procRtTypes, rtype)
+	}
+	return
 }
 
 func (op *Operation) PrioritizeAddress() (int, error) {
@@ -344,6 +369,7 @@ func init() {
 	GlobalTypes[RNT][StdRNT] = "rnt"
 	GlobalTypes[RNT][ADDR] = "address"
 	GlobalTypes[RNT][RNGABL] = "rangeable"
+	GlobalTypes[RNT][PTR] = PTR
 
 	GlobalTypes[MEM] = make(map[string]string, 0)
 	GlobalTypes[MEM][StdMem] = "rnt"
