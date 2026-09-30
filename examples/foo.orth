@@ -1,5 +1,5 @@
-teste var i 47
+@include "std.orth"
 
 main proc in
-    teste hold deref putui
+    teste call putui
 end

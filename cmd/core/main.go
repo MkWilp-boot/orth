@@ -35,6 +35,7 @@ func init() {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
+	*orth_debug.I += orth_debug.DEFAULT_INCLUDE_PATH
 }
 
 func main() {

@@ -11,17 +11,17 @@ import (
 	"strings"
 )
 
-func ppDefineDirective(line string) (string, string) {
+func preProccessDefineDirective(line string) (string, string) {
 	const directive = "define"
 	name := ""
 	for i := len(directive) + 2; i < len(line) && line[i] != ' '; i++ {
 		name += string(line[i])
 	}
-	value := ""
+	var value strings.Builder
 	for i := len(directive) + len(name) + 3; i < len(line); i++ {
-		value += string(line[i])
+		value.WriteString(string(line[i]))
 	}
-	return strings.TrimSpace(name), strings.TrimSpace(value)
+	return strings.TrimSpace(name), strings.TrimSpace(value.String())
 }
 
 func preProccessFile(includeFile string, parsedFiles chan orth_types.File[string]) {
@@ -68,7 +68,7 @@ func preProccessFile(includeFile string, parsedFiles chan orth_types.File[string
 
 		switch directive {
 		case "define":
-			name, value := ppDefineDirective(line)
+			name, value := preProccessDefineDirective(line)
 			rawFile = strings.Replace(rawFile, fmt.Sprintf("@define %s %s", name, value), "", -1)
 			rawFile = strings.ReplaceAll(rawFile, name, value)
 

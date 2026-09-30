@@ -16,6 +16,8 @@ var (
 	Sim          = flag.Bool("sim", false, "simulate program's stack")
 )
 
+const DEFAULT_INCLUDE_PATH = "E:\\"
+
 func LogStep(message string) {
 	if !*Log {
 		return
