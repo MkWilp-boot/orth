@@ -102,16 +102,11 @@ const (
 	INVALIDTYPE string = ""
 )
 
-type ContextDeclaration struct {
-	Name  string
-	Index uint
-}
-
 type Context struct {
 	Name          string
 	Order         uint
 	Parent        *Context
-	Declarations  []ContextDeclaration
+	Declarations  []Operation
 	InnerContexts []*Context
 }
 
@@ -213,15 +208,16 @@ func (ctx *Context) MountFullLengthContext(name string) string {
 }
 
 func (ctx *Context) GetVaraible(variable string, program *Program) (*Operation, error) {
-	for ctx != nil {
-		for _, decls := range ctx.Declarations {
-			if decls.Name == variable {
-				return &program.Operations[decls.Index], nil
-			}
-		}
-		ctx = ctx.Parent
+	if ctx == nil {
+		return nil, errors.New("could not find variable, it's either out of scope or was not declared")
 	}
-	return nil, errors.New("could not find variable, it's either out of scope or was not declared")
+	for _, decls := range ctx.Declarations {
+		if decls.Operator.Operand == variable {
+			return &decls, nil
+		}
+	}
+	ctx = ctx.Parent
+	return ctx.GetVaraible(variable, program)
 }
 
 func (ctx *Context) GetNestedVariables(program *Program) ([]Operation, error) {
@@ -230,7 +226,7 @@ func (ctx *Context) GetNestedVariables(program *Program) ([]Operation, error) {
 	}
 	variables := make([]Operation, 0, len(ctx.Declarations))
 	for _, variable := range ctx.Declarations {
-		variables = append(variables, program.Operations[variable.Index])
+		variables = append(variables, variable)
 	}
 	for _, innerContext := range ctx.InnerContexts {
 		nestedVariables, err := innerContext.GetNestedVariables(program)
@@ -245,7 +241,7 @@ func (ctx *Context) GetNestedVariables(program *Program) ([]Operation, error) {
 func (ctx *Context) HasVariableDeclaredInOrAbove(variable string) bool {
 	for ctx != nil {
 		for _, v := range ctx.Declarations {
-			if v.Name == variable {
+			if v.Operator.Operand == variable {
 				return true
 			}
 		}

@@ -1,2 +1,5 @@
-main proc  in
+teste var i 47
+
+main proc in
+    teste hold deref putui
 end

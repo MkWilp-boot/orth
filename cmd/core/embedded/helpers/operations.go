@@ -73,12 +73,12 @@ func HandleOperationElse(stack *[]RefStackItem, program *orth_types.Program, ope
 	}
 }
 
-func GetVariableContext(variable orth_types.ContextDeclaration, context *orth_types.Context) (string, error) {
+func GetVariableContext(variable orth_types.Operation, context *orth_types.Context) (string, error) {
 	if context == nil {
-		return "", fmt.Errorf("undefined variable at abs location: %d", variable.Index)
+		return "", fmt.Errorf("undefined variable %q", variable.Operator.Operand)
 	}
 	for _, declaration := range context.Declarations {
-		if declaration.Name == variable.Name {
+		if declaration.Operator.Operand == variable.Operator.Operand {
 			return context.Name, nil
 		}
 	}
@@ -116,11 +116,12 @@ func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, p
 	}()
 
 	operand := ""
-	if instruction == orth_types.InstructionMult {
+	switch instruction {
+	case orth_types.InstructionMult:
 		operand = fmt.Sprint(param1 * param2)
-	} else if instruction == orth_types.InstructionSum {
+	case orth_types.InstructionSum:
 		operand = fmt.Sprint(param1 + param2)
-	} else if instruction == orth_types.InstructionMod {
+	case orth_types.InstructionMod:
 		var param1Inter interface{} = param1
 		switch param1Inter.(type) {
 		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
@@ -128,9 +129,9 @@ func ProduceOperator[TOperand constraints.Float | constraints.Integer](param1, p
 		default:
 			panic("modulo operation is only supported for integer types.")
 		}
-	} else if instruction == orth_types.InstructionDiv {
+	case orth_types.InstructionDiv:
 		operand = fmt.Sprint(param1 / param2)
-	} else if instruction == orth_types.InstructionMinus {
+	case orth_types.InstructionMinus:
 		operand = fmt.Sprint(param1 - param2)
 	}
 

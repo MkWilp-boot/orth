@@ -66,7 +66,7 @@ func VarTypeToLocalAsmType(operand orth_types.Operand) string {
 	case orth_types.StdF64:
 		return "REAL8"
 	default:
-		fmt.Fprintf(os.Stderr, "ivalid type od %q\n", operand.SymbolName)
+		fmt.Fprintf(os.Stderr, "invalid type od %q\n", operand.SymbolName)
 		os.Exit(1)
 		return ""
 	}
@@ -96,7 +96,7 @@ func VarTypeToAsmType(operand orth_types.Operand) string {
 	case orth_types.StdF64:
 		asmTypeInstruction = "real8"
 	default:
-		fmt.Fprintf(os.Stderr, "ivalid type of %q\n", operand.SymbolName)
+		fmt.Fprintf(os.Stderr, "invalid type of %q\n", operand.SymbolName)
 		os.Exit(1)
 	}
 	return asmTypeInstruction
@@ -146,16 +146,18 @@ func MangleVarName(o orth_types.Operation) string {
 	} else if o.Instruction == orth_types.InstructionConst || o.Operator.SymbolName == orth_types.StdConst {
 		memType = "Const"
 	} else {
-		panic(fmt.Errorf("invalid operation on type %d", o.Instruction))
+		panic(fmt.Errorf("invalid operation\n\n%s", orth_types.PPrintOperation(o)))
 	}
 
-	return fmt.Sprintf("%s@%s@%s", o.Context.Name, memType, o.Operator.Operand)
+	result := strings.Join([]string{o.Context.Name, memType, o.Operator.Operand}, "@")
+	return result
 }
 
 func BuildVarDataSeg(variable orth_types.Operation) string {
 	variableValue := variable.Links["variable_value"].Operator
-	return fmt.Sprintf("%s %s %s",
-		MangleVarName(variable),
-		VarTypeToAsmType(variableValue),
-		VarValueToAsmSyntax(variableValue, true))
+	varName := MangleVarName(variable)
+	varType := VarTypeToAsmType(variableValue)
+	varValue := VarValueToAsmSyntax(variableValue, true)
+	result := strings.Join([]string{varName, varType, varValue}, " ")
+	return result
 }

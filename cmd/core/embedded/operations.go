@@ -81,11 +81,10 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 		Name:          embedded_helpers.MainScope,
 		Order:         0,
 		Parent:        nil,
-		Declarations:  make([]orth_types.ContextDeclaration, 0),
+		Declarations:  make([]orth_types.Operation, 0),
 		InnerContexts: make([]*orth_types.Context, 0),
 	}
 
-	var globalInstructionIndex uint = 0
 	var lastInvalidSymbol string = ""
 
 	for fIndex, file := range tokenFiles {
@@ -189,7 +188,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					Name:          fmt.Sprintf("c?_if_%d$", len(context.InnerContexts)),
 					Parent:        context,
 					Order:         uint(len(context.InnerContexts)),
-					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					Declarations:  make([]orth_types.Operation, 0),
 					InnerContexts: make([]*orth_types.Context, 0),
 				}
 				context.InnerContexts = append(context.InnerContexts, &newContext)
@@ -207,7 +206,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					Name:          fmt.Sprintf("c?_else_%d$", len(context.InnerContexts)),
 					Parent:        context.Parent, // else is not a child of "if"
 					Order:         uint(len(context.InnerContexts)),
-					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					Declarations:  make([]orth_types.Operation, 0),
 					InnerContexts: make([]*orth_types.Context, 0),
 				}
 
@@ -300,7 +299,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					Name:          fmt.Sprintf("c?_proc_%s_%d$", pName, len(context.InnerContexts)),
 					Parent:        context,
 					Order:         uint(len(context.InnerContexts)),
-					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					Declarations:  make([]orth_types.Operation, 0),
 					InnerContexts: make([]*orth_types.Context, 0),
 				}
 				context.InnerContexts = append(context.InnerContexts, &newContext)
@@ -377,7 +376,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					Name:          fmt.Sprintf("c?_do_%d$", len(context.InnerContexts)),
 					Parent:        context,
 					Order:         uint(len(context.InnerContexts)),
-					Declarations:  make([]orth_types.ContextDeclaration, 0),
+					Declarations:  make([]orth_types.Operation, 0),
 					InnerContexts: make([]*orth_types.Context, 0),
 				}
 				context.InnerContexts = append(context.InnerContexts, &newContext)
@@ -461,15 +460,12 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					return
 				}
 
-				context.Declarations = append(context.Declarations, orth_types.ContextDeclaration{
-					Name:  vName,
-					Index: globalInstructionIndex,
-				})
-
 				value := parseToken(vType, vValue, context, orth_types.InstructionPush)
 				constant := parseToken(orth_types.StdConst, vName, context, orth_types.InstructionConst)
 				constant.Links = make(map[string]orth_types.Operation)
 				constant.Links["variable_value"] = value
+
+				context.Declarations = append(context.Declarations, constant)
 
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  constant,
@@ -477,7 +473,7 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 				}
 			case orth_types.StdVar:
 				vValue, vType, vName := grabVariableDefinition(preProgram, i)
-
+				lastInvalidSymbol = ""
 				if context.HasVariableDeclaredInOrAbove(vName) {
 					parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 						Left:  orth_types.Operation{},
@@ -487,15 +483,12 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					return
 				}
 
-				context.Declarations = append(context.Declarations, orth_types.ContextDeclaration{
-					Name:  vName,
-					Index: globalInstructionIndex,
-				})
-
 				value := parseToken(vType, vValue, context, orth_types.InstructionPush)
 				variable := parseToken(orth_types.StdVar, vName, context, orth_types.InstructionVar)
 				variable.Links = make(map[string]orth_types.Operation)
 				variable.Links["variable_value"] = value
+
+				context.Declarations = append(context.Declarations, variable)
 
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
 					Left:  variable,
@@ -521,8 +514,9 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 			// 		Right: nil,
 			// 	}
 			case orth_types.StdHold:
-				preProgram[i+1].Content.ValidPos = true
-				vName := preProgram[i+1].Content.Token
+				preProgram[i-1].Content.ValidPos = true
+				vName := lastInvalidSymbol
+				lastInvalidSymbol = ""
 
 				instruction := parseToken(orth_types.StdHold, vName, context, orth_types.InstructionHold)
 				parsedOperation <- orth_types.Pair[orth_types.Operation, error]{
@@ -582,7 +576,6 @@ func ParseTokenAsOperation(tokenFiles []orth_types.File[[]orth_types.StringEnum]
 					return
 				}
 			}
-			globalInstructionIndex++
 		}
 	}
 
@@ -593,22 +586,22 @@ func grabVariableDefinition(preProgram []orth_types.StringEnum, i int) (string, 
 	re := regexp.MustCompile(`[^\w]`)
 
 	// check name
-	if re.Match([]byte(preProgram[i+1].Content.Token)) {
+	if re.Match([]byte(preProgram[i-1].Content.Token)) {
 		fmt.Fprintf(os.Stderr, "%s has invalid characters in it's composition\n", "const")
 		os.Exit(1)
 	}
 	// check if has a value
-	if !orth_types.IsValidTypeSybl(preProgram[i+2].Content.Token) {
+	if !orth_types.IsValidTypeSybl(preProgram[i+1].Content.Token) {
 		fmt.Fprintln(os.Stderr, "var/const must be initialized with a valid type")
 		os.Exit(1)
 	}
 
-	for x := 1; x < 4; x++ {
-		preProgram[i+x].Content.ValidPos = true
-	}
+	preProgram[i-1].Content.ValidPos = true
+	preProgram[i+1].Content.ValidPos = true
+	preProgram[i+2].Content.ValidPos = true
 
-	varName := preProgram[i+1].Content.Token
-	varType := preProgram[i+2].Content.Token
+	varName := preProgram[i-1].Content.Token
+	varType := preProgram[i+1].Content.Token
 
 	var varValue string
 
@@ -616,9 +609,9 @@ func grabVariableDefinition(preProgram []orth_types.StringEnum, i int) (string, 
 	case orth_types.StdSTR:
 		fallthrough
 	case orth_types.RNGABL:
-		varValue = preProgram[i+3].Content.Token[1 : len(preProgram[i+3].Content.Token)-1]
+		varValue = preProgram[i+2].Content.Token[1 : len(preProgram[i+2].Content.Token)-1]
 	default:
-		varValue = preProgram[i+3].Content.Token
+		varValue = preProgram[i+2].Content.Token
 	}
 
 	return varValue, varType, varName
