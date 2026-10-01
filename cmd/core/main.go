@@ -9,7 +9,6 @@ import (
 	"orth/cmd/core/lexer"
 	"orth/cmd/core/orth_debug"
 	"orth/cmd/pkg/helpers/functions"
-	"orth/cmd/pkg/simulation"
 	orth_types "orth/cmd/pkg/types"
 	"os"
 	"strings"
@@ -81,9 +80,6 @@ func main() {
 	}
 
 	program, err := embedded.CrossReferenceBlocks(program)
-	if *orth_debug.Sim {
-		simulation.SimulateStack(&program)
-	}
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
